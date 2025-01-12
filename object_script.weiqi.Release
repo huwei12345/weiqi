@@ -1,0 +1,13 @@
+release/boardwidget.o
+release/gameresearch.o
+release/gamesettings.o
+release/main.o
+release/mainwindow.o
+release/piece.o
+release/screencapture.o
+release/sgfparser.o
+release/timecontrol.o
+release/qrc_src.o
+release/moc_boardwidget.o
+release/moc_mainwindow.o
+release/moc_screencapture.o
