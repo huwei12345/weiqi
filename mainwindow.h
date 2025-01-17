@@ -39,6 +39,24 @@ private slots:
 
     void on_pieceTree_itemClicked(QTreeWidgetItem *item, int column);
 
+    void on_toolButton_2_clicked();
+
+    void on_horizontalSlider_valueChanged(int value);
+
+    void on_Begin_clicked();
+
+    void on_End_clicked();
+
+    void on_leftFive_clicked();
+
+    void on_leftOne_clicked();
+
+    void on_rightFive_clicked();
+
+    void on_rightOne_clicked();
+
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;

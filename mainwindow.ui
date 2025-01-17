@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1117</width>
-    <height>661</height>
+    <width>1058</width>
+    <height>688</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,14 +18,51 @@
     <item>
      <widget class="QWidget" name="gameWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QWidget" name="panWidget" native="true">
-         <layout class="QHBoxLayout" name="horizontalLayout_5"/>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+         </layout>
         </widget>
        </item>
        <item>
         <widget class="QWidget" name="widget_2" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QTreeWidget" name="pieceTree">
             <column>
@@ -40,6 +77,19 @@
             </column>
            </widget>
           </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
          </layout>
         </widget>
        </item>
@@ -49,6 +99,25 @@
     <item>
      <widget class="QWidget" name="processWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <spacer name="horizontalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item>
         <widget class="QToolButton" name="storeBtn">
          <property name="text">
@@ -71,14 +140,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_26">
-         <property name="font">
-          <font>
-           <bold>true</bold>
-          </font>
-         </property>
+        <widget class="QToolButton" name="toolButton_2">
          <property name="text">
-          <string>下一步</string>
+          <string>读取定式</string>
          </property>
         </widget>
        </item>
@@ -104,6 +168,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QToolButton" name="toolButton">
+         <property name="text">
+          <string>reset</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QToolButton" name="judgeBtn">
          <property name="text">
           <string>形式判断</string>
@@ -117,23 +188,55 @@
         </widget>
        </item>
        <item>
+        <widget class="QToolButton" name="toolButton_10">
+         <property name="text">
+          <string>智能裁判</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="toolButton_11">
+         <property name="text">
+          <string>智能分析</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_7">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="widget" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <spacer name="horizontalSpacer_4">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
         <widget class="QToolButton" name="toolButton_6">
          <property name="text">
           <string>悔棋</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_19">
-         <property name="text">
-          <string>停一手</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_7">
-         <property name="text">
-          <string>认输</string>
          </property>
         </widget>
        </item>
@@ -145,6 +248,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QToolButton" name="toolButton_19">
+         <property name="text">
+          <string>停一手</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QToolButton" name="toolButton_9">
          <property name="text">
           <string>退出</string>
@@ -152,25 +262,24 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_10">
+        <widget class="QToolButton" name="toolButton_7">
          <property name="text">
-          <string>智能裁判</string>
+          <string>认输</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton">
-         <property name="text">
-          <string>reset</string>
+        <spacer name="horizontalSpacer_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_11">
-         <property name="text">
-          <string>智能分析</string>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
          </property>
-        </widget>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -178,6 +287,25 @@
     <item>
      <widget class="QWidget" name="testWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item>
         <widget class="QToolButton" name="toolButton_20">
          <property name="text">
@@ -220,12 +348,34 @@
          </property>
         </widget>
        </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
     </item>
     <item>
      <widget class="QWidget" name="watchWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="leftMargin">
+        <number>11</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
@@ -241,49 +391,49 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_14">
+        <widget class="QToolButton" name="Begin">
          <property name="text">
           <string>|&lt;</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_12">
-         <property name="text">
-          <string>&lt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_13">
-         <property name="text">
-          <string>&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QToolButton" name="toolButton_16">
+        <widget class="QToolButton" name="leftFive">
          <property name="text">
           <string>&lt;&lt;</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_17">
+        <widget class="QToolButton" name="leftOne">
+         <property name="text">
+          <string>&lt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="rightOne">
+         <property name="text">
+          <string>&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="rightFive">
          <property name="text">
           <string>&gt;&gt;</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_15">
+        <widget class="QToolButton" name="End">
          <property name="text">
           <string>|&gt;</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit"/>
+        <widget class="QLineEdit" name="pieceEdit"/>
        </item>
        <item>
         <widget class="QPushButton" name="pushButton">
@@ -302,7 +452,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1117</width>
+     <width>1058</width>
      <height>25</height>
     </rect>
    </property>

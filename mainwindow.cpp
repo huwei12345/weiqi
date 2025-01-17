@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     QLayout* layout = ui->panWidget->layout();
     layout->addWidget(goWidget);
     goWidget->setUITree(ui->pieceTree);
+
 }
 
 MainWindow::~MainWindow()
@@ -43,6 +44,12 @@ void MainWindow::on_LoadBtn_clicked()
         return;
     }
     goWidget->readSGF(fileName.toStdString());
+    // 设置滑块的范围
+    ui->horizontalSlider->setMinimum(0);  // 设置最小值
+    qDebug() << " allNumber " << goWidget->allNumber;
+    ui->horizontalSlider->setMaximum(goWidget->allNumber);  // 设置最大值
+    ui->horizontalSlider->setSingleStep(1);
+    ui->horizontalSlider->setValue(goWidget->allNumber);
 }
 
 
@@ -83,7 +90,7 @@ void MainWindow::on_judgeBtn_clicked(bool checked)
     qDebug() << "black " << p.first << " white " << p.second;
 }
 
-
+// reset
 void MainWindow::on_toolButton_clicked()
 {
     goWidget->clearJudge();
@@ -93,8 +100,94 @@ void MainWindow::on_toolButton_clicked()
 void MainWindow::on_pieceTree_itemClicked(QTreeWidgetItem *item, int column)
 {
     TreeData data = item->data(0, 1).value<TreeData>();
-    qDebug() << data.node->moveNum;
-    goWidget->jumptoPiece(data.node);
+    auto p = data.node.lock();
+    qDebug() << p->moveNum;
+    goWidget->jumptoPiece(p);
 }
 
+
+
+void MainWindow::on_toolButton_2_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+                        tr("Open File"),
+                        "",
+                        tr("All Files (*);;Text Files (*.txt)"));
+    //D:/easybcd.zip
+    if (!fileName.isEmpty()) {
+        qDebug() << "Selected file:" << fileName;
+    } else {
+        qDebug() << "No file selected.";
+        return;
+    }
+    goWidget->loadDingShiBook(fileName.toStdString());
+}
+
+
+void MainWindow::on_horizontalSlider_valueChanged(int value)
+{
+    int currentValue = ui->horizontalSlider->value();
+    qDebug() << "from " << currentValue << "jumpto " << value;
+    goWidget->jumptoPiece(value);
+}
+
+
+void MainWindow::on_Begin_clicked()
+{
+    ui->horizontalSlider->setValue(0);
+}
+
+void MainWindow::on_End_clicked()
+{
+    ui->horizontalSlider->setValue(goWidget->allNumber);
+}
+
+void MainWindow::on_leftOne_clicked()
+{
+    int currentValue = ui->horizontalSlider->value() - 1;
+    if (currentValue >= 0 && currentValue <= goWidget->allNumber) {
+        qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << currentValue;
+        ui->horizontalSlider->setValue(currentValue);
+    }
+}
+
+void MainWindow::on_rightOne_clicked()
+{
+    int currentValue = ui->horizontalSlider->value() + 1;
+    if (currentValue >= 0 && currentValue <= goWidget->allNumber) {
+        qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << currentValue;
+        ui->horizontalSlider->setValue(currentValue);
+    }
+}
+
+void MainWindow::on_leftFive_clicked()
+{
+    int currentValue = ui->horizontalSlider->value() - 5;
+    if (currentValue >= 0 && currentValue <= goWidget->allNumber) {
+        qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << currentValue;
+        ui->horizontalSlider->setValue(currentValue);
+    }
+}
+
+void MainWindow::on_rightFive_clicked()
+{
+    int currentValue = ui->horizontalSlider->value() + 5;
+    if (currentValue >= 0 && currentValue <= goWidget->allNumber) {
+        qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << currentValue;
+        ui->horizontalSlider->setValue(currentValue);
+    }
+}
+
+//redo undo也可以加入进度条显示，但要考虑是否是主分支
+
+
+void MainWindow::on_pushButton_clicked()
+{
+    QString str = ui->pieceEdit->text();
+    int num = str.toInt();
+    if (num >= 0 && num <= goWidget->allNumber) {
+        qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << num;
+        ui->horizontalSlider->setValue(num);
+    }
+}
 

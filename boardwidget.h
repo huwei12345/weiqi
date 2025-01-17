@@ -24,30 +24,39 @@
 extern int dx[4];
 extern int dy[4];
 
-extern const int BOARDWIDTH;
-extern const int HEIGHT;
-extern const int WIDTH;
-
-
 class TreeData {
 public:
-    SGFTreeNode* node;
+    std::weak_ptr<SGFTreeNode> node;
     int index;
 };
 Q_DECLARE_METATYPE(TreeData)
 
+enum PieceColor {BLACK = 0, WHITE = 1, SPACE = 2};
 
-/*
- * 重构
+
+void showPoint(int row, int col, int color = -1);
+
+QString showPiece(int row, int col, int color = -1);
+QString showPiece(const Piece& piece);
+QString colToChar(int col);
+
+
+enum GameState {
+    NOGAME = 0,
+    DISCUSS = 1,
+    PLAY = 2,
+    OVER = 3,
+    DoubleQuotation = 4,//复盘
+};
+
+//重构
 class GoGameLogic : public QWidget {
     Q_OBJECT
 
 public:
-    explicit GoGameLogic(QWidget *parent = nullptr) : QWidget(parent), hoverRow(-1), hoverCol(-1) {
+    explicit GoGameLogic(QWidget *parent = nullptr) : QWidget(parent){
 
     }
-
-
     initializeBoard();// (初始化棋盘)
     startNewGame();// (开始新游戏)
     setBoardSize(int size);// (设置棋盘大小)
@@ -64,9 +73,9 @@ public:
     checkVictory();// (检查胜负)
     printBoard();// (打印棋盘)
 
-    getCurrentBoardState(); //**：提供当前棋盘的状态，方便GameResearch类加载和使用。
-    getMoveHistory(); //**：提供当前棋局的历史记录，供研究模式分析使用。
-    checkGameOver(); //**：判断游戏是否结束，供研究模式在加载棋局后判断当前状态。
+    getCurrentBoardState(); //提供当前棋盘的状态，方便GameResearch类加载和使用。
+    getMoveHistory(); //提供当前棋局的历史记录，供研究模式分析使用。
+    checkGameOver(); //判断游戏是否结束，供研究模式在加载棋局后判断当前状态。
 
     std::vector<std::vector<Piece>> board;//棋盘状态
     std::vector<std::vector<Piece>> zeroBoard;// x y 2
@@ -101,7 +110,7 @@ public:
 
     QTreeWidget* pieceTree;
 };
-*/
+
 
 class GoBoardWidget : public QWidget {
     Q_OBJECT
@@ -121,14 +130,18 @@ public:
 
         board.assign(BOARDWIDTH, std::vector<Piece>(BOARDWIDTH));
         zeroBoard = board;
-        history.push(board);
         currentPlayer = Qt::black;
         moveNumber = 1;
         allNumber = 1;
         blackEaten = 0;
         whiteEaten = 0;
         tiemu = 7.5;
-        historyNode = NULL;
+        historyNode = nullptr;
+        root = std::make_shared<SGFTreeNode>();
+        root->boardHistory = zeroBoard;
+        root->parent.reset();
+
+        DingShiBook = nullptr;
     }
     // 打印棋盘（调试用）
     void printBoard() {
@@ -141,6 +154,7 @@ public:
     }
 protected:
     void paintEvent(QPaintEvent *event) override {
+        Q_UNUSED(event)
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
 
@@ -168,17 +182,17 @@ protected:
         font.setPointSize(10);
         painter.setFont(font);
 
-        // 横线标注
-        for (int i = 0; i < boardSize; ++i) {
-            int x = margin + gridSize * i + gridSize / 2 - 23;
-            int y = margin - 5; // 放在棋盘上方
-            // 防止第一个数字标注与棋盘重合
-            painter.drawText(x, y, QString('A' + i));
-        }
-
         // 竖线标注
         for (int i = 0; i < boardSize; ++i) {
-            int x = margin - 20; // 放在棋盘左侧
+            int x = margin + gridSize * i + gridSize / 2 - 20;
+            int y = margin - 10; // 放在棋盘上方
+            // 防止第一个数字标注与棋盘重合
+            painter.drawText(x, y, colToChar(i));
+        }
+
+        // 横线标注
+        for (int i = 0; i < boardSize; ++i) {
+            int x = margin - 25; // 放在棋盘左侧
             int y = margin + gridSize * i + gridSize / 2 - 15;
             if (i >= 0)
                 painter.drawText(x, y, QString::number(19 - i));
@@ -235,16 +249,19 @@ protected:
     //TODO:
     void updateMoveLabel(QPainter& painter, int gridSize) {
         // 获取最近 5 颗棋子的手数
+        if (historyNode == nullptr) {
+            return;
+        }
         int margin = 30; // 留出30像素的边距
         // 构建显示文本
         QString text;
         int count = 5;
-        SGFTreeNode* node = historyNode;
+        SGFTreeNode* node = historyNode.get();
         QPen penold = painter.pen();
         std::vector<SGFTreeNode*> showPieces;
         int lastMoveNum = INT_MAX;
         while (count > 0) {
-            if (node == NULL) {
+            if (node == nullptr) {
                 break;
             }
             if (lastMoveNum <= node->moveNum) {
@@ -348,28 +365,36 @@ protected:
         return true;
     }
 
-    bool judgeJieZheng(std::vector<std::vector<Piece>>& boarder , int row, int col, int color) {
+    //当不是眼时，判断是否能一手棋做成眼
+    bool canBeEye();
+
+    //判断某块棋能否活棋，1.具备两眼。 2.具备一眼，并能一手再做一眼 (3.可以通过对杀将对手杀死.)
+    //不能活棋 1.无眼 2.具备一眼，但不能一手棋再做一眼
+    bool isAlive();
+
+    bool judgeJieZheng(std::vector<std::vector<Piece>>& boarder) {
         qDebug() << "jiezheng start";
         //TODO: 三劫循环应看6手之前 四届循环看8手之前。
-        if (history.size() <= 1) {
+        //SGFTreeNode* node = historyNode;
+        auto p = historyNode->parent.lock();
+        if (p == nullptr) {
             return true;
         }
-        std::vector<std::vector<Piece>> board1 = history.top();
-        history.pop();
-        std::vector<std::vector<Piece>>& board2 = history.top();
+        std::vector<std::vector<Piece>>& boardp = p->boardHistory;
         bool equal = true;
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
-                if (board2[i][j].color != boarder[i][j].color) {
+                if (boardp[i][j].color != boarder[i][j].color) {
                     equal = false;
+                    break;
                 }
             }
         }
+
+        //前前手相等，不能下
         if (equal == true) {
-            history.push(board1);
             return false;
         }
-        history.push(board1);
         return true;
     }
 
@@ -464,9 +489,9 @@ protected:
 
     int eatChess(std::vector<std::vector<Piece>> &boarder, int row, int col, int color) {
         auto &newBoard = boarder;
-        qDebug() << " row1    " << row << "col1        " << col;
+        qDebug() << showPiece(row, col, color);
         newBoard[row][col].color = color;
-        int ace = getAceOfPoint(newBoard, row, col, color);
+        //int ace = getAceOfPoint(newBoard, row, col, color);
         int eatenNum = 0;
         int safeBook[19][19];
         for (int i = 0; i < 4; i++) {
@@ -486,9 +511,9 @@ protected:
 
     //删除此子连片的子，已确保这片棋是0气的
     int erasePiece(std::vector<std::vector<Piece>>& boarder, int row, int col, int (&safeBook)[19][19]) {
-        qDebug() << " row    " << row << "col        " << col;
         std::queue<std::pair<int, int>> que;
         int color = boarder[row][col].color;
+        qDebug() << showPiece(row, col, color);
         que.push(std::make_pair(row, col));
         int eaten = 0;
         while (!que.empty()) {
@@ -499,7 +524,7 @@ protected:
             if (safeBook[row][col] == 1) {
                 continue;
             }
-            qDebug() << "row " << row + 1 << "col" << col + 1 << "color : " << color << "is eaten";
+            qDebug() << showPiece(row, col, color) << " is eaten";
             if (boarder[row][col].color != 2) {
                 boarder[row][col].color = 2;
                 if (color == 0) {
@@ -555,7 +580,7 @@ protected:
         int ace = getAceOfPoint(newBoard, row, col, color);
         if (eatenNum == 1) {
             //判断打劫
-            bool ret = judgeJieZheng(newBoard, row, col, color);
+            bool ret = judgeJieZheng(newBoard);
             if (!ret) {
                 //不可提劫
                 qDebug() << "can not put because of JieZheng";
@@ -577,6 +602,245 @@ protected:
         return true;
     }
 
+    void putPiece(int row, int col, int color) {
+        board[row][col].color = color;
+        board[row][col].row = row;
+        board[row][col].col = col;
+        //board[row][col].moveNumber = moveNumber++;  // 记录下棋的手数
+        //pieceSeq.push_back(board[row][col]);
+    }
+
+    //改造putPiece，在落子时可以在TreeWidget上添加
+    //添加的N种情况：
+    // 1. 当前节点没有其他分支，直接在当前节点的move添加，并更新history
+    // 2. 当前节点已有分支或者move后续， 那么作为一个分支，但这样需要拆分SGFNode，因为它在move的中间断开了
+    //所以需要重构SGFTree，不能已vector作为数据，而应以一个Piece作为节点。
+    //先重构完再考虑
+
+    void setMoveNum(std::shared_ptr<SGFTreeNode>& node, int OtherBranchPut) {
+        auto p = node->parent.lock();
+        if (p == nullptr || OtherBranchPut) {
+            node->moveNum = 1;
+        }
+        else {
+            node->moveNum = p->moveNum + 1;
+        }
+        if (!OtherBranchPut) {
+            //不计入总分支长度与undo redo逻辑
+            if (allNumber < node->moveNum) {
+                allNumber = node->moveNum;
+            }
+            //TODO:这里需要改吗？上一个节点
+        }
+        node->move.moveNumber = node->moveNum;
+        board[node->move.row][node->move.col].moveNumber = node->moveNum;  // 记录下棋的手数
+        node->boardHistory = board;
+
+        historyNode = node;
+    }
+
+    bool putPiece(std::shared_ptr<SGFTreeNode>& node, int OtherBranchPut) {
+        int row = node->move.row;
+        int col = node->move.col;
+        int color = node->move.color;
+        if (checkAllowPut(row, col, color)) {
+            putPiece(row, col, color);
+            showPoint(row, col, color);
+            setMoveNum(node, OtherBranchPut);
+            currentPlayer = (color == 0 ? Qt::white : Qt::black);
+            //pieceSeq.push_back(board[row][col]);
+            return true;
+        }
+        else {
+            qDebug() << "not allow put ";
+            return false;
+        }
+        return true;
+    }
+
+    /*
+    1.当顶层时，嫡分支直接保持顶层。 庶分支在二层。
+    2.非顶层时，嫡分支保持原层。庶分支在在下一层。
+    3.当某节点为独子分支时，整个分支在下一层。
+    4.当某节点为非独子分支时，整个分支以分支的第一个节点为头，其余节点以这个节点为父展开。
+    5.当某节点由独自变为非独子时，将当前节点压缩，
+    6.当某节点由非独子变为独子时，将释放节点。
+    */
+    //仅tree显示修改，不改变SGFTreeNode内部结构
+    void makeTreeItem(std::shared_ptr<SGFTreeNode> node) {
+
+        QTreeWidgetItem* item = new QTreeWidgetItem;
+        auto piece = node->move;
+        QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
+        QString str2 = QString::number(node->moveNum) + "  ";
+        //QString::number(node->move.moveNumber) + " is " + (isBranch ? "yes" : "no")
+        item->setText(0, str);
+        item->setText(1, str2);
+        treeItemMap[node] = item;
+        TreeData data;
+        data.node = node;
+        data.index = node->moveNum;
+        QVariant variant = QVariant::fromValue(data);
+        item->setData(0, 1, variant);
+
+        auto parent = node->parent.lock();
+        if (parent == nullptr || (parent == root && parent->branches.size() == 1)) {
+            //根节点
+            pieceTree->addTopLevelItem(item);
+        }
+        else {
+            //auto
+            QTreeWidgetItem* pitem = treeItemMap[parent];//获取父节点的treeWidget
+            if (pitem == nullptr) {
+                if (parent != root) {
+                    qDebug() << "Faital Error";
+                }
+                //说明parent == root
+                //此时说明是在空棋盘上 第一个子都要进行分支。要先压缩原分支，然后将新分支压缩为分支
+                if (parent->branches.size() == 2) {
+                    treeCompress(root, nullptr);
+                    pieceTree->addTopLevelItem(item);
+                }
+                qDebug() << "pitem == nullptr";
+                return;
+            }
+            if (parent->branches.size() == 1) {
+                //没有后续，
+                auto pp = parent->parent.lock();
+                //如果父节点只有一个子，说明刚添加的子是唯一的分支
+                //即使是独子，也要考虑是否应该加在兄弟分支，还是子分支。
+                //应该加在兄弟分支，如果父分支是独分支时或者顶分支时
+                //应该加在子分支，如果父分支是非独分支时。
+                if (pp == nullptr || pp->branches.size() == 1) {
+                    QTreeWidgetItem* ppitem = pitem->parent();
+                    if (ppitem == nullptr) {
+                        pieceTree->addTopLevelItem(item);
+                    }
+                    else {
+                        ppitem->addChild(item);
+                    }
+                }
+                else {
+                    pitem->addChild(item);
+                }
+            }
+            else if (parent->branches.size() == 2) {
+                //由独变为非独
+                //将之前的独子分支压缩，再添加新分支
+                treeCompress(parent, pitem);
+                pitem->addChild(item);
+            }
+            else {
+                pitem->addChild(item);
+            }
+        }
+    }
+
+    void treeCompress(std::shared_ptr<SGFTreeNode> node, QTreeWidgetItem* item) {
+        //还有一种情况，就是这个点虽然在tree上没有分支，但是有2个子。也要压缩。
+
+        if (node->branches.size() != 2) {
+            return;
+        }
+
+        if (item == nullptr) {
+            QList<QTreeWidgetItem*> wlist;
+            QTreeWidgetItem *sonItem = pieceTree->topLevelItem(0);
+            for (int i = 1; i < pieceTree->topLevelItemCount(); ++i) {
+                wlist.push_back(pieceTree->topLevelItem(i));
+            }
+            for (int i = 0; i < wlist.size(); i++) {
+                 pieceTree->takeTopLevelItem(1);
+                 sonItem->addChild(wlist[i]);
+            }
+            //TODO: 应该递归压缩
+            return;
+        }
+        if (item->childCount() == 0) {
+            auto ppitem = item->parent();
+            if (ppitem == nullptr) {
+                return;
+            }
+            //平层子压缩
+            if (item != ppitem->child(0)) {
+                return;
+            }
+            auto dage = ppitem->child(1);//新大哥
+            QList<QTreeWidgetItem*> wlist;
+            for (int i = 2; i < ppitem->childCount(); i++) {
+                wlist.push_back(ppitem->child(i));
+            }
+            for (int i = 0; i < wlist.size(); i++) {
+                 ppitem->removeChild(wlist[i]);
+                 dage->addChild(wlist[i]);
+            }
+            ppitem->removeChild(dage);
+            item->addChild(dage);
+        }
+        else {
+            QList<QTreeWidgetItem*> wlist;
+            for (int i = 0; i < item->childCount(); i++) {
+                wlist.push_back(item->child(i));
+            }
+            for (int i = 1; i < wlist.size(); i++) {
+                item->removeChild(wlist[i]);
+                wlist[0]->addChild(wlist[i]);
+            }
+        }
+    }
+
+    void onLeftClick(QMouseEvent *event) {
+        int margin = 30;
+        int gridSize = (width() - 2 * margin) / 19;
+        int row = std::round((float)(event->y() - margin) / (float)gridSize);
+        int col = std::round((float)(event->x() - margin) / (float)gridSize);
+        if (!isValid(row, col)) {
+            return;
+        }
+        // 输出点击的棋盘坐标
+        // 检查该位置是否已经有棋子
+        int color = currentPlayer == Qt::black ? 0 : 1;
+        qDebug() << showPiece(row, col, color);
+        //检查分支上已经有这个子了，就不用再放了，移动一下状态就行了。
+        if (historyNode != nullptr) {
+            for (auto n : historyNode->branches) {
+                if (n->move.row == row && n->move.col == col && n->move.color == color) {
+                    jumptoPiece(n);
+                    return;
+                }
+            }
+        }
+
+        if (isOccupied(row, col)) {
+            return; // 如果该位置已被占据，则不放置棋子
+        }
+        // 交替放置棋子
+        if (checkAllowPut(row, col, color)) {
+            putPiece(row, col, color);
+            std::shared_ptr<SGFTreeNode> node = std::make_shared<SGFTreeNode>();
+            Piece piece;
+            piece.row = row; piece.col = col; piece.color = color;
+            node->move = piece;
+            bool isOtherBranch = false;
+            if (historyNode != nullptr) {
+                if (historyNode->branches.size() >= 1) {
+                    isOtherBranch = true;
+                }
+                historyNode->branches.push_back(node);
+                node->parent = historyNode;
+            }
+            else if (historyNode == nullptr) {
+                root->branches.push_back(node);
+                node->parent = root;
+            }
+            setMoveNum(node, isOtherBranch);
+            makeTreeItem(historyNode);
+            currentPlayer = (currentPlayer == Qt::black ? Qt::white : Qt::black);
+        }
+        // 检查棋子是否符合规则
+        // 触发重绘
+        repaint();
+    }
 
     void onRightClick(QMouseEvent *event) {
         int margin = 30;
@@ -589,101 +853,11 @@ protected:
         // 输出点击的棋盘坐标
         // 检查该位置是否已经有棋子
         if (isOccupied(row, col)) {
-            qDebug() << "Row: " << row + 1 << ", Column: " << col + 1 << "Color: " << board[row][col].color << " Ace: " << getAceOfPoint(board, row, col, board[row][col].color);
+            qDebug() << showPiece(row, col, board[row][col].color) << " Ace: " << getAceOfPoint(board, row, col, board[row][col].color);
         }
         else {
             qDebug() << "block";
         }
-    }
-
-    bool putPiece(int row, int col, int color, std::shared_ptr<SGFTreeNode> node, int OtherBranchPut) {
-        if (checkAllowPut(row, col, color)) {
-            board[row][col].color = color;
-            currentPlayer = (color == 0 ? Qt::white : Qt::black);
-            board[row][col].row = row;
-            board[row][col].col = col;
-            auto p = node->parent.lock();
-            if (p == nullptr || OtherBranchPut) {
-                qDebug() << "xxxxxxxxxxxxxxxxx" << row << " " << col << " " << color;
-                node->moveNum = 1;
-            }
-            else if (p.get() == NULL) {
-                node->moveNum = 1;
-                qDebug() << "yyyyyyyyyyyyyyyyyy" << row << " " << col << " " << color;
-            }
-            else {
-                node->moveNum = p->moveNum + 1;
-            }
-            if (!OtherBranchPut) {
-                //不计入总分支长度与undo redo逻辑
-                if (allNumber < node->moveNum - 1) {
-                    allNumber = node->moveNum - 1;
-                }
-                historyNode = node.get();
-            }
-            board[row][col].moveNumber = node->moveNum;  // 记录下棋的手数
-            node->move.moveNumber = node->moveNum;
-            history.push(board);
-            pieceSeq.push_back(board[row][col]);
-            node->boardHistory = board;
-            return true;
-        }
-        else {
-            qDebug() << "not allow put ";
-            return false;
-        }
-        return true;
-    }
-
-    bool putPiece(int row, int col, int color) {
-        if (checkAllowPut(row, col, color)) {
-            board[row][col].color = color;
-            currentPlayer = (color == 0 ? Qt::white : Qt::black);
-            board[row][col].row = row;
-            board[row][col].col = col;
-            //board[row][col].moveNumber = moveNumber++;  // 记录下棋的手数
-            history.push(board);
-            pieceSeq.push_back(board[row][col]);
-            return true;
-        }
-        else {
-            qDebug() << "not allow put ";
-            return false;
-        }
-    }
-
-    //改造putPiece，可以在落子时可以在TreeWidget上添加
-    //添加的N种情况：
-    // 1. 当前节点没有其他分支，直接在当前节点的move添加，并更新history
-    // 2. 当前节点已有分支或者move后续， 那么作为一个分支，但这样需要拆分SGFNode，因为它在move的中间断开了
-    //所以需要重构SGFTree，不能已vector作为数据，而应以一个Piece作为节点。
-    //先重构完再考虑
-
-    void onLeftClick(QMouseEvent *event) {
-        int margin = 30;
-        int gridSize = (width() - 2 * margin) / 19;
-        int row = std::round((float)(event->y() - margin) / (float)gridSize);
-        int col = std::round((float)(event->x() - margin) / (float)gridSize);
-        if (!isValid(row, col)) {
-            return;
-        }
-        // 输出点击的棋盘坐标
-        qDebug() << "Row: " << row + 1 << ", Column: " << col + 1;
-        // 检查该位置是否已经有棋子
-        if (isOccupied(row, col)) {
-            return; // 如果该位置已被占据，则不放置棋子
-        }
-
-        // 交替放置棋子
-        if (currentPlayer == Qt::black) {
-            putPiece(row, col, 0);
-
-        } else {
-            putPiece(row, col, 1);
-        }
-        // 检查棋子是否符合规则
-        // 触发重绘
-        repaint();
     }
 
     void mousePressEvent(QMouseEvent *event) override {
@@ -704,7 +878,7 @@ protected:
         int row = std::round((float)(event->y() - margin) / (float)gridSize);
         int col = std::round((float)(event->x() - margin) / (float)gridSize);
         // 如果鼠标位置发生变化，更新坐标并触发重绘
-        if (row != hoverRow || col != hoverCol && isValid(row, col)) {
+        if (row != hoverRow || col != hoverCol) {
             hoverRow = row;
             hoverCol = col;
 
@@ -714,38 +888,67 @@ protected:
     }
 
 public:
-    void jumptoPiece(SGFTreeNode* node) {
-        qDebug() << "before undo " << historyNode->moveNum;
-        if (node == NULL) {
+    void jumptoPiece(std::shared_ptr<SGFTreeNode> node) {
+        if (historyNode != nullptr) {
+            qDebug() << "before jump " << historyNode->moveNum;
+        }
+        if (node == nullptr) {
             qDebug() << "can not jump to ";
+            return;
+        }
+        if (historyNode == node) {
             return;
         }
         historyNode = node;
         Piece piece = historyNode->move;
         board = historyNode->boardHistory;
         currentPlayer = piece.color == 0 ? Qt::white : Qt::black;
-        qDebug() << "jump " << historyNode->moveNum;
+        qDebug() << "jump " << historyNode->moveNum << " board " << board.size();
         QTreeWidgetItem* item = treeItemMap[historyNode];
         pieceTree->setCurrentItem(item);
         repaint();
     }
 
+    std::shared_ptr<SGFTreeNode> jumptoPiece(int index) {
+        if (index == 0) {
+            jumptoPiece(root);
+            return root;
+        }
+        if (index <= 0 || index > allNumber) {
+            qDebug() << "error index " << index;
+        }
+        if (root == nullptr || root->branches.size() == 0) {
+            return nullptr;
+        }
+        auto node = root->branches[0];
+        while (index != 1) {
+            if (node->branches.size() > 0) {
+                node = node->branches[0];
+            }
+            else {
+                qDebug() << "can not jump to " << index;
+            }
+            index--;
+        }
+        jumptoPiece(node);
+        return node;
+    }
 
     void undo() {
-        if (historyNode == NULL) {
+        if (historyNode == nullptr) {
             return;
         }
         qDebug() << "before undo " << historyNode->moveNum;
         auto p = historyNode->parent.lock();
         if (p == nullptr) {
-            historyNode = NULL;
+            historyNode = nullptr;
             board = zeroBoard;
             currentPlayer = Qt::black;
             qDebug() << "can not undo";
             repaint();
             return;
         }
-        historyNode = p.get();
+        historyNode = p;
         board = historyNode->boardHistory;
         currentPlayer = currentPlayer == Qt::black ? Qt::white : Qt::black;
         qDebug() << "undo " << historyNode->moveNum;
@@ -757,12 +960,15 @@ public:
     // 重做撤销的操作
     //未考虑分支变化，只考虑主变化
     void redo() {
-        if (historyNode == NULL) {
+        if (root == nullptr) {
+            return;
+        }
+        if (historyNode == nullptr) {
             //空棋盘
-            historyNode = root.get();
+            historyNode = root;
             board = historyNode->boardHistory;
             currentPlayer = Qt::white;
-            qDebug() << "redo " << historyNode->moveNum;
+            qDebug() << "redo " << historyNode->moveNum << " board " << board.size();
             repaint();
             return;
         }
@@ -773,7 +979,7 @@ public:
             return;
         }
         qDebug() << "before redo " << historyNode->moveNum;
-        historyNode = historyNode->branches[0].get();
+        historyNode = historyNode->branches[0];
         board = historyNode->boardHistory;
         currentPlayer = currentPlayer == Qt::black ? Qt::white : Qt::black;
         qDebug() << "after redo " << historyNode->moveNum;
@@ -811,7 +1017,8 @@ public:
 
            } else if (event->key() == Qt::Key_X && event->modifiers() == Qt::ControlModifier) {
                redo();  // Ctrl + X 执行重做
-           } else if (event->key() == Qt::Key_B && event->modifiers() == Qt::ControlModifier) {
+           } else if ((event->key() == Qt::Key_B || event->key() == Qt::Key_W) && event->modifiers() == Qt::ControlModifier) {
+               bool isBlack = (event->key() == Qt::Key_B);
                int margin = 30;
                int gridSize = (width() - 2 * margin) / 19;
                QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
@@ -820,28 +1027,12 @@ public:
                if (!isValid(row, col)) {
                    return;
                }
-               // 输出点击的棋盘坐标
-               qDebug() << "Row: " << row + 1 << ", Column: " << col + 1;
+               qDebug() << showPiece(row, col, isBlack ? 0 : 1);
                // 检查该位置是否已经有棋子
                if (isOccupied(row, col)) {
                    return; // 如果该位置已被占据，则不放置棋子
                }
-               putPiece(row, col, 0);
-               repaint();
-           } else if (event->key() == Qt::Key_N && event->modifiers() == Qt::ControlModifier) {
-               int margin = 30;
-               int gridSize = (width() - 2 * margin) / 19;
-               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
-               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
-               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
-
-               // 输出点击的棋盘坐标
-               qDebug() << "Row: " << row + 1 << ", Column: " << col + 1;
-               // 检查该位置是否已经有棋子
-               if (isOccupied(row, col)) {
-                   return; // 如果该位置已被占据，则不放置棋子
-               }
-               putPiece(row, col, 1);
+               putPiece(row, col, isBlack ? 0 : 1);
                repaint();
            } else if (event->key() == Qt::Key_E && event->modifiers() == Qt::ControlModifier) {
                int margin = 30;
@@ -856,8 +1047,21 @@ public:
                    qDebug() << "not black";
                    return; // 如果该位置已被占据，则不放置棋子
                }
-               qDebug() << "Row: " << row + 1 << ", Column: " << col + 1 << " is BEye ? " << isEye(row, col, 0);
-               qDebug() << "Row: " << row + 1 << ", Column: " << col + 1 << " is WEye ? " << isEye(row, col, 1);
+               qDebug() << showPiece(row, col, 2) << " is BEye ? " << isEye(row, col, 0);
+               qDebug() << showPiece(row, col, 2) << " is WEye ? " << isEye(row, col, 1);
+           } else if (event->key() == Qt::Key_R && event->modifiers() == Qt::ControlModifier) {
+               int margin = 30;
+               int gridSize = (width() - 2 * margin) / 19;
+               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+               if (isOccupied(row, col)) {
+                   qDebug() << "not black";
+                   return; // 如果该位置已被占据，则不放置棋子
+               }
+               int color = (currentPlayer == Qt::black ? 0 : 1);
+               std::vector<std::vector<Piece>> ans;
+               remember(board, row, col, color, 3, ans);
            }
        }
 
@@ -902,14 +1106,14 @@ public:
                     std::set<std::pair<int, int>> st;
                     if (floodFill(i, j, visited, blackTerritory, whiteTerritory, st)) {
                         if (blackTerritory > whiteTerritory) {
-                            qDebug() << "[i,j]" << (char)('A' + i) << " " << j + 1 << " " << " blackTerritory  " << st.size();
+                            qDebug() << showPiece(i, j, 2) << " " << " blackTerritory  " << st.size();
                             blackScore += st.size();
                             //此处不包括死子，所以存在的死子算2遍
                             for (auto& p : st) {
                                 blackLiberties.push_back(p);
                             }
                         } else if (blackTerritory < whiteTerritory) {
-                            qDebug() << "[i,j]" << (char)('A' + i) << " " << j + 1 << " " << " whiteTerritory  " << st.size();
+                            qDebug() << showPiece(i, j, 2) << " whiteTerritory  " << st.size();
                             whiteScore += st.size();
                             for (auto& p : st) {
                                 whiteLiberties.push_back(p);
@@ -929,7 +1133,7 @@ public:
                                     white++;
                                 }
                             }
-                            qDebug() << "xxxxxxx " << (char)('A' + i) << " yyyyy " << j + 1 << " b " << black << " w " << white;
+                            qDebug() << "xxxxxxx " << showPiece(i, j, 2) << black << " w " << white;
                             if (white == 0 && black != 0) {
                                 blackLiberties.push_back({i, j});
                                 blackScore += 1;//TODO:可能不是1，而是块大小
@@ -1195,7 +1399,7 @@ public:
             maxEyeSize = std::max(maxEyeSize, eyeSize);
         }
         for (auto r : eyes) {
-            qDebug() << "eye " << (char)('A' + r.first) << " " << r.second + 1;
+            qDebug() << "eye " << showPiece(r.first, r.second, 2);
         }
         qDebug() << "eysNum " << eyes.size() << " maxEyeSize = " << maxEyeSize;
         if (eyes.size() >= 2 || maxEyeSize >= 5) {
@@ -1287,23 +1491,33 @@ public:
         return 'a' + index;  // 0 -> 'a', 1 -> 'b', ..., 18 -> 's'
     }
 
-
+    QString colToChar(int col) {
+        QString numx;
+        if (col >= 8) {
+            numx = QString('A' + col + 1);
+        }
+        else {
+            numx = QString('A' + col);
+        }
+        return numx;
+    }
     //顶层
     bool showSGF(std::shared_ptr<SGFTreeNode> node, QTreeWidgetItem* parent, int compress, bool isBranch) {
-        QTreeWidgetItem* item = NULL;
+        QTreeWidgetItem* item = nullptr;
 
         if (compress == 1) {
             Piece& piece = node->move;
-            putPiece(piece.row, piece.col, piece.color, node, isBranch);
+            putPiece(node, isBranch);
             item = new QTreeWidgetItem;
-            QString str = QString('A' + piece.col + 1) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
+
+            QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
             QString str2 = QString::number(node->moveNum) + "  ";
             //QString::number(node->move.moveNumber) + " is " + (isBranch ? "yes" : "no")
             item->setText(0, str);
             item->setText(1, str2);
-            treeItemMap[node.get()] = item;
+            treeItemMap[node] = item;
             TreeData data;
-            data.node = node.get();
+            data.node = node;
             data.index = node->moveNum;
             QVariant variant = QVariant::fromValue(data);
             item->setData(0, 1, variant);
@@ -1326,25 +1540,25 @@ public:
                     historyNode = oldHistoryNode;
                 }
             }
-
         }
         else {
             while (1) {
                 Piece& piece = node->move;
-                putPiece(piece.row, piece.col, piece.color, node, isBranch);
+                putPiece(node, isBranch);
                 item = new QTreeWidgetItem;
-                QString str = QString('A' + piece.col + 1) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
+                QString numx;
+                QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
                 QString str2 = QString::number(node->moveNum) + "  ";
                 //QString::number(node->move.moveNumber) + " is " + (isBranch ? "yes" : "no")
                 item->setText(0, str);
                 item->setText(1, str2);
-                treeItemMap[node.get()] = item;
+                treeItemMap[node] = item;
                 TreeData data;
-                data.node = node.get();
+                data.node = node;
                 data.index = node->moveNum;
                 QVariant variant = QVariant::fromValue(data);
                 item->setData(0, 1, variant);
-                if (parent == NULL)
+                if (parent == nullptr)
                     pieceTree->addTopLevelItem(item);
                 else
                     parent->addChild(item);
@@ -1371,18 +1585,44 @@ public:
         return true;
     }
 
+
+    void clearRoot() {
+        historyNode = nullptr;
+        treeItemMap.clear();
+        board = zeroBoard;
+        clearBranch(root);
+        root = nullptr;
+        root = std::make_shared<SGFTreeNode>();
+        root->boardHistory = zeroBoard;
+        root->parent.reset();
+    }
+
+    void clearBranch(std::shared_ptr<SGFTreeNode>& node) {
+        for (auto p : node->branches) {
+            clearBranch(p);
+        }
+        node->parent.reset();
+        node->branches.clear();
+    }
     // 读取 .sgf 文件并解析棋谱
     bool readSGF(const std::string &filename) {
-        root = sgfParser.parse(filename);
-        for (auto node : root->branches) {
-            showSGF(node, NULL, 0, 0);
+        if (root != nullptr) {
+            //清除原棋盘和SFG
+            clearRoot();
         }
+        root = sgfParser.parse(filename, setupInfo);
+        showSGF(root, nullptr, 0, 0);
         repaint();
         return true;
     }
 
+    bool loadDingShiBook(const std::string &filename) {
+        DingShiBook = sgfParser.parse(filename, DingShiSetupInfo);
+        return true;
+    }
+
     bool saveSGF(const std::string &filename) {
-        sgfParser.saveSGF(filename, root);
+        sgfParser.saveSGF(filename, root, setupInfo);
         return true;
     }
     // 打印棋盘 test BW
@@ -1404,19 +1644,20 @@ public:
 public:
     void clear() {
         board = zeroBoard;
-        pieceSeq.clear();
-        while (!history.empty()) {
-            history.pop();
-        }
-        while (!redoStack.empty()) {
-            redoStack.pop();
-        }
+        //pieceSeq.clear();
+//        while (!redoStack.empty()) {
+//            redoStack.pop();
+//        }
         moveNumber = 0;
         allNumber = 0;
         blackEaten = 0;
         whiteEaten = 0;
         currentPlayer = Qt::black;
         repaint();
+        clearJudge();
+        clearRoot();
+        treeItemMap.clear();
+        pieceTree->clear();
     }
     void clearJudge() {
         blackLiberties.clear();
@@ -1428,6 +1669,157 @@ public:
     void setUITree(QTreeWidget* widget) {
         pieceTree = widget;
     }
+
+
+public:
+    //A B C
+    //A C B
+    //B A C
+    //B C A
+    //C A B
+    //C B A
+    //n!
+    //row col color 下一招准备下的位置
+    //stepN 准备获取后续stepN招
+    //定时不要超过25步，否则复杂度极大
+    //获取当前棋盘已放置棋子的所有顺序pieceSeqList
+    //color当前谁走
+    void getEverySeq(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& pieceSeqList, int color) {
+        std::vector<Piece> pieceSeq;
+        for (int i = 0; i < BOARDWIDTH; i++) {
+            for (int j = 0; j < BOARDWIDTH; j++) {
+                if (boarder[i][j].color != 2) {
+                    pieceSeq.push_back(boarder[i][j]);
+                }
+            }
+        }
+        //推断当前所有子回退后，定时的第一子是黑还是白
+        color = pieceSeq.size() % 2 == 0? color : !color;
+        int n = 0;
+        std::set<int> st;
+        std::vector<Piece> seq;
+        getSeq(pieceSeq, n, pieceSeqList, seq, color, st);
+        for (auto r : pieceSeqList) {
+            for (auto x : r) {
+                std::cout << showPiece(x).toStdString() + " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    void getSeq(std::vector<Piece> pieceSeq, int index, std::vector<std::vector<Piece>>& res, std::vector<Piece> cur, int curColor, std::set<int> st) {
+        if (index == (int)pieceSeq.size() && cur.size() == pieceSeq.size()) {
+            res.push_back(cur);
+            return;
+        }
+        for (size_t i = 0; i < pieceSeq.size(); i++) {
+            if (pieceSeq[i].color == curColor && !st.count(i)) {
+                st.insert(i);
+                cur.push_back(pieceSeq[i]);
+                getSeq(pieceSeq, index + 1, res, cur, (int)(!curColor), st);
+                cur.pop_back();
+                st.erase(i);
+            }
+        }
+    }
+
+    //无法处理打劫问题，只能根据当前盘面与当前落子点和颜色推断如何下（依据是定式库）。
+    //目前没有显示，只是打印分支，最好做多个小图显示，或者将第一首以虚子显示。然后逐渐补齐。
+    void remember(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        std::vector<std::vector<Piece>> seqList;
+        getEverySeq(boarder, seqList, color);
+        for (size_t i = 0; i < seqList.size(); i++) {
+            //遍历每种排列，不能随便排，要考虑颜色。number < n!
+            auto pieceSeq = seqList[i];
+            //getPieceSeqFromBoarder(boarder, pieceSeq, number);
+            //这种方式还有利于将错误棋局导向正确棋局
+            getNextStep(pieceSeq, DingShiBook, row, col, color, stepN, res);
+            showNextNStep(res);
+        }
+    }
+
+    //已知一种确定的顺序pieceSeq
+    //已知下一步要下在哪
+    //获取stepN步分支，存入res
+    //res  num个stepN步分支
+    //另外考虑，不同方向，不同角，对称位置，其实是同一种
+    //也就是每个Node对应一个piece，和N个branch,其实像前缀树
+    //row col color 当前准备下的位置
+    void getNextStep(std::vector<Piece> & pieceSeq, std::shared_ptr<SGFTreeNode> book, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        size_t i = 0;
+        std::shared_ptr<SGFTreeNode> cur = book;
+        size_t cnt = 0;
+        while (i < pieceSeq.size()) {
+            cnt = 0;
+            if (cur->branches.size() == 0) {
+                return;
+            }
+            for (auto branch : cur->branches) {
+                if (branch->move.row == pieceSeq[i].row
+                        && branch->move.col == pieceSeq[i].col
+                        && branch->move.color == pieceSeq[i].color) {
+                    break;
+                }
+                cnt++;
+            }
+            if (cnt != book->branches.size()) {
+                //有
+                cur = cur->branches[cnt];
+                i++;
+            }
+            else {
+                break;
+            }
+        }
+        if (i != pieceSeq.size()) {
+            return;
+        }
+        cnt = 0;
+        for (auto branch : cur->branches) {
+            if (branch->move.row == row
+                    && branch->move.col == col
+                    && branch->move.color == color) {
+                break;
+            }
+            cnt++;
+        }
+        if (cnt == cur->branches.size()) {
+            //选点无后续
+            return;
+        }
+        cur = cur->branches[cnt];
+        //算cur节点
+        std::vector<Piece> vec;
+        dfs(cur, stepN, res, vec);
+        qDebug() << "dfs result: " << res.size();
+    }
+
+    void dfs(std::shared_ptr<SGFTreeNode> node, int stepN, std::vector<std::vector<Piece>> &res, std::vector<Piece> vec) {
+        vec.push_back(node->move);
+        // || stepN == 0
+        if (node->branches.size() == 0) {
+            res.push_back(vec);
+            return;
+        }
+        for (auto r : node->branches) {
+            dfs(r, stepN - 1, res, vec);
+        }
+    }
+
+    //最多显示20种，所以应当先将stepN调小，越往后越大，前边变化多，后边变化少
+    void showNextNStep(std::vector<std::vector<Piece>> &res) {
+        //将分支以多个方框并列显示在界面上侧
+        //按照胜率或者按照常用程度排列
+        for (size_t i = 0; i < res.size(); i++) {
+            for (auto r : res[i]) {
+                std::cout << showPiece(r.row, r.col, r.color).toStdString() << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
+
+
 private:
     bool isOccupied(int row, int col) {
         // 检查是否有棋子在这个位置
@@ -1445,12 +1837,17 @@ private:
 
     std::vector<std::vector<Piece>> board;// x y
     std::vector<std::vector<Piece>> zeroBoard;// x y
+
+    //这两个可能有用，可以用当前节点，反向迭代回根节点获取历史和已下节点
     std::stack<std::vector<std::vector<Piece>>> history;  // 历史栈（用于撤销）  TODO:这个有问题
-    SGFTreeNode* historyNode;
-    std::stack<std::vector<std::vector<Piece>>> redoStack;  // 重做栈（用于重做）
     std::vector<Piece> pieceSeq;
+
+
+    std::shared_ptr<SGFTreeNode> historyNode;
+
+    //std::stack<std::vector<std::vector<Piece>>> undoStack;  // 重做栈（用于重做）
+    //std::stack<std::vector<std::vector<Piece>>> redoStack;  // 重做栈（用于重做）
     int moveNumber;//当前手数
-    int allNumber;//总手数
     int blackEaten;
     int whiteEaten;
 
@@ -1462,13 +1859,40 @@ private:
     SGFParser sgfParser;
 
     QTreeWidget* pieceTree;
-    std::map<SGFTreeNode*, QTreeWidgetItem*> treeItemMap;
+    std::map<std::shared_ptr<SGFTreeNode>, QTreeWidgetItem*> treeItemMap;
+    std::shared_ptr<SGFTreeNode> DingShiBook;
+    std::map<std::string, std::string> DingShiSetupInfo;
+
+    std::map<std::string, std::string> setupInfo;
+
+public:
+    int allNumber;//总手数
 };
 
 
 //TODO:
 
 /*
+ *
+ *  顶层分支。
+ *  统一读取出来的和下出来的子
+ *
+ *  添加文件head
+ *
+ *
+ *  分割类
+ *
+ *  添加让子 贴目 时间 判定方式等要素
+ *
+ *  胜负判断 是否终局判断 形式判断
+ *
+ *  悔棋、和棋 认输 退出等
+ *
+ *  进度条，前进 后退，大前进，开头 结尾 跳转等
+ *
+ *  试下（对局不可试下） 手数 摆黑 摆白 交替等。。。
+ *
+ *
     存储 存储信息，让子... 贴目 对局双方 时间 对局结果 游戏 ...
 
     判定胜负和形式判断，形式判断需要在图上显示如何判定的。

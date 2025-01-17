@@ -36,10 +36,12 @@ public:
 };
 class SGFParser {
 public:
-    SGFParser() = default;
+    SGFParser() {
+        head = R"(;AppName[golaxy]BlackPlayer[境由心生]BoardSize[19]Date[2025-01-0316\:27\:12]Komi[7.5]WhitePlayer[莫以成败论英])";
+    }
 
     // 解析SGF文件
-    std::shared_ptr<SGFTreeNode> parse(const std::string& filename) {
+    std::shared_ptr<SGFTreeNode> parse(const std::string& filename, std::map<std::string, std::string> &setupInfo) {
         std::ifstream file(filename);
         std::string line;
         std::stringstream ss;
@@ -48,15 +50,16 @@ public:
         while (std::getline(file, line)) {
             ss << line;
         }
-        return parseSGF(ss.str());
+        return parseSGF(ss.str(), setupInfo);
     }
 
 private:
-    std::shared_ptr<SGFTreeNode> parseSGF(const std::string& sgf) {
+    std::shared_ptr<SGFTreeNode> parseSGF(const std::string& sgf, std::map<std::string, std::string> &setupInfo) {
         auto root = std::make_shared<SGFTreeNode>();
+        root->boardHistory.assign(BOARDWIDTH, std::vector<Piece>(BOARDWIDTH));
         size_t pos = 0;
 
-        parseSetupInfo(sgf, pos, root);
+        parseSetupInfo(sgf, pos, root, setupInfo);
         // 处理主局面和分支
         int moveNum = 1;
         root->parent.reset();
@@ -65,13 +68,14 @@ private:
         return root;
     }
 
-    void parseSetupInfo(const std::string& sgf, size_t& pos, std::shared_ptr<SGFTreeNode>& node) {
+    void parseSetupInfo(const std::string& sgf, size_t& pos, std::shared_ptr<SGFTreeNode>& node, std::map<std::string, std::string> &setupInfo) {
         // 解析开局信息，直到遇到第一对括号 '(' 为止
+        pos += 2;
         bool startFlag = 0;
         while (pos < sgf.size()) {
+            char s = sgf[pos];
             // 解析开局的每一项（键值对）
-            if (sgf[pos] == (char)';') {
-                ++pos; // Skip the semicolon
+            if (sgf[pos] == (char)';' || sgf[pos] == '(') {
                 break;
             }
 
@@ -117,6 +121,7 @@ private:
         std::shared_ptr<SGFTreeNode> ptr = nullptr;
         while (pos < sgf.size()) {
             // 查找'('标记分支的开始
+            char s = sgf[pos];
             if (sgf[pos] == '(') {
                 ++pos; // Skip the '('
                 // 递归解析当前分支
@@ -141,7 +146,7 @@ private:
                         auto newNode = std::make_shared<SGFTreeNode>();
                         newNode->move = piece;
                         newNode->parent = cur;
-                        if (ptr == NULL) {
+                        if (ptr == nullptr) {
                             ptr = newNode;
                         }
                         cur->branches.push_back(newNode);
@@ -171,6 +176,10 @@ private:
 public:
     // 将开局信息写入文件
     void writeSetupInfo(std::ofstream& file, const std::map<std::string, std::string>& setupInfo) {
+        if (setupInfo.size() == 0) {
+            file << head;
+            return;
+        }
         file << ";";
         for (auto& r : setupInfo) {
             file << r.first << "[" << r.second << "]";
@@ -179,12 +188,15 @@ public:
 
     // 将棋步写入文件
     void writeMove(std::ofstream& file, Piece& move) {
+        if (move.color == 2) {
+            return;
+        }
         char color = (move.color == 0) ? 'B' : 'W';
         file << ";" << color << "[" << (char)('a' + move.col) << (char)('a' + move.row) << "]";
     }
 
     // 递归保存分支
-    void saveBranch(std::ofstream& file, const std::shared_ptr<SGFTreeNode>& node) {
+    void saveBranch(std::ofstream& file, const std::shared_ptr<SGFTreeNode>& node, std::map<std::string, std::string> &setupInfo) {
         file << "(";
         {
             if (node->getParent() == nullptr) {
@@ -192,18 +204,23 @@ public:
             }
         }
         // 写入棋步
-        writeMove(file, node->move);
+        std::shared_ptr<SGFTreeNode> cur = node;
+        while (cur->branches.size() == 1) {
+            writeMove(file, cur->move);
+            cur = cur->branches[0];
+        }
+        writeMove(file, cur->move);
 
         // 递归保存分支，不要递归，深度大
-        for (const auto& branch : node->branches) {
-            saveBranch(file, branch);
+        for (const auto& branch : cur->branches) {
+            saveBranch(file, branch, setupInfo);
         }
 
         file << ")";
     }
 
     // 保存SGF文件
-    void saveSGF(const std::string& filename, const std::shared_ptr<SGFTreeNode>& root) {
+    void saveSGF(const std::string& filename, const std::shared_ptr<SGFTreeNode>& root, std::map<std::string, std::string> &setupInfo) {
         std::ofstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Failed to open file for writing: " << filename << std::endl;
@@ -212,12 +229,13 @@ public:
 
         // 写入文件格式、字符集、游戏类型等开局信息
         // 保存分支
-        saveBranch(file, root);
+        saveBranch(file, root, setupInfo);
 
         file.close();
         std::cout << "SGF file saved to " << filename << std::endl;
     }
-    std::map<std::string, std::string> setupInfo;
+
+    std::string head;
 };
 
 #endif // SGFPARSER_H

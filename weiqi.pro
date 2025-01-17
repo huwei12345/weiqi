@@ -3,19 +3,28 @@ QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
-
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
+
+#OPENCV_DIR = D:/cv/opencv/build
+## 设置 OpenCV 的 include 目录和 lib 目录
+#INCLUDEPATH += $$OPENCV_DIR/include
+#LIBS += -L$$OPENCV_DIR/x64/mingw/lib
+## 添加 OpenCV 库文件
+#LIBS += -lopencv_world4100
 
 SOURCES += \
     boardwidget.cpp \
     gameresearch.cpp \
     gamesettings.cpp \
+    imagerecognition.cpp \
     main.cpp \
     mainwindow.cpp \
     piece.cpp \
     screencapture.cpp \
+    screenshot.cpp \
     sgfparser.cpp \
     timecontrol.cpp
 
@@ -23,9 +32,11 @@ HEADERS += \
     boardwidget.h \
     gameresearch.h \
     gamesettings.h \
+    imagerecognition.h \
     mainwindow.h \
     piece.h \
     screencapture.h \
+    screenshot.h \
     sgfparser.h \
     timecontrol.h
 

@@ -3,9 +3,15 @@
 #include <vector>
 #include <string>
 #include <map>
+
+extern const int BOARDWIDTH;
+extern const int HEIGHT;
+extern const int WIDTH;
+
+
 class Piece {
 public:
-    Piece() : color(2), aceCount(0) {}
+    Piece() : color(2), aceCount(0), row(0), col(0), moveNumber(-1) {}
     int color;//0黑 1白 2无
     int aceCount;//气数
     int row;
