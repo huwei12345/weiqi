@@ -708,25 +708,28 @@ protected:
     void showTreeItem(std::shared_ptr<SGFTreeNode> node) {
         auto item = makeTreeItem(node);
         auto parent = node->parent.lock();
-        if (parent == nullptr || (parent == root && parent->branches.size() == 1)) {
-            //父节点是根节点或者nullptr
-            pieceTree->addTopLevelItem(item);
+        if (parent == nullptr) {
             return;
         }
         QTreeWidgetItem* parentItem = treeItemMap[parent];//获取父节点的treeWidget
-        if (parentItem == nullptr) {
-            qDebug() << "parentItem nullptr";
-            if (parent != root) {
-                qDebug() << "Faital Error";
+
+        if (parent == root) {
+            if (parent->branches.size() == 1) {
+                pieceTree->addTopLevelItem(item);
             }
-            //说明parent == root
-            //此时说明是在空棋盘上,且第一个子至少有两个分支。要先压缩原分支，然后将新分支压缩为分支
-            if (parent->branches.size() == 2) {
-                treeCompress(root, nullptr);
+            else if (parent->branches.size() == 2) {
+                //此时说明是在空棋盘上,且第一个子至少有两个分支。要先压缩原分支，然后将新分支压缩为分支
+                if (parent->branches.size() == 2) {
+                    treeCompress(root, nullptr);
+                    pieceTree->addTopLevelItem(item);
+                }
+            }
+            else {
                 pieceTree->addTopLevelItem(item);
             }
             return;
         }
+
         if (parent->branches.size() == 1) {
             //没有后续，
             auto grandpa = parent->parent.lock();
@@ -1577,6 +1580,24 @@ public:
     }
     //顶层
     bool showSGF(std::shared_ptr<SGFTreeNode> node, QTreeWidgetItem* parent, int compress, bool isBranch) {
+        if (node == root && node != nullptr) {
+            bool flag = false;
+            for (auto p : root->branches) {
+                if (flag == false) {
+                    if (root->branches.size() <= 1) {
+                        showSGF(p, nullptr, 0, 0);
+                    }
+                    else {
+                        showSGF(p, nullptr, 1, 0);
+                    }
+                    flag = true;
+                }
+                else {
+                    showSGF(p, nullptr, 1, 1);
+                }
+            }
+            return true;
+        }
         QTreeWidgetItem* item = nullptr;
 
         if (compress == 1) {
@@ -1586,7 +1607,6 @@ public:
 
             QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
             QString str2 = QString::number(node->moveNum) + "  ";
-            //QString::number(node->move.moveNumber) + " is " + (isBranch ? "yes" : "no")
             item->setText(0, str);
             item->setText(1, str2);
             treeItemMap[node] = item;
@@ -1595,7 +1615,12 @@ public:
             data.index = node->moveNum;
             QVariant variant = QVariant::fromValue(data);
             item->setData(0, 1, variant);
-            parent->addChild(item);
+            if (parent == nullptr) {
+                pieceTree->addTopLevelItem(item);
+            }
+            else {
+                parent->addChild(item);
+            }
             if (node->branches.size() == 0) {
                 return true;
             }
@@ -1620,10 +1645,8 @@ public:
                 Piece& piece = node->move;
                 putPiece(node, isBranch);
                 item = new QTreeWidgetItem;
-                QString numx;
                 QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
                 QString str2 = QString::number(node->moveNum) + "  ";
-                //QString::number(node->move.moveNumber) + " is " + (isBranch ? "yes" : "no")
                 item->setText(0, str);
                 item->setText(1, str2);
                 treeItemMap[node] = item;
