@@ -658,17 +658,11 @@ protected:
         return true;
     }
 
-    /*
-    1.当顶层时，嫡分支直接保持顶层。 庶分支在二层。
-    2.非顶层时，嫡分支保持原层。庶分支在在下一层。
-    3.当某节点为独子分支时，整个分支在下一层。
-    4.当某节点为非独子分支时，整个分支以分支的第一个节点为头，其余节点以这个节点为父展开。
-    5.当某节点由独自变为非独子时，将当前节点压缩，
-    6.当某节点由非独子变为独子时，将释放节点。
-    */
-    //仅tree显示修改，不改变SGFTreeNode内部结构
-    void makeTreeItem(std::shared_ptr<SGFTreeNode> node) {
-
+    //这个具体的排列逻辑还是要理一下
+    QTreeWidgetItem* makeTreeItem(std::shared_ptr<SGFTreeNode> node) {
+        if (node == nullptr || node == root) {
+            return nullptr;
+        }
         QTreeWidgetItem* item = new QTreeWidgetItem;
         auto piece = node->move;
         QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
@@ -682,67 +676,149 @@ protected:
         data.index = node->moveNum;
         QVariant variant = QVariant::fromValue(data);
         item->setData(0, 1, variant);
+        return item;
+    }
 
+
+    bool isNodeDizi(std::shared_ptr<SGFTreeNode> node) {
+        if (node == nullptr || node == root) {
+            return true;
+        }
+        auto pa = node->parent.lock();
+        if (pa == nullptr) {
+            qDebug() << "Dizi Error";
+            return true;
+        }
+        return pa->branches.size() == 1;
+    }
+
+    /*
+     *原则是不要产生误解，当一个节点除了嫡子之外，还有其他分支时，其他分支都作为(可展开状态）。
+     * 当一个节点只有嫡子时，可与嫡子并列，（但若该节点作为可展开状态时，嫡子作为子）
+     * 其实以上逻辑是通用的，并不分顶层还是非顶层，因为把root节点也算在内了。但multigo事实上把主线做了区分。
+     *
+    1.当顶层时，嫡分支直接保持顶层。 庶分支在二层。
+    2.非顶层时，嫡分支保持原层。庶分支在在下一层。
+    3.当某节点为独子分支时，整个分支在下一层。
+    4.当某节点为非独子分支时，整个分支以分支的第一个节点为头，其余节点以这个节点为父展开。
+    5.当某节点由独自变为非独子时，将当前节点压缩，
+    6.当某节点由非独子变为独子时，将释放节点。
+    */
+    //仅tree显示修改，不改变SGFTreeNode内部结构
+    void showTreeItem(std::shared_ptr<SGFTreeNode> node) {
+        auto item = makeTreeItem(node);
         auto parent = node->parent.lock();
         if (parent == nullptr || (parent == root && parent->branches.size() == 1)) {
-            //根节点
+            //父节点是根节点或者nullptr
             pieceTree->addTopLevelItem(item);
+            return;
         }
-        else {
-            //auto
-            QTreeWidgetItem* pitem = treeItemMap[parent];//获取父节点的treeWidget
-            if (pitem == nullptr) {
-                if (parent != root) {
-                    qDebug() << "Faital Error";
-                }
-                //说明parent == root
-                //此时说明是在空棋盘上 第一个子都要进行分支。要先压缩原分支，然后将新分支压缩为分支
-                if (parent->branches.size() == 2) {
-                    treeCompress(root, nullptr);
+        QTreeWidgetItem* parentItem = treeItemMap[parent];//获取父节点的treeWidget
+        if (parentItem == nullptr) {
+            qDebug() << "parentItem nullptr";
+            if (parent != root) {
+                qDebug() << "Faital Error";
+            }
+            //说明parent == root
+            //此时说明是在空棋盘上,且第一个子至少有两个分支。要先压缩原分支，然后将新分支压缩为分支
+            if (parent->branches.size() == 2) {
+                treeCompress(root, nullptr);
+                pieceTree->addTopLevelItem(item);
+            }
+            return;
+        }
+        if (parent->branches.size() == 1) {
+            //没有后续，
+            auto grandpa = parent->parent.lock();
+            //如果父节点只有一个子，说明刚添加的子是唯一的分支
+            //即使是独子，也要考虑是否应该加在兄弟分支，还是子分支。
+            //应该加在兄弟分支，如果父分支是独分支时或者顶分支时
+            //应该加在子分支，如果父分支是非独分支时。
+            if (grandpa == nullptr || grandpa->branches.size() == 1) {
+                QTreeWidgetItem* grandpaItem = parentItem->parent();//并不是真的grandpa对应的item
+                if (grandpaItem == nullptr) {
                     pieceTree->addTopLevelItem(item);
                 }
-                qDebug() << "pitem == nullptr";
-                return;
-            }
-            if (parent->branches.size() == 1) {
-                //没有后续，
-                auto pp = parent->parent.lock();
-                //如果父节点只有一个子，说明刚添加的子是唯一的分支
-                //即使是独子，也要考虑是否应该加在兄弟分支，还是子分支。
-                //应该加在兄弟分支，如果父分支是独分支时或者顶分支时
-                //应该加在子分支，如果父分支是非独分支时。
-                if (pp == nullptr || pp->branches.size() == 1) {
-                    QTreeWidgetItem* ppitem = pitem->parent();
-                    if (ppitem == nullptr) {
-                        pieceTree->addTopLevelItem(item);
-                    }
-                    else {
-                        ppitem->addChild(item);
-                    }
-                }
                 else {
-                    pitem->addChild(item);
+                    grandpaItem->addChild(item);
                 }
-            }
-            else if (parent->branches.size() == 2) {
-                //由独变为非独
-                //将之前的独子分支压缩，再添加新分支
-                treeCompress(parent, pitem);
-                pitem->addChild(item);
             }
             else {
-                pitem->addChild(item);
+                parentItem->addChild(item);
             }
+        }
+        else if (parent->branches.size() == 2) {
+            //由独变为非独
+            //将之前的独子分支压缩，再添加新分支
+            if (parentItem->childCount() == 0) {
+                parentItem->addChild(item);
+            }
+            else {
+                compress(parent->branches[0]);
+                parentItem->addChild(item);
+            }
+        }
+        else {
+            parentItem->addChild(item);
         }
     }
 
+    void addFrontChild(QTreeWidgetItem* parent, QTreeWidgetItem* son) {
+        QList<QTreeWidgetItem*> wlist;
+        for (int i = 0; i < parent->childCount(); i++) {
+            wlist.push_back(parent->child(i));
+        }
+        for (int i = 0; i < wlist.size(); i++) {
+            parent->removeChild(wlist[i]);
+        }
+        parent->addChild(son);
+        for (int i = 0; i < wlist.size(); i++) {
+            parent->addChild(wlist[i]);
+        }
+    }
+    //单纯压缩一个节点，之前node和之后的节点为顺序分支关系，现在要以node节点为一个节点，压缩这个分支
+    void compress(std::shared_ptr<SGFTreeNode> node) {
+        QTreeWidgetItem* item = treeItemMap[node];
+        if (node->branches.size() == 1) {
+            //入主
+            auto parent = node->parent.lock();
+            if (parent == nullptr) {
+                qDebug() << "Fatil Error";
+                return;
+            }
+            QTreeWidgetItem* parentItem = item->parent();
+            int index = parentItem->indexOfChild(item);
+            QList<QTreeWidgetItem*> wlist;
+            for (int i = index + 1; i < parentItem->childCount(); i++) {
+                wlist.push_back(parentItem->child(i));
+            }
+            for (int i = 0; i < wlist.size(); i++) {
+                parentItem->removeChild(wlist[i]);
+                item->addChild(wlist[i]);
+            }
+        }
+        else {
+            //多路合并
+            auto dd = node->branches[0];
+            compress(dd);
+            auto parent = node->parent.lock();
+            if (parent == nullptr) {
+                qDebug() << "Fatil Error";
+                return;
+            }
+            QTreeWidgetItem* parentItem = item->parent();
+            parentItem->removeChild(treeItemMap[dd]);
+            //加在最前面
+            addFrontChild(item, treeItemMap[dd]);//头部添加
+            //item->addChild(treeItemMap[dd]);
+            //TODO: 也许原先node的第二三四五个分支也需要压缩？  或者这第二个分支就一定（已压缩）
+        }
+    }
     void treeCompress(std::shared_ptr<SGFTreeNode> node, QTreeWidgetItem* item) {
         //还有一种情况，就是这个点虽然在tree上没有分支，但是有2个子。也要压缩。
-
         if (node->branches.size() != 2) {
             return;
         }
-
         if (item == nullptr) {
             QList<QTreeWidgetItem*> wlist;
             QTreeWidgetItem *sonItem = pieceTree->topLevelItem(0);
@@ -810,7 +886,6 @@ protected:
                 }
             }
         }
-
         if (isOccupied(row, col)) {
             return; // 如果该位置已被占据，则不放置棋子
         }
@@ -834,10 +909,9 @@ protected:
                 node->parent = root;
             }
             setMoveNum(node, isOtherBranch);
-            makeTreeItem(historyNode);
+            showTreeItem(historyNode);
             currentPlayer = (currentPlayer == Qt::black ? Qt::white : Qt::black);
         }
-        // 检查棋子是否符合规则
         // 触发重绘
         repaint();
     }
@@ -1616,11 +1690,6 @@ public:
         return true;
     }
 
-    bool loadDingShiBook(const std::string &filename) {
-        DingShiBook = sgfParser.parse(filename, DingShiSetupInfo);
-        return true;
-    }
-
     bool saveSGF(const std::string &filename) {
         sgfParser.saveSGF(filename, root, setupInfo);
         return true;
@@ -1672,6 +1741,10 @@ public:
 
 
 public:
+    bool loadDingShiBook(const std::string &filename) {
+        DingShiBook = sgfParser.parse(filename, DingShiSetupInfo);
+        return true;
+    }
     //A B C
     //A C B
     //B A C
@@ -1908,6 +1981,158 @@ public:
 
 
     截图 模式识别，入库，组织一颗大树 检索 显示 跳转
+*/
+
+
+
+
+/*
+    bool readSGF(const std::string &filename) {
+        if (root != nullptr) {
+            //清除原棋盘和SFG
+            clearRoot();
+        }
+        root = sgfParser.parse(filename);
+        for (auto& node : root->branches) {
+            showSGF(node, nullptr, 0, 0);
+        }
+        repaint();
+        return true;
+    }
+
+    void makeTreeItem(std::shared_ptr<SGFTreeNode> node) {
+
+        QTreeWidgetItem* item = new QTreeWidgetItem;
+        auto piece = node->move;
+        QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
+        QString str2 = QString::number(node->moveNum) + "  ";
+        //QString::number(node->move.moveNumber) + " is " + (isBranch ? "yes" : "no")
+        item->setText(0, str);
+        item->setText(1, str2);
+        treeItemMap[node] = item;
+        TreeData data;
+        data.node = node;
+        data.index = node->moveNum;
+        QVariant variant = QVariant::fromValue(data);
+        item->setData(0, 1, variant);
+
+        auto parent = node->parent.lock();
+        if (parent == nullptr || (parent == root && parent->branches.size() == 1)) {
+            //根节点
+            pieceTree->addTopLevelItem(item);
+        }
+        else {
+            //auto
+            QTreeWidgetItem* pitem = treeItemMap[parent];//获取父节点的treeWidget
+            if (pitem == nullptr) {
+                if (parent != root) {
+                    qDebug() << "Faital Error";
+                }
+                //说明parent == root
+                //此时说明是在空棋盘上下第二个分支。要先压缩原分支，然后将新分支压缩为分支
+                if (parent->branches.size() == 2) {
+                    treeCompress(root, node);
+                    pieceTree->addTopLevelItem(item);
+                }
+                qDebug() << "pitem == nullptr";
+                return;
+            }
+            if (parent->branches.size() == 1) {
+                //没有后续，
+                auto pp = parent->parent.lock();
+                //如果父节点只有一个子，说明刚添加的子是唯一的分支
+                //即使是独子，也要考虑是否应该加在兄弟分支，还是子分支。
+                //应该加在兄弟分支，如果父分支是独分支时或者顶分支时
+                //应该加在子分支，如果父分支是非独分支时。
+                if (pp == nullptr || pp->branches.size() == 1) {
+                    QTreeWidgetItem* ppitem = pitem->parent();
+                    if (ppitem == nullptr) {
+                        pieceTree->addTopLevelItem(item);
+                    }
+                    else {
+                        ppitem->addChild(item);
+                    }
+                }
+                else {
+                    pitem->addChild(item);
+                }
+            }
+            else if (parent->branches.size() == 2) {
+                //由独变为非独
+                //将之前的独子分支压缩，再添加新分支
+                treeCompress(parent, node);
+                pitem->addChild(item);
+            }
+            else {
+                pitem->addChild(item);
+            }
+        }
+    }
+
+    //node由于它的branch中由一个元素变为2个元素，所以进行压缩，将后面所有的兄弟节点压入第一个元素，然后放入第二个元素
+    void treeCompress(std::shared_ptr<SGFTreeNode> node, std::shared_ptr<SGFTreeNode> son) {
+        //还有一种情况，就是这个点虽然在tree上没有分支，但是有2个子。也要压缩。
+        if (node->branches.size() != 2) {
+            return;
+        }
+        if (node == root) {
+            QTreeWidgetItem *sonItem = treeItemMap[node];
+            QList<QTreeWidgetItem*> wlist;
+            for (int i = 1; i < pieceTree->topLevelItemCount(); ++i) {
+                wlist.push_back(pieceTree->topLevelItem(i));
+            }
+            if (sonItem->childCount() == 0) {
+                for (int i = 0; i < wlist.size(); i++) {
+                     pieceTree->takeTopLevelItem(1);
+                     sonItem->addChild(wlist[i]);
+                }
+            }
+            else {
+                //TODO: 应该递归压缩
+                compress(root->branches[0]);
+                pieceTree->addTopLevelItem(treeItemMap[son]);
+            }
+            return;
+        }
+
+        compress(node->branches[0]);
+        QTreeWidgetItem* sonItem = treeItemMap[son];
+        QTreeWidgetItem* item = treeItemMap[node];
+        item->addChild(sonItem);
+//        if (item->childCount() == 0) {
+//            auto ppitem = item->parent();
+//            if (ppitem == nullptr) {
+//                return;
+//            }
+//            //平层子压缩
+//            if (item != ppitem->child(0)) {
+//                return;
+//            }
+//            auto dage = ppitem->child(1);//新大哥
+//            QList<QTreeWidgetItem*> wlist;
+//            for (int i = 2; i < ppitem->childCount(); i++) {
+//                wlist.push_back(ppitem->child(i));
+//            }
+//            for (int i = 0; i < wlist.size(); i++) {
+//                 ppitem->removeChild(wlist[i]);
+//                 dage->addChild(wlist[i]);
+//            }
+//            ppitem->removeChild(dage);
+//            item->addChild(dage);
+//        }
+//        else {
+//            QList<QTreeWidgetItem*> wlist;
+//            for (int i = 0; i < item->childCount(); i++) {
+//                wlist.push_back(item->child(i));
+//            }
+//            for (int i = 1; i < wlist.size(); i++) {
+//                item->removeChild(wlist[i]);
+//                wlist[0]->addChild(wlist[i]);
+//            }
+//        }
+    }
+
+
 */
 
 #endif
