@@ -8,14 +8,14 @@ QMAKE_CXX.COMPILER_MACROS = \
     QMAKE_GCC_MINOR_VERSION \
     QMAKE_GCC_PATCH_VERSION
 QMAKE_CXX.INCDIRS = \
-    D:/Qt/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ \
-    D:/Qt/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 \
-    D:/Qt/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward \
-    D:/Qt/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include \
-    D:/Qt/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed \
-    D:/Qt/Tools/mingw730_64/x86_64-w64-mingw32/include
+    D:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ \
+    D:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 \
+    D:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward \
+    D:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include \
+    D:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed \
+    D:/qt5.14/Tools/mingw730_64/x86_64-w64-mingw32/include
 QMAKE_CXX.LIBDIRS = \
-    D:/Qt/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0 \
-    D:/Qt/Tools/mingw730_64/lib/gcc \
-    D:/Qt/Tools/mingw730_64/x86_64-w64-mingw32/lib \
-    D:/Qt/Tools/mingw730_64/lib
+    D:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0 \
+    D:/qt5.14/Tools/mingw730_64/lib/gcc \
+    D:/qt5.14/Tools/mingw730_64/x86_64-w64-mingw32/lib \
+    D:/qt5.14/Tools/mingw730_64/lib

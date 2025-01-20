@@ -50,3 +50,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     src.qrc
+
+LIBS += -L$$PWD/../cvbuild/install/x64/mingw/lib/ -llibopencv_world4100.dll
+INCLUDEPATH += $$PWD/../cvbuild/install/include
+DEPENDPATH += $$PWD/../cvbuild/install/x64/mingw/bin

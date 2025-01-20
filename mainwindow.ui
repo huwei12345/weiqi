@@ -16,6 +16,22 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
+     <widget class="QTextEdit" name="textEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>30</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QWidget" name="gameWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <property name="topMargin">
@@ -78,6 +94,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="ImageLabel">
+            <property name="text">
+             <string>Image</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -105,6 +128,13 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>研究</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <spacer name="horizontalSpacer_6">
          <property name="orientation">
@@ -221,6 +251,13 @@
      <widget class="QWidget" name="widget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>比赛</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_4">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -293,6 +330,13 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>黑白</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <spacer name="horizontalSpacer_3">
          <property name="orientation">

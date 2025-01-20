@@ -1,6 +1,8 @@
 ﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "imagerecognition.h"
+
 #include <QMainWindow>
 #include <boardwidget.h>
 QT_BEGIN_NAMESPACE
@@ -19,6 +21,8 @@ public:
             // 发射信号，将键盘事件传递给子窗口
             emit keyEventCaptured(event);
         }
+
+    void showSetupInfo(std::map<std::string, std::string> setupInfo);
 
 signals:
     void keyEventCaptured(QKeyEvent *event);
@@ -57,9 +61,12 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_toolButton_27_clicked();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;
+    ImageRecognition* recTool;
 
 };
 #endif // MAINWINDOW_H

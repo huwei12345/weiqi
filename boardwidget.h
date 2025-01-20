@@ -57,25 +57,25 @@ public:
     explicit GoGameLogic(QWidget *parent = nullptr) : QWidget(parent){
 
     }
-    initializeBoard();// (初始化棋盘)
-    startNewGame();// (开始新游戏)
-    setBoardSize(int size);// (设置棋盘大小)
-    playMove(int x, int y);// (执行玩家落子)
-    isMoveLegal(int x, int y);// (检查落子是否合法)
-    checkCapture(int x, int y);// (检查是否有提子)
-    switchPlayer();// (切换玩家)
-    isGameOver();// (判断游戏是否结束)
-    calculateScore();// (计算得分)
-    undoMove();// (悔棋)
-    loadGameState();// (加载游戏状态)
-    saveGameState();// (保存游戏状态)
+//    initializeBoard();// (初始化棋盘)
+//    startNewGame();// (开始新游戏)
+//    setBoardSize(int size);// (设置棋盘大小)
+//    playMove(int x, int y);// (执行玩家落子)
+//    isMoveLegal(int x, int y);// (检查落子是否合法)
+//    checkCapture(int x, int y);// (检查是否有提子)
+//    switchPlayer();// (切换玩家)
+//    isGameOver();// (判断游戏是否结束)
+//    calculateScore();// (计算得分)
+//    undoMove();// (悔棋)
+//    loadGameState();// (加载游戏状态)
+//    saveGameState();// (保存游戏状态)
 
-    checkVictory();// (检查胜负)
-    printBoard();// (打印棋盘)
+//    checkVictory();// (检查胜负)
+//    printBoard();// (打印棋盘)
 
-    getCurrentBoardState(); //提供当前棋盘的状态，方便GameResearch类加载和使用。
-    getMoveHistory(); //提供当前棋局的历史记录，供研究模式分析使用。
-    checkGameOver(); //判断游戏是否结束，供研究模式在加载棋局后判断当前状态。
+//    getCurrentBoardState(); //提供当前棋盘的状态，方便GameResearch类加载和使用。
+//    getMoveHistory(); //提供当前棋局的历史记录，供研究模式分析使用。
+//    checkGameOver(); //判断游戏是否结束，供研究模式在加载棋局后判断当前状态。
 
     std::vector<std::vector<Piece>> board;//棋盘状态
     std::vector<std::vector<Piece>> zeroBoard;// x y 2
@@ -1705,7 +1705,7 @@ public:
     bool readSGF(const std::string &filename) {
         if (root != nullptr) {
             //清除原棋盘和SFG
-            clearRoot();
+            clear();
         }
         root = sgfParser.parse(filename, setupInfo);
         showSGF(root, nullptr, 0, 0);
@@ -1931,7 +1931,6 @@ private:
     QPixmap blackPiece; // 黑棋图片
     QPixmap whitePiece; // 白棋图片
 
-    std::vector<std::vector<Piece>> board;// x y
     std::vector<std::vector<Piece>> zeroBoard;// x y
 
     //这两个可能有用，可以用当前节点，反向迭代回根节点获取历史和已下节点
@@ -1959,36 +1958,39 @@ private:
     std::shared_ptr<SGFTreeNode> DingShiBook;
     std::map<std::string, std::string> DingShiSetupInfo;
 
-    std::map<std::string, std::string> setupInfo;
 
 public:
+    std::vector<std::vector<Piece>> board;// x y
+    std::map<std::string, std::string> setupInfo;
     int allNumber;//总手数
 };
 
 
-//TODO:
-
-/*
+/*TODO:
  *
- *  顶层分支。
- *  统一读取出来的和下出来的子
- *
- *  添加文件head
- *
- *
+ *  顶层分支(完成)
+ *  统一读取出来的和下出来的子(完成)
+ *  添加文件head(完成)
+ *  进度条，前进 后退，大前进，开头 结尾 跳转(完成)
+ *  劫争逻辑(完成)
  *  分割类
  *
- *  添加让子 贴目 时间 判定方式等要素
+ * 难点：获取图片  解析图片转化为二维数组  将数组放到棋盘上，然后选择一点进行推理。将可能的后续，用多个图给出或者以虚棋子显示在棋盘上。
+ * 难点2：形式判断 是否终局 判定胜负。
+ * 难点3：作为一个游戏，哪怕是自己对自己，需要完成。（悔棋、和棋 认输 退出等） (添加让子 贴目 时间 判定方式等要素)
+ * 难点4：制作网络对战，可能有网络层 连接层 session层 游戏平台，游戏对战界面等。
  *
- *  胜负判断 是否终局判断 形式判断
  *
- *  悔棋、和棋 认输 退出等
+    1.读取大棋盘
+    2.清除非匹配部分,或者框选，支持删除，放置。
+    3.匹配结果合适的显示方式
+    4.旋转，对称，黑白交换的匹配结果，并进行过滤相同结果。
+    5.结果排序，近似不放一块。 bfs
+    6.库的合理组织，以及定式录入的程序化。骗招是单方面的，给出警示标志
+    7.合理的UI界面
  *
- *  进度条，前进 后退，大前进，开头 结尾 跳转等
  *
  *  试下（对局不可试下） 手数 摆黑 摆白 交替等。。。
- *
- *
     存储 存储信息，让子... 贴目 对局双方 时间 对局结果 游戏 ...
 
     判定胜负和形式判断，形式判断需要在图上显示如何判定的。
@@ -1996,12 +1998,11 @@ public:
     如果不能判定胜负，可以使用形式判断的函数给出结果。
     形式判断有很多模棱两可的判断。
 
-    劫争逻辑 双活逻辑
+    双活逻辑 对杀逻辑，（合理的逻辑：将这一片进行割出，作为研究对象，当两个绝顶聪明的人互相下）
 
-    无胜负
+    无胜负（三劫循环以上）
 
     盘龙眼 摇头劫 长生。。。
-
 
     截图 模式识别，入库，组织一颗大树 检索 显示 跳转
 */
@@ -2010,88 +2011,6 @@ public:
 
 
 /*
-    bool readSGF(const std::string &filename) {
-        if (root != nullptr) {
-            //清除原棋盘和SFG
-            clearRoot();
-        }
-        root = sgfParser.parse(filename);
-        for (auto& node : root->branches) {
-            showSGF(node, nullptr, 0, 0);
-        }
-        repaint();
-        return true;
-    }
-
-    void makeTreeItem(std::shared_ptr<SGFTreeNode> node) {
-
-        QTreeWidgetItem* item = new QTreeWidgetItem;
-        auto piece = node->move;
-        QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
-        QString str2 = QString::number(node->moveNum) + "  ";
-        //QString::number(node->move.moveNumber) + " is " + (isBranch ? "yes" : "no")
-        item->setText(0, str);
-        item->setText(1, str2);
-        treeItemMap[node] = item;
-        TreeData data;
-        data.node = node;
-        data.index = node->moveNum;
-        QVariant variant = QVariant::fromValue(data);
-        item->setData(0, 1, variant);
-
-        auto parent = node->parent.lock();
-        if (parent == nullptr || (parent == root && parent->branches.size() == 1)) {
-            //根节点
-            pieceTree->addTopLevelItem(item);
-        }
-        else {
-            //auto
-            QTreeWidgetItem* pitem = treeItemMap[parent];//获取父节点的treeWidget
-            if (pitem == nullptr) {
-                if (parent != root) {
-                    qDebug() << "Faital Error";
-                }
-                //说明parent == root
-                //此时说明是在空棋盘上下第二个分支。要先压缩原分支，然后将新分支压缩为分支
-                if (parent->branches.size() == 2) {
-                    treeCompress(root, node);
-                    pieceTree->addTopLevelItem(item);
-                }
-                qDebug() << "pitem == nullptr";
-                return;
-            }
-            if (parent->branches.size() == 1) {
-                //没有后续，
-                auto pp = parent->parent.lock();
-                //如果父节点只有一个子，说明刚添加的子是唯一的分支
-                //即使是独子，也要考虑是否应该加在兄弟分支，还是子分支。
-                //应该加在兄弟分支，如果父分支是独分支时或者顶分支时
-                //应该加在子分支，如果父分支是非独分支时。
-                if (pp == nullptr || pp->branches.size() == 1) {
-                    QTreeWidgetItem* ppitem = pitem->parent();
-                    if (ppitem == nullptr) {
-                        pieceTree->addTopLevelItem(item);
-                    }
-                    else {
-                        ppitem->addChild(item);
-                    }
-                }
-                else {
-                    pitem->addChild(item);
-                }
-            }
-            else if (parent->branches.size() == 2) {
-                //由独变为非独
-                //将之前的独子分支压缩，再添加新分支
-                treeCompress(parent, node);
-                pitem->addChild(item);
-            }
-            else {
-                pitem->addChild(item);
-            }
-        }
-    }
-
     //node由于它的branch中由一个元素变为2个元素，所以进行压缩，将后面所有的兄弟节点压入第一个元素，然后放入第二个元素
     void treeCompress(std::shared_ptr<SGFTreeNode> node, std::shared_ptr<SGFTreeNode> son) {
         //还有一种情况，就是这个点虽然在tree上没有分支，但是有2个子。也要压缩。

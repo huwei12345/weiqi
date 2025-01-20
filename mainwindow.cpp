@@ -1,6 +1,7 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QClipboard>
 #include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -15,12 +16,23 @@ MainWindow::MainWindow(QWidget *parent)
     QLayout* layout = ui->panWidget->layout();
     layout->addWidget(goWidget);
     goWidget->setUITree(ui->pieceTree);
+    recTool = new ImageRecognition;
 
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::showSetupInfo(std::map<std::string, std::string> setupInfo)
+{
+    //ui->lineEdit;
+    QString str;
+    for (auto info : setupInfo) {
+        str += QString::fromStdString(info.first + " : " + info.second + "  ");
+    }
+    ui->textEdit->append(str);
 }
 
 
@@ -43,13 +55,16 @@ void MainWindow::on_LoadBtn_clicked()
         qDebug() << "No file selected.";
         return;
     }
-    goWidget->readSGF(fileName.toStdString());
-    // 设置滑块的范围
-    ui->horizontalSlider->setMinimum(0);  // 设置最小值
-    qDebug() << " allNumber " << goWidget->allNumber;
-    ui->horizontalSlider->setMaximum(goWidget->allNumber);  // 设置最大值
-    ui->horizontalSlider->setSingleStep(1);
-    ui->horizontalSlider->setValue(goWidget->allNumber);
+    bool ret = goWidget->readSGF(fileName.toStdString());
+    if (ret) {
+        // 设置滑块的范围
+        ui->horizontalSlider->setMinimum(0);  // 设置最小值
+        qDebug() << " allNumber " << goWidget->allNumber;
+        ui->horizontalSlider->setMaximum(goWidget->allNumber);  // 设置最大值
+        ui->horizontalSlider->setSingleStep(1);
+        ui->horizontalSlider->setValue(goWidget->allNumber);
+        showSetupInfo(goWidget->setupInfo);
+    }
 }
 
 
@@ -188,6 +203,23 @@ void MainWindow::on_pushButton_clicked()
     if (num >= 0 && num <= goWidget->allNumber) {
         qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << num;
         ui->horizontalSlider->setValue(num);
+    }
+}
+
+
+//目前只是从剪贴板复制，不具备真实截图功能，需要外部截图。
+void MainWindow::on_toolButton_27_clicked()
+{
+    // 获取剪贴板内容
+    QClipboard *clipboard = QApplication::clipboard();
+    QImage image = clipboard->image();  // 获取剪贴板中的图像
+
+    if (!image.isNull()) {
+        // 显示图片
+        ui->ImageLabel->setPixmap(QPixmap::fromImage(image));
+        recTool->recogniton2(image, goWidget->board);
+    } else {
+        ui->ImageLabel->setText("No image in clipboard");
     }
 }
 
