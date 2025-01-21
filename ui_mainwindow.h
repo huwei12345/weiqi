@@ -60,6 +60,7 @@ public:
     QToolButton *toolButton_10;
     QToolButton *toolButton_11;
     QSpacerItem *horizontalSpacer_7;
+    QToolButton *addDSBtn;
     QWidget *widget;
     QHBoxLayout *horizontalLayout_7;
     QLabel *label_3;
@@ -230,6 +231,11 @@ public:
         horizontalSpacer_7 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         horizontalLayout->addItem(horizontalSpacer_7);
+
+        addDSBtn = new QToolButton(processWidget);
+        addDSBtn->setObjectName(QString::fromUtf8("addDSBtn"));
+
+        horizontalLayout->addWidget(addDSBtn);
 
 
         verticalLayout->addWidget(processWidget);
@@ -422,6 +428,7 @@ public:
         judgeBtn->setText(QCoreApplication::translate("MainWindow", "\345\275\242\345\274\217\345\210\244\346\226\255", nullptr));
         toolButton_10->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\350\243\201\345\210\244", nullptr));
         toolButton_11->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\345\210\206\346\236\220", nullptr));
+        addDSBtn->setText(QCoreApplication::translate("MainWindow", "\345\205\245\345\272\223", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "\346\257\224\350\265\233", nullptr));
         toolButton_6->setText(QCoreApplication::translate("MainWindow", "\346\202\224\346\243\213", nullptr));
         toolButton_8->setText(QCoreApplication::translate("MainWindow", "\345\222\214\346\243\213", nullptr));

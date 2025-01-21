@@ -223,3 +223,16 @@ void MainWindow::on_toolButton_27_clicked()
     }
 }
 
+//将当前界面的落子顺序解析入库
+void MainWindow::on_addDSBtn_clicked()
+{
+    bool ret = goWidget->addDSintoBook();
+    if (ret) {
+        std::string bookPath = "";
+        ret = goWidget->storeDingShiBook(bookPath);
+        if (ret) {
+            qDebug() << "insert DingShi success";
+        }
+    }
+}
+

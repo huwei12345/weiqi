@@ -17,6 +17,7 @@ public:
     int row;
     int col;
     int moveNumber;  // 手数
+    bool operator==(Piece rhs);
 };
 
 #endif // PIECE_H

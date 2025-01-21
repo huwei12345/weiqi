@@ -32,7 +32,7 @@ public:
 Q_DECLARE_METATYPE(TreeData)
 
 enum PieceColor {BLACK = 0, WHITE = 1, SPACE = 2};
-
+enum Direction {TOP = 0, BOTTOM, LEFT, RIGHT, TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT};
 
 void showPoint(int row, int col, int color = -1);
 
@@ -246,7 +246,6 @@ protected:
         //当前棋子加一个小红旗标示
     }
 
-    //TODO:
     void updateMoveLabel(QPainter& painter, int gridSize) {
         // 获取最近 5 颗棋子的手数
         if (historyNode == nullptr) {
@@ -282,6 +281,7 @@ protected:
             auto& p = showPieces[i];
             auto piece = p->move;
             if (board[piece.row][piece.col].color == 2) {
+                //被提子后，这个子上的标记不显示
                 continue;
             }
             int row = margin + piece.row * gridSize + 5;
@@ -321,7 +321,6 @@ protected:
         }
         painter.setPen(penold);
 
-        //TODO:被提子后，这个子上的标记不显示
     }
 
     // 判断位置是否合法
@@ -330,7 +329,7 @@ protected:
     }
 
     // 检查一个区域是否是眼 8个位置都要判断，
-    // TODO: 还需要判断是否周围被这个颜色包围
+    // TODO: 还需要判断是否周围被这个颜色包围，也可能是大眼，需要更细致的判断
     bool isEye(int x, int y, int color) {
         int rx[8] {1,-1,0,0,  1,1,-1,-1};
         int ry[8] {0,0,1,-1,  1,-1,1,-1};
@@ -630,7 +629,7 @@ protected:
             if (allNumber < node->moveNum) {
                 allNumber = node->moveNum;
             }
-            //TODO:这里需要改吗？上一个节点
+            //TODO:这里需要改吗？上一个节点 historyNode目前对应所有结点，也可以只对应主线结点。
         }
         node->move.moveNumber = node->moveNum;
         board[node->move.row][node->move.col].moveNumber = node->moveNum;  // 记录下棋的手数
@@ -813,8 +812,6 @@ protected:
             parentItem->removeChild(treeItemMap[dd]);
             //加在最前面
             addFrontChild(item, treeItemMap[dd]);//头部添加
-            //item->addChild(treeItemMap[dd]);
-            //TODO: 也许原先node的第二三四五个分支也需要压缩？  或者这第二个分支就一定（已压缩）
         }
     }
     void treeCompress(std::shared_ptr<SGFTreeNode> node, QTreeWidgetItem* item) {
@@ -832,7 +829,6 @@ protected:
                  pieceTree->takeTopLevelItem(1);
                  sonItem->addChild(wlist[i]);
             }
-            //TODO: 应该递归压缩
             return;
         }
         if (item->childCount() == 0) {
@@ -933,7 +929,7 @@ protected:
             qDebug() << showPiece(row, col, board[row][col].color) << " Ace: " << getAceOfPoint(board, row, col, board[row][col].color);
         }
         else {
-            qDebug() << "block";
+            qDebug() << "block  row " << row << " col "<<  col;
         }
     }
 
@@ -1765,8 +1761,16 @@ public:
 
 public:
     bool loadDingShiBook(const std::string &filename) {
+        mDingShiBookPath = filename;
         DingShiBook = sgfParser.parse(filename, DingShiSetupInfo);
         return true;
+    }
+
+    bool storeDingShiBook(std::string &filename) {
+        if (filename == "") {
+            filename = mDingShiBookPath;
+        }
+        return sgfParser.saveSGF(filename, DingShiBook, DingShiSetupInfo);
     }
     //A B C
     //A C B
@@ -1819,8 +1823,9 @@ public:
         }
     }
 
+
     //无法处理打劫问题，只能根据当前盘面与当前落子点和颜色推断如何下（依据是定式库）。
-    //目前没有显示，只是打印分支，最好做多个小图显示，或者将第一首以虚子显示。然后逐渐补齐。
+    //目前没有显示，只是打印分支，最好做多个小图显示，或者将第一手以虚子显示。然后逐渐补齐。
     void remember(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
         std::vector<std::vector<Piece>> seqList;
         getEverySeq(boarder, seqList, color);
@@ -1841,6 +1846,10 @@ public:
     //另外考虑，不同方向，不同角，对称位置，其实是同一种
     //也就是每个Node对应一个piece，和N个branch,其实像前缀树
     //row col color 当前准备下的位置
+    //匹配规则完善逻辑 旋转 对称 黑白 4 * 2 * 2 = 16，得到结果后再翻转回来,还要筛出相同项（或者在入库时就统一在左下放置并筛出相同，然后记录变换） (定位) ->废弃
+    //TODO: 存的时候统一旋转位置放在左下，然后对称放两种。搜索的时候转化到左下就行了，结果再转化过去就行了
+    //如何判断需要旋转，如果60%的棋子在左上右上右下，那么需要转换到左下，存的时候先正常存，再col row存一次
+    //需要判断当前局面的位置，然后记录转化步骤，顺时针转90 180 270，然后得到结果后再将结果逆时针转90 180 270，然后显示。习题也可以这样借鉴。
     void getNextStep(std::vector<Piece> & pieceSeq, std::shared_ptr<SGFTreeNode> book, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
         size_t i = 0;
         std::shared_ptr<SGFTreeNode> cur = book;
@@ -1916,6 +1925,140 @@ public:
     }
 
 
+
+
+
+private:
+    void AdjustPosToLeftDown(std::vector<Piece>& seq) {
+        Direction direction = BOTTOMLEFT;//
+        int dirce[8] = {0};
+        for (int i = 0; i < seq.size(); i++) {
+            if (seq[i].row <= 9 && seq[i].col <= 9) {
+                dirce[TOPLEFT]++;
+            }
+            if (seq[i].row <= 9 && seq[i].col >= 9) {
+                dirce[TOPRIGHT]++;
+            }
+            if (seq[i].row >= 9 && seq[i].col <= 9) {
+                dirce[BOTTOMLEFT]++;
+            }
+            if (seq[i].row >= 9 && seq[i].col >= 9) {
+                dirce[BOTTOMRIGHT]++;
+            }
+        }
+        int maxFreq = 0;
+        for (int i = 0; i < 8; i++) {
+            if (dirce[i] > maxFreq) {
+                direction = Direction(i);
+                maxFreq = dirce[i];
+            }
+        }
+        if (direction == BOTTOMLEFT) {
+            return;
+        }
+        //怎么旋转， 左上，row直接19 - 。  右上 row col都减 右下 col直接减
+        for (int i = 0; i < seq.size(); i++) {
+            if (direction == BOTTOMRIGHT) {
+                seq[i].col = 18 - seq[i].col;
+            }
+            else if (direction == TOPLEFT) {
+                seq[i].row = 18 - seq[i].row;
+            }
+            else if (direction == TOPRIGHT) {
+                seq[i].row = 18 - seq[i].row;
+                seq[i].col = 18 - seq[i].col;
+            }
+        }
+    }
+
+    //按左下对角线对称
+    void symmetrization(std::vector<Piece>& seq) {
+        for (int i = 0; i < seq.size(); i++) {
+            int tmp = seq[i].col;
+            seq[i].col = 18 - seq[i].row;
+            seq[i].row = 18 - tmp;
+        }
+    }
+
+    bool addnewBranchDS(std::shared_ptr<SGFTreeNode> node, std::vector<Piece> &seq, int index) {
+        if (node == nullptr) {
+            return false;
+        }
+        while (index < seq.size()) {
+            auto newNode = std::make_shared<SGFTreeNode>();
+            newNode->move = seq[index];
+            newNode->parent = node;
+            if (node->branches.size() == 0) {
+                newNode->moveNum = node->moveNum + 1;
+            }
+            else {
+                newNode->moveNum = 1;
+            }
+            node->branches.push_back(newNode);
+            node = newNode;
+        }
+        return true;
+    }
+
+    bool addBranchDS(std::shared_ptr<SGFTreeNode> node, std::vector<Piece>& seq) {
+        int i = 0;
+        while (i < seq.size()) {
+            bool has = false;
+            for (int j = 0; j < node->branches.size(); j++) {
+                if (seq[i] == node->branches[j]->move) {
+                    has = true;
+                    node = node->branches[j];
+                    break;
+                }
+            }
+            if (!has) {
+                //开始添加
+                //把seq[i] 添加到node下。
+                return addnewBranchDS(node, seq, i);
+            }
+        }
+        if (i == seq.size()) {
+            //已完整匹配，已存在
+            return false;
+        }
+    }
+
+public:
+    //TODO: 存的时候统一旋转位置放在左下，然后对称放两种。搜索的时候转化到左下就行了，结果再转化过去就行了
+    //如何判断需要旋转，如果60%的棋子在左上右上右下，那么需要转换到左下，存的时候先正常存，再对称存一次
+    bool addDSintoBook() {
+        if (DingShiBook == nullptr) {
+            qDebug() << "please first read DingShiBook from local";
+            return false;
+        }
+        auto head = DingShiBook;
+        auto node = historyNode;
+        std::vector<Piece> seq;
+        while (node->parent.lock() != nullptr) {
+            node = node->parent.lock();
+        }
+        node = node->branches[0];
+        while (node != nullptr) {
+            seq.push_back(node->move);
+            if (!node->branches.empty())
+                node = node->branches[0];
+            else
+                break;
+        }
+        if (seq.empty()) {
+            qDebug() << "has no piece";
+            return false;
+        }
+        AdjustPosToLeftDown(seq);//调整到左下
+        bool ret1 = addBranchDS(head, seq);
+        symmetrization(seq);//对称
+        bool ret2 = addBranchDS(head, seq);
+        return ret1 && ret2;
+    }
+
+
+
+
 private:
     bool isOccupied(int row, int col) {
         // 检查是否有棋子在这个位置
@@ -1934,12 +2077,12 @@ private:
     std::vector<std::vector<Piece>> zeroBoard;// x y
 
     //这两个可能有用，可以用当前节点，反向迭代回根节点获取历史和已下节点
-    std::stack<std::vector<std::vector<Piece>>> history;  // 历史栈（用于撤销）  TODO:这个有问题
     std::vector<Piece> pieceSeq;
 
 
     std::shared_ptr<SGFTreeNode> historyNode;
 
+    //std::stack<std::vector<std::vector<Piece>>> history;  // 历史栈（用于撤销）  TODO:这个有问题
     //std::stack<std::vector<std::vector<Piece>>> undoStack;  // 重做栈（用于重做）
     //std::stack<std::vector<std::vector<Piece>>> redoStack;  // 重做栈（用于重做）
     int moveNumber;//当前手数
@@ -1956,23 +2099,22 @@ private:
     QTreeWidget* pieceTree;
     std::map<std::shared_ptr<SGFTreeNode>, QTreeWidgetItem*> treeItemMap;
     std::shared_ptr<SGFTreeNode> DingShiBook;
-    std::map<std::string, std::string> DingShiSetupInfo;
-
-
+    std::map<std::string, std::string> DingShiSetupInfo;   
+    std::string mDingShiBookPath;
 public:
     std::vector<std::vector<Piece>> board;// x y
     std::map<std::string, std::string> setupInfo;
     int allNumber;//总手数
 };
 
-
 /*TODO:
- *
+
  *  顶层分支(完成)
  *  统一读取出来的和下出来的子(完成)
  *  添加文件head(完成)
  *  进度条，前进 后退，大前进，开头 结尾 跳转(完成)
  *  劫争逻辑(完成)
+ *
  *  分割类
  *
  * 难点：获取图片  解析图片转化为二维数组  将数组放到棋盘上，然后选择一点进行推理。将可能的后续，用多个图给出或者以虚棋子显示在棋盘上。
@@ -1999,15 +2141,13 @@ public:
     形式判断有很多模棱两可的判断。
 
     双活逻辑 对杀逻辑，（合理的逻辑：将这一片进行割出，作为研究对象，当两个绝顶聪明的人互相下）
+    无胜负（三劫循环以上） 盘龙眼 摇头劫 长生。。。
 
-    无胜负（三劫循环以上）
+    截图 模式识别（基础完成），入库，组织一颗大树 检索 显示 跳转
 
-    盘龙眼 摇头劫 长生。。。
-
-    截图 模式识别，入库，组织一颗大树 检索 显示 跳转
+    目前应该完成定式入库逻辑和匹配规则完善逻辑（旋转 定位等，先将结果作为字符串显示）
+    在考虑合理的的字符串可视化。（或者这步先做更好）
 */
-
-
 
 
 /*

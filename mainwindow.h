@@ -63,6 +63,8 @@ private slots:
 
     void on_toolButton_27_clicked();
 
+    void on_addDSBtn_clicked();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;

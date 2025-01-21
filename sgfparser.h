@@ -220,11 +220,11 @@ public:
     }
 
     // 保存SGF文件
-    void saveSGF(const std::string& filename, const std::shared_ptr<SGFTreeNode>& root, std::map<std::string, std::string> &setupInfo) {
+    bool saveSGF(const std::string& filename, const std::shared_ptr<SGFTreeNode>& root, std::map<std::string, std::string> &setupInfo) {
         std::ofstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Failed to open file for writing: " << filename << std::endl;
-            return;
+            return false;
         }
 
         // 写入文件格式、字符集、游戏类型等开局信息
@@ -233,6 +233,7 @@ public:
 
         file.close();
         std::cout << "SGF file saved to " << filename << std::endl;
+        return true;
     }
 
     std::string head;
