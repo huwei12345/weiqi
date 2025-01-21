@@ -1834,7 +1834,10 @@ public:
             auto pieceSeq = seqList[i];
             //getPieceSeqFromBoarder(boarder, pieceSeq, number);
             //这种方式还有利于将错误棋局导向正确棋局
+            int rotate = 0, symm = 0;
+            AdjustPosToLeftDown(pieceSeq, rotate, symm);
             getNextStep(pieceSeq, DingShiBook, row, col, color, stepN, res);
+            adjustResultOrigin(res, rotate, symm);//逆操作将结果调回原位
             showNextNStep(res);
         }
     }
@@ -1929,7 +1932,9 @@ public:
 
 
 private:
-    void AdjustPosToLeftDown(std::vector<Piece>& seq) {
+    //rotate 0 无旋转 1 顺时针90 2 顺时针180 3 顺时针270
+    //symm 0 旋转后无对称 1 旋转后再对称
+    void AdjustPosToLeftDown(std::vector<Piece>& seq, int& rotate, int& symmetrize) {
         Direction direction = BOTTOMLEFT;//
         int dirce[8] = {0};
         for (int i = 0; i < seq.size(); i++) {
@@ -1980,6 +1985,11 @@ private:
         }
     }
 
+    //逆操作将结果调回原位
+    void adjustResultOrigin(std::vector<std::vector<Piece>>& res, int rotate, int symm) {
+
+    }
+
     bool addnewBranchDS(std::shared_ptr<SGFTreeNode> node, std::vector<Piece> &seq, int index) {
         if (node == nullptr) {
             return false;
@@ -1996,6 +2006,7 @@ private:
             }
             node->branches.push_back(newNode);
             node = newNode;
+            index++;
         }
         return true;
     }
@@ -2008,6 +2019,7 @@ private:
                 if (seq[i] == node->branches[j]->move) {
                     has = true;
                     node = node->branches[j];
+                    i++;
                     break;
                 }
             }
@@ -2017,8 +2029,9 @@ private:
                 return addnewBranchDS(node, seq, i);
             }
         }
-        if (i == seq.size()) {
+        if (i == (int)seq.size()) {
             //已完整匹配，已存在
+            qDebug() << "current DS has exists";
             return false;
         }
     }
@@ -2049,7 +2062,8 @@ public:
             qDebug() << "has no piece";
             return false;
         }
-        AdjustPosToLeftDown(seq);//调整到左下
+        int rotate = 0, symm = 0;
+        AdjustPosToLeftDown(seq, rotate, symm);//调整到左下
         bool ret1 = addBranchDS(head, seq);
         symmetrization(seq);//对称
         bool ret2 = addBranchDS(head, seq);
@@ -2147,6 +2161,11 @@ public:
 
     目前应该完成定式入库逻辑和匹配规则完善逻辑（旋转 定位等，先将结果作为字符串显示）
     在考虑合理的的字符串可视化。（或者这步先做更好）
+
+
+    定式已经可以读入，但可惜在显示定式文件时存在问题bug readSGF或者showSGF有问题
+    在获取下一步的时候，目前有问题。需要进行修改，修正定式方位和结果方位。之前没方位是可以匹配的。
+
 */
 
 

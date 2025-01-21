@@ -220,7 +220,7 @@ public:
     }
 
     // 保存SGF文件
-    bool saveSGF(const std::string& filename, const std::shared_ptr<SGFTreeNode>& root, std::map<std::string, std::string> &setupInfo) {
+    bool saveSGF(const std::string& filename, const std::shared_ptr<SGFTreeNode> root, std::map<std::string, std::string> &setupInfo) {
         std::ofstream file(filename);
         if (!file.is_open()) {
             std::cerr << "Failed to open file for writing: " << filename << std::endl;
