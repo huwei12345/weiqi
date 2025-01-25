@@ -1,4 +1,4 @@
-#ifndef PIECE_H
+﻿#ifndef PIECE_H
 #define PIECE_H
 #include <vector>
 #include <string>
@@ -7,6 +7,8 @@
 extern const int BOARDWIDTH;
 extern const int HEIGHT;
 extern const int WIDTH;
+enum PieceColor {BLACK = 0, WHITE = 1, SPACE = 2};
+enum Direction {TOP = 0, BOTTOM, LEFT, RIGHT, TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT};
 
 
 class Piece {

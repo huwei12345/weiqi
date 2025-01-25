@@ -33,8 +33,6 @@ public:
 };
 Q_DECLARE_METATYPE(TreeData)
 
-enum PieceColor {BLACK = 0, WHITE = 1, SPACE = 2};
-enum Direction {TOP = 0, BOTTOM, LEFT, RIGHT, TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT};
 
 void showPoint(int row, int col, int color = -1);
 
@@ -144,6 +142,8 @@ public:
         root->parent.reset();
 
         DingShiBook = nullptr;
+        mStepN = 20;
+        mTryMode = false;
     }
     // 打印棋盘（调试用）
     void printBoard() {
@@ -610,7 +610,13 @@ protected:
         //board[row][col].moveNumber = moveNumber++;  // 记录下棋的手数
         //pieceSeq.push_back(board[row][col]);
     }
-
+    void delPiece(int row, int col) {
+        board[row][col].color = 2;
+        board[row][col].row = row;
+        board[row][col].col = col;
+        //board[row][col].moveNumber = moveNumber++;  // 记录下棋的手数
+        //pieceSeq.push_back(board[row][col]);
+    }
     //改造putPiece，在落子时可以在TreeWidget上添加
     //添加的N种情况：
     // 1. 当前节点没有其他分支，直接在当前节点的move添加，并更新history
@@ -867,6 +873,10 @@ protected:
     }
 
     void onLeftClick(QMouseEvent *event) {
+        if (mTryMode == true) {
+            qDebug() << "please first end Try Mode";
+            return;
+        }
         int margin = 30;
         int gridSize = (width() - 2 * margin) / 19;
         int row = std::round((float)(event->y() - margin) / (float)gridSize);
@@ -1092,23 +1102,6 @@ public:
 
            } else if (event->key() == Qt::Key_X && event->modifiers() == Qt::ControlModifier) {
                redo();  // Ctrl + X 执行重做
-           } else if ((event->key() == Qt::Key_B || event->key() == Qt::Key_W) && event->modifiers() == Qt::ControlModifier) {
-               bool isBlack = (event->key() == Qt::Key_B);
-               int margin = 30;
-               int gridSize = (width() - 2 * margin) / 19;
-               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
-               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
-               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
-               if (!isValid(row, col)) {
-                   return;
-               }
-               qDebug() << showPiece(row, col, isBlack ? 0 : 1);
-               // 检查该位置是否已经有棋子
-               if (isOccupied(row, col)) {
-                   return; // 如果该位置已被占据，则不放置棋子
-               }
-               putPiece(row, col, isBlack ? 0 : 1);
-               repaint();
            } else if (event->key() == Qt::Key_E && event->modifiers() == Qt::ControlModifier) {
                int margin = 30;
                int gridSize = (width() - 2 * margin) / 19;
@@ -1136,10 +1129,56 @@ public:
                }
                int color = (currentPlayer == Qt::black ? 0 : 1);
                std::vector<std::vector<Piece>> ans;
-               remember(board, row, col, color, 3, ans);
+               remember(board, row, col, color, mStepN, ans);
            } else if (event->key() == Qt::Key_T && event->modifiers() == Qt::ControlModifier) {
+               //调试用
                DingShiShow* ds = new DingShiShow();
                ds->show();
+           } else if ((event->key() == Qt::Key_B || event->key() == Qt::Key_W) && event->modifiers() == Qt::ControlModifier) {
+               if (!mTryMode) {
+                   qDebug() << "please open TryMode";
+                   return;
+               }
+               bool isBlack = (event->key() == Qt::Key_B);
+               int margin = 30;
+               int gridSize = (width() - 2 * margin) / 19;
+               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+               if (!isValid(row, col)) {
+                   return;
+               }
+               // 检查该位置是否已经有棋子
+               if (isOccupied(row, col)) {
+                   return; // 如果该位置已被占据，则不放置棋子
+               }
+               qDebug() << "putPiece " << showPiece(row, col, isBlack ? 0 : 1);
+               putPiece(row, col, isBlack ? 0 : 1);
+               mTryMode = true;
+               repaint();
+           } else if (event->key() == Qt::Key_D && event->modifiers() == Qt::ControlModifier) {
+               if (!mTryMode) {
+                   qDebug() << "please open TryMode";
+                   return;
+               }
+               //删除节点
+               int margin = 30;
+               int gridSize = (width() - 2 * margin) / 19;
+               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+               if (!isValid(row, col)) {
+                   return;
+               }
+               // 检查该位置是否已经有棋子
+               if (!isOccupied(row, col)) {
+                   qDebug() << "no piece";
+                   return; // 如果该位置已被占据，则不放置棋子
+               }
+               qDebug() << "delPiece " << showPiece(row, col);
+               delPiece(row, col);
+               mTryMode = true;
+               repaint();
            }
        }
 
@@ -1940,6 +1979,7 @@ public:
     //如何判断需要旋转，如果60%的棋子在左上右上右下，那么需要转换到左下，存的时候先正常存，再col row存一次
     //需要判断当前局面的位置，然后记录转化步骤，顺时针转90 180 270，然后得到结果后再将结果逆时针转90 180 270，然后显示。习题也可以这样借鉴。
     void getNextStep(std::vector<Piece> & pieceSeq, std::shared_ptr<SGFTreeNode>& book, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        //先对前边的几手棋找到起始搜索节点cur
         size_t i = 0;
         std::shared_ptr<SGFTreeNode> cur = book;
         size_t cnt = 0;
@@ -1985,13 +2025,13 @@ public:
         //算cur节点
         std::vector<Piece> vec;
         dfs(cur, stepN, res, vec);
-        qDebug() << "dfs result: " << res.size();
+        qDebug() << "stepN = " << stepN << " dfs result: " << res.size();
     }
 
     void dfs(std::shared_ptr<SGFTreeNode> node, int stepN, std::vector<std::vector<Piece>> &res, std::vector<Piece> vec) {
         vec.push_back(node->move);
         // || stepN == 0
-        if (node->branches.size() == 0) {
+        if (node->branches.size() == 0 || stepN <= 0) {
             res.push_back(vec);
             return;
         }
@@ -2214,7 +2254,9 @@ public:
         return ret1 && ret2;
     }
 
-
+    void openTryMode(bool open) {
+        mTryMode = open;
+    }
 
 
 private:
@@ -2263,6 +2305,9 @@ public:
     std::vector<std::vector<Piece>> board;// x y
     std::map<std::string, std::string> setupInfo;
     int allNumber;//总手数
+    int mStepN;
+    bool mTryMode;
+    std::vector<Piece> tryModeSeq;
 };
 
 /*TODO:
@@ -2301,10 +2346,12 @@ public:
     双活逻辑 对杀逻辑，（合理的逻辑：将这一片进行割出，作为研究对象，当两个绝顶聪明的人互相下）
     无胜负（三劫循环以上） 盘龙眼 摇头劫 长生。。。
 
-    截图 模式识别（基础完成），入库，组织一颗大树 检索 显示 跳转
+    截图 模式识别（基础完成）
+    入库（完成）
+    组织一颗大树 检索 显示 跳转（完成）
 
-    目前应该完成定式入库逻辑和匹配规则完善逻辑（旋转 定位等，先将结果作为字符串显示）
-    在考虑合理的的字符串可视化。（或者这步先做更好）
+    目前应该完成定式入库逻辑和匹配规则完善逻辑（旋转 定位等，先将结果作为字符串显示）（完成）
+    在考虑合理的的字符串可视化。（或者这步先做更好）（完成）
 
 
     定式已经可以读入，但可惜在显示定式文件时存在问题bug readSGF或者showSGF有问题（解决）
@@ -2312,13 +2359,20 @@ public:
 
 
     界面上删除tree分支。(完成)
-    对定式后续结果进行显示，目前已经可以显示，但是待优化dingshishow dingshishowWidget
+    对定式后续结果进行显示(完成）
+    缩小显示棋盘10*10(完成）
+    网格布局显示或者使用滚动条（完成）
 
-    缩小显示棋盘10*10 网格布局显示
-
-    (添加一些额外添加的子，或者修改的) 节点。
     应当对定式进行检查不能有分支，否则不能添加。(完成)
     黑白交换如何匹配(完成)
+
+    (添加一些额外添加的子，添加 删除 修改) 节点。先做一个试下功能，再考虑在SGF中添加这种节点。
+    截图识别功能有待加强（优化）
+    存储结构有待加强和压缩，SGF费空间，检索慢，考虑使用数据库。
+    入库需要多一些定式
+    搜索N步（完成）
+
+    试下加入步数信息，和记录以及关闭试下后的记录
 */
 
 

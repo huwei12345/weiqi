@@ -22,6 +22,7 @@ public:
     QString colToChar(int col);
     void showDS(int index);
     void setWindSize(int size);
+    void setRowNumber();
 protected:
     void paintEvent(QPaintEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
@@ -35,6 +36,10 @@ private:
     double zoomRatio;
     bool m_dragging;
     QPoint m_dragPosition;
+    Direction direction;
+    int maxLineSize;
+    int boardRowBase;//已知方向后的，棋盘开始绘制的起点
+    int boardColBase;//已知方向后的，棋盘开始绘制的起点
 };
 
 #endif // DINGSHISHOW_H

@@ -17,7 +17,8 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(goWidget);
     goWidget->setUITree(ui->pieceTree);
     recTool = new ImageRecognition;
-
+    ui->toolButton_4->setCheckable(true);
+    ui->toolButton_4->setChecked(false);
     // 设置上下文菜单策略为菜单触发
     ui->pieceTree->setContextMenuPolicy(Qt::CustomContextMenu);
 }
@@ -270,5 +271,12 @@ void MainWindow::on_pieceTree_customContextMenuRequested(const QPoint &pos)
         // 弹出菜单
         contextMenu.exec(ui->pieceTree->mapToGlobal(pos));
     }
+}
+
+
+void MainWindow::on_toolButton_4_clicked(bool checked)
+{
+    qDebug() << (checked ? "start TryMode" : "close TryMode");
+    goWidget->openTryMode(checked);
 }
 

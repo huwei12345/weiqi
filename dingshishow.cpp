@@ -5,9 +5,9 @@
 #include <QDebug>
 DingShiShow::DingShiShow(QWidget *parent) : QWidget(parent), m_dragging(false)
 {
-    resize(windowSize, windowSize);
+    setFixedSize(windowSize, windowSize);
     zoomRatio = (double)windowSize / (double)mainSize;
-    qDebug() << windowSize << " / " << mainSize << "zoomRatio " << zoomRatio;
+    //qDebug() << windowSize << " / " << mainSize << "zoomRatio " << zoomRatio;
     blackPiece = QPixmap(":/images/black.png"); // 使用资源文件
     blackPiece = blackPiece.scaled(QSize(30 * zoomRatio, 30 * zoomRatio), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     whitePiece = QPixmap(":/images/white.png"); // 使用资源文件
@@ -41,18 +41,91 @@ void DingShiShow::showDS(int index)
 void DingShiShow::setWindSize(int size)
 {
     windowSize = size;
+    direction = TOPLEFT;
 }
 
 DingShiShow::DingShiShow(std::vector<std::vector<Piece> > &boarder, std::vector<Piece> &seq) : DingShiShow()
 {
     board = boarder;
     this->seq = seq;
+    setRowNumber();
+    if (maxLineSize != 0) {
+        zoomRatio = zoomRatio * ((double)BOARDWIDTH / (double)maxLineSize);
+    }
+    qDebug() << "maxLineSize " << maxLineSize << " zoomRatio " << zoomRatio;
+}
+
+
+void DingShiShow::setRowNumber() {
+    direction = BOTTOMLEFT;//
+    int dirce[8] = {0};
+    for (size_t i = 0; i < seq.size(); i++) {
+        if (seq[i].row <= 9 && seq[i].col <= 9) {
+            dirce[TOPLEFT]++;
+        }
+        if (seq[i].row <= 9 && seq[i].col >= 9) {
+            dirce[TOPRIGHT]++;
+        }
+        if (seq[i].row >= 9 && seq[i].col <= 9) {
+            dirce[BOTTOMLEFT]++;
+        }
+        if (seq[i].row >= 9 && seq[i].col >= 9) {
+            dirce[BOTTOMRIGHT]++;
+        }
+    }
+    int maxFreq = 0;
+    for (int i = 0; i < 8; i++) {
+        if (dirce[i] > maxFreq) {
+            direction = Direction(i);
+            maxFreq = dirce[i];
+        }
+    }
+
+    //已知方向
+    maxLineSize = 0;
+    for (size_t i = 0; i < seq.size(); i++) {
+        if (direction == TOPLEFT) {
+            int maxS = std::max(seq[i].row + 1, seq[i].col + 1);
+            maxLineSize = std::max(maxLineSize, maxS);
+        }
+        else if (direction == TOPRIGHT) {
+            int maxS = std::max(seq[i].row + 1, 18 - seq[i].col + 1);
+            maxLineSize = std::max(maxLineSize, maxS);
+        }
+        else if (direction == BOTTOMLEFT) {
+            int maxS = std::max(18 - seq[i].row + 1, seq[i].col + 1);
+            maxLineSize = std::max(maxLineSize, maxS);
+        }
+        else if (direction == BOTTOMRIGHT) {
+            int maxS = std::max(18 - seq[i].row + 1, 18 - seq[i].col + 1);
+            maxLineSize = std::max(maxLineSize, maxS);
+        }
+    }
+    maxLineSize = std::max(maxLineSize, 10);
+    for (int i = 0; i < 4; i++) {
+        if (direction == TOPLEFT) {
+            boardRowBase = 0;
+            boardColBase = 0;
+        }
+        else if (direction == TOPRIGHT) {
+            boardRowBase = 0;
+            boardColBase = 19 - maxLineSize;
+        }
+        else if (direction == BOTTOMLEFT) {
+            boardRowBase = 19 - maxLineSize;
+            boardColBase = 0;
+        }
+        else if (direction == BOTTOMRIGHT) {
+            boardRowBase = 19 - maxLineSize;
+            boardColBase = 19 - maxLineSize;
+        }
+    }
 }
 
 void DingShiShow::paintEvent(QPaintEvent *event) {
     Q_UNUSED(event)
-    windowSize = std::min(width(), height());
-    zoomRatio = (double)windowSize / (double)mainSize;
+    //windowSize = std::min(width(), height());
+    //zoomRatio = (double)windowSize / (double)mainSize;
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     blackPiece = QPixmap(":/images/black.png"); // 使用资源文件
@@ -60,9 +133,9 @@ void DingShiShow::paintEvent(QPaintEvent *event) {
     whitePiece = QPixmap(":/images/white.png"); // 使用资源文件
     whitePiece = whitePiece.scaled(QSize(30 * zoomRatio, 30 * zoomRatio), Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
-    int boardSize = 19;
+    int boardSize = std::min(maxLineSize, 19);
     int margin = std::max(windowSize / 50, 3); // 留出30像素的边距
-    int gridSize = (std::min(width(), height()) - 2 * margin) / 18; // 计算实际棋盘格子大小
+    int gridSize = (std::min(width(), height()) - 2 * margin) / (boardSize - 1); // 计算实际棋盘格子大小
 
     // 绘制棋盘背景
     painter.fillRect(margin, margin, width() - 2 * margin, height() - 2 * margin, QColor(255, 223, 186));
@@ -72,45 +145,44 @@ void DingShiShow::paintEvent(QPaintEvent *event) {
     pen.setColor(Qt::black);
     pen.setWidth(2);
     painter.setPen(pen);
-
+    int lineLength = gridSize * (boardSize - 1);
     for (int i = 0; i < boardSize; ++i) {
         // 绘制纵向和横向的线
-        painter.drawLine(margin + gridSize * i, margin, margin + gridSize * i, margin + gridSize * 18);
-        painter.drawLine(margin, margin + gridSize * i, gridSize * 18 + margin, margin + gridSize * i);
+        painter.drawLine(margin + gridSize * i, margin, margin + gridSize * i, margin + lineLength);
+        painter.drawLine(margin, margin + gridSize * i, margin + lineLength, margin + gridSize * i);
     }
 
-    // 标注数字
+    // 标注数字，先不标注
     QFont font = painter.font();
-    font.setPointSize(10);
+    font.setPointSize(7);
     painter.setFont(font);
 
     // 竖线标注
-    for (int i = 0; i < boardSize; ++i) {
-        int x = margin + gridSize * i + gridSize / 2 - 2;
-        int y = margin - 10; // 放在棋盘上方
-        // 防止第一个数字标注与棋盘重合
-        painter.drawText(x, y, colToChar(i));
-    }
+//    for (int i = 0; i < boardSize; ++i) {
+//        int x = margin + gridSize * i + gridSize / 2 - 2;
+//        int y = margin - 10; // 放在棋盘上方
+//        // 防止第一个数字标注与棋盘重合
+//        painter.drawText(x, y, colToChar(i + boardRowBase));
+//    }
 
-    // 横线标注
-    for (int i = 0; i < boardSize; ++i) {
-        int x = margin - 25; // 放在棋盘左侧
-        int y = margin + gridSize * i + gridSize / 2 - 1;
-        if (i >= 0)
-            painter.drawText(x, y, QString::number(19 - i));
-    }
-
+//    // 横线标注
+//    for (int i = 0; i < boardSize; ++i) {
+//        int x = margin - 25; // 放在棋盘左侧
+//        int y = margin + gridSize * i + gridSize / 2 - 1;
+//        if (i >= 0)
+//            painter.drawText(x, y, QString::number(19 - i - boardColBase));
+//    }
 
     for (int i = 0; i < 19; i++) {
         for (int j = 0; j < 19; j++) {
             if (board[i][j].color == 1) {
-            painter.drawPixmap(margin + j * gridSize - whitePiece.width() / 2,
-                           margin + i * gridSize - whitePiece.height() / 2,
+            painter.drawPixmap(margin + (j - boardColBase) * gridSize - whitePiece.width() / 2,
+                           margin + (i - boardRowBase) * gridSize - whitePiece.height() / 2,
                            whitePiece);
             }
             else if (board[i][j].color == 0) {
-                painter.drawPixmap(margin + j * gridSize - blackPiece.width() / 2,
-                                   margin + i * gridSize - blackPiece.height() / 2,
+                painter.drawPixmap(margin + (j - boardColBase) * gridSize - blackPiece.width() / 2,
+                                   margin + (i - boardRowBase) * gridSize - blackPiece.height() / 2,
                                    blackPiece);
             }
         }
@@ -118,33 +190,33 @@ void DingShiShow::paintEvent(QPaintEvent *event) {
     QPen penold = painter.pen();
     for (int i = 0; i < (int)seq.size(); i++) {
         if (seq[i].color == 1) {
-            painter.drawPixmap(margin + seq[i].col * gridSize - whitePiece.width() / 2,
-                       margin + seq[i].row * gridSize - whitePiece.height() / 2,
+            painter.drawPixmap(margin + (seq[i].col - boardColBase) * gridSize - whitePiece.width() / 2,
+                       margin + (seq[i].row - boardRowBase) * gridSize - whitePiece.height() / 2,
                        whitePiece);
         }
         else if (seq[i].color == 0) {
-            painter.drawPixmap(margin + seq[i].col * gridSize - blackPiece.width() / 2,
-                               margin + seq[i].row * gridSize - blackPiece.height() / 2,
+            painter.drawPixmap(margin + (seq[i].col - boardColBase) * gridSize - blackPiece.width() / 2,
+                               margin + (seq[i].row - boardRowBase) * gridSize - blackPiece.height() / 2,
                                blackPiece);
         }
-        int row = margin + seq[i].row * gridSize + zoomRatio* 5;
+        int row = margin + (seq[i].row - boardRowBase) * gridSize + zoomRatio* 5;
         int col = 0;
-        QString text = QString::number(i);
+        QString text = QString::number(i + 1);
         if (i < 10) {
-            col = margin + seq[i].col * gridSize - zoomRatio * 5;
+            col = margin + (seq[i].col - boardColBase) * gridSize - zoomRatio * 5;
         }
         else if (i >= 10 && i < 100) {
-            col = margin + seq[i].col * gridSize - zoomRatio* 10;
+            col = margin + (seq[i].col - boardColBase) * gridSize - zoomRatio* 10;
         }
         else if (i >= 100) {
-            col = margin + seq[i].col * gridSize - zoomRatio* 15;
+            col = margin + (seq[i].col - boardColBase) * gridSize - zoomRatio* 15;
         }
+
         QFont font = painter.font();
         //font.setFamily("Arial");           // 设置字体为 Arial
         font.setPointSize(std::max(int(10 * zoomRatio), 4));             // 设置字体大小
         //font.setPixelSize(std::max(int(10 * zoomRatio), 5));
         font.setBold(true);                // 设置加粗
-
         //font.setWeight(QFont::DemiBold);   // 设置半粗体
         painter.setFont(font);
         // 设置文本颜色

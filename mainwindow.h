@@ -69,6 +69,8 @@ private slots:
 
     void on_pieceTree_customContextMenuRequested(const QPoint &pos);
 
+    void on_toolButton_4_clicked(bool checked);
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;
