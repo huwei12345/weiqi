@@ -301,6 +301,8 @@ void ImageRecognition::recogniton2(QImage image, std::vector<std::vector<Piece> 
         for (int j = 0; j < 19; j++) {
             cout << list[i][j] << " ";
             boarder[i][j].color = list[i][j];
+            boarder[i][j].row = i;
+            boarder[i][j].col = j;
         }
         cout << endl;
     }

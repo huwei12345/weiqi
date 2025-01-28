@@ -282,24 +282,27 @@ void DingShiShow::updateMoveLabel(QPainter& painter, int gridSize) {
 
 }
 
-    void DingShiShow::mousePressEvent(QMouseEvent *event)  {
-        if (event->button() == Qt::LeftButton) {
-            m_dragging = true;
-            m_dragPosition = event->pos();
-            event->accept();
-        }
+void DingShiShow::mousePressEvent(QMouseEvent *event)  {
+    if (event->button() == Qt::LeftButton) {
+        m_dragging = true;
+        m_dragPosition = event->pos();
+        event->accept();
     }
-    void DingShiShow::mouseMoveEvent(QMouseEvent *event)  {
-        if (m_dragging && (event->buttons() & Qt::LeftButton)) {
-            move(pos() + event->pos() - m_dragPosition);
-            repaint();
-            m_dragPosition = event->pos();
-            event->accept();
-        }
+}
+
+void DingShiShow::mouseMoveEvent(QMouseEvent *event)  {
+    if (m_dragging && (event->buttons() & Qt::LeftButton)) {
+        //move(pos() + event->pos() - m_dragPosition);
+        //TOSEE:move开启可以拖动
+        repaint();
+        m_dragPosition = event->pos();
+        event->accept();
     }
-    void DingShiShow::mouseReleaseEvent(QMouseEvent *event)  {
-        if (event->button() == Qt::LeftButton) {
-            m_dragging = false;
-            event->accept();
-        }
+}
+
+void DingShiShow::mouseReleaseEvent(QMouseEvent *event)  {
+    if (event->button() == Qt::LeftButton) {
+        m_dragging = false;
+        event->accept();
     }
+}

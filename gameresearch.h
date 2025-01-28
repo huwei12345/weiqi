@@ -1,17 +1,11 @@
-#ifndef GAMERESEARCH_H
+﻿#ifndef GAMERESEARCH_H
 #define GAMERESEARCH_H
 
 #include "gamesettings.h"
 #include "boardwidget.h"
 #include <vector>
+#include "piece.h"
 
-enum ModeType {
-    PlayMode = 0,
-    SearchMode = 1,
-    DingShiMode = 2,
-    ExerciseMode = 3,
-    AIMode = 4
-};
 
 //研究模式
 class GameResearch
@@ -28,7 +22,7 @@ public:
     GameSettings settings;//**：游戏设置，可能包括规则、时间等。
     TimeControl *timeControl;// = setting->timeControl**：时间控制，适用于模拟研究时的时间限制（如果有的话）。
     QColor currentPlayer;//**：当前落子的玩家。
-    ModeType isInResearchMode;//**：指示是否处于研究模式。
+    BoardModeType isInResearchMode;//**：指示是否处于研究模式。
     //    **std::vector<Move> analysisMoves**：存储玩家或AI在研究模式下进行的棋步（与历史棋局无关，纯粹用于分析）。
 
     //    **loadGameFromFile(const std::string& filename)**：从文件中读取棋局，恢复到研究模式。

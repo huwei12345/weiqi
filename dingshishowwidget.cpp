@@ -23,6 +23,7 @@ DingShiShowWidget::DingShiShowWidget(QWidget *parent)
     mainLayout = new QHBoxLayout();
     mainLayout->addWidget(scrollArea);
     setLayout(mainLayout);
+    setWindowTitle("定式集");
 }
 
 void DingShiShowWidget::showDS()

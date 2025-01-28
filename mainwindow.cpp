@@ -21,6 +21,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toolButton_4->setChecked(false);
     // 设置上下文菜单策略为菜单触发
     ui->pieceTree->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    setWindowTitle("围棋练习助手");
 }
 
 MainWindow::~MainWindow()
