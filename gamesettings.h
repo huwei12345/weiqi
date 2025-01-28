@@ -1,4 +1,4 @@
-#ifndef GAMESETTINGS_H
+﻿#ifndef GAMESETTINGS_H
 #define GAMESETTINGS_H
 
 #include "timecontrol.h"
@@ -27,7 +27,7 @@ public:
     QString loadSGFHead();
     std::string blackPlayerName;// (黑方玩家名字)
     std::string whitePlayerName;// (白方玩家名字)
-    int komi; //(贴目，浮动贴目规则)
+    double komi = 7.5; //(贴目，浮动贴目规则)
     int boardSize;// (棋盘大小，如 19x19, 13x13)
 
     TimeControl timecontrol;

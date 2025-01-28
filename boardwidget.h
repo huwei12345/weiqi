@@ -160,6 +160,11 @@ public:
         std::set<std::pair<int, int>> pieceFiled;
         std::vector<Filed*> aceFiled;
         std::vector<Filed*> roundFiled;
+        std::vector<Filed*> neighborFiled;
+        int eyeSize = 0;
+        int eyeCnt = 0;
+        bool alived = false;
+        int belong = -1; //空属于黑还是白 0黑 1白 2共
     };
 
     // 打印棋盘（调试用）
@@ -284,6 +289,28 @@ protected:
         for (auto p : filedLiberties) {
             painter.setBrush(QBrush(Qt::green));
             painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+        }
+
+        std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                if (indexMap[i][j] != nullptr && visited[i][j] == false) {
+                    auto liber = indexMap[i][j];
+                    if (liber->color == 2) {
+                        for (auto p : liber->pieceFiled) {
+                            visited[p.first][p.second] = true;
+                            if (liber->belong == 0) {
+                                painter.setBrush(QBrush(Qt::yellow));
+                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+                            }
+                            else if (liber->belong == 1) {
+                                painter.setBrush(QBrush(Qt::gray));
+                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+                            }
+                        }
+                    }
+                }
+            }
         }
         //当前棋子加一个小红旗标示
     }
@@ -462,6 +489,39 @@ protected:
         return true;
     }
 
+    bool isEye(std::vector<std::vector<Piece>> & boarder, int x, int y, int color) {
+        int rx[8] {1,-1,0,0,  1,1,-1,-1};
+        int ry[8] {0,0,1,-1,  1,-1,1,-1};
+        // 检查一个眼的条件：四周必须是空白或敌方棋子，且没有其他棋子存在
+        // 一个有效的眼必须完全被一个颜色围住
+        int qutorNum = 0;
+        int allqutorNum = 0;
+        //上下左右
+        int orthogonalityNum = 0;
+        for (int i = 0; i < 8; i++) {
+            int nx = x + rx[i];
+            int ny = y + ry[i];
+            if (isValid(nx, ny)) {
+                allqutorNum++;
+                if (boarder[nx][ny].color == 2 || boarder[nx][ny].color == color) {
+                    qutorNum++;
+                    if (i < 4 && boarder[nx][ny].color == color) {
+                        orthogonalityNum++;
+                    }
+                }
+            }
+        }
+        if (allqutorNum == 3) {
+            return qutorNum >= 3;
+        }
+        else if (allqutorNum == 5) {
+            return qutorNum >= 5;
+        }
+        else if (allqutorNum == 8) {
+            return orthogonalityNum == 4 && qutorNum >= 7;
+        }
+        return true;
+    }
 
     int isEyes(std::set<std::pair<int, int>> &liberties) {
         int bEye = 0;
@@ -471,6 +531,56 @@ protected:
                 bEye++;
             }
             if (isEye(p.first, p.second, 1)) {
+                wEye++;
+            }
+            qDebug() << "isEyes " << p.first << p.second;
+        }
+        if (bEye != 0 && wEye != 0) {
+            qDebug() << "bCnt " << bEye << " wCnt " << wEye;
+            return 0;//都不是
+        }
+        else if (bEye > 0) {
+            return liberties.size();
+        }
+        else if (wEye > 0) {
+            return 0 - (int)liberties.size();
+        }
+        return 0;
+    }
+
+    int isEyes(std::vector<std::vector<Piece>> & boarder, Filed* spaceFiled) {
+        int bEye = 0;
+        int wEye = 0;
+        auto &liberties = spaceFiled->pieceFiled;
+
+        if (liberties.size() == 2) {
+
+        }
+        //TODO:判断2和3的情况，应该判断的
+        //如果这片区域大小大于4，并且只被一种颜色围住，怎么都有一个眼
+        //是否需要单独判断2和3的情况
+        if (liberties.size() >= 2) {
+            if (spaceFiled->roundFiled.size() == 1) {
+                int color = spaceFiled->roundFiled[0]->color;
+                //只有一种颜色，说明被围住了
+                if (color == 0) {
+                    return liberties.size();
+                }
+                else if (color == 1) {
+                    return 0 - (int)liberties.size();
+                }
+                else {
+                    qDebug() << "ERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR";
+                }
+            }
+        }
+
+        //判断每个点是否是眼，并不完全合理，即时是一大片空，每个点也不一定是眼的形状（指4面围住这个点，4角占三个）
+        for (auto p : liberties) {
+            if (isEye(boarder, p.first, p.second, 0)) {
+                bEye++;
+            }
+            if (isEye(boarder, p.first, p.second, 1)) {
                 wEye++;
             }
             qDebug() << "isEyes " << p.first << p.second;
@@ -532,24 +642,31 @@ protected:
 
     //判断某块棋能否活棋，1.具备两眼。 2.具备一眼，并能一手再做一眼 (3.可以通过对杀将对手杀死.)
     //不能活棋 1.无眼 2.具备一眼，但不能一手棋再做一眼
-    bool isAlive(Filed* filed) {
+    bool isAlive(std::vector<std::vector<Piece>> &boarder, Filed* filed) {
         //游戏终局除了双活的情况。一个空要么是黑的眼，要么是白的眼，如果无法判定，说明这个空没下完，无法点目。
         int count = 0;
-        for (auto p : filed->aceFiled) {
-            int size = isEyes(p->pieceFiled);
+        int size = 0;
+        int maxSize = 0;
+        for (auto &p : filed->aceFiled) {
+            size = isEyes(boarder, p);
             if (filed->color == 1) {
                 size = -size;
             }
             if (size > 0) {
                 count++;
+                p->belong = filed->color;
             }
-            if (size >= 5) {
-                return true;
-            }
+            maxSize = std::max(maxSize, size);
+        }
+        filed->eyeSize = maxSize;
+        filed->eyeCnt = count;
+        if (maxSize >= 5) {
+            return true;
         }
         if (count >= 2) {
             return true;
         }
+        return false;
     }
 
     bool judgeJieZheng(std::vector<std::vector<Piece>>& boarder) {
@@ -1490,14 +1607,10 @@ public:
 //               std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
 //               floodFill(row, col, visited);
                if (hasCalc == false) {
-                   calc();
+                   calc(board, false);
                    hasCalc = true;
                }
                Filed* fd = indexMap[row][col];
-               bool ret = isAlive(fd);
-               if (ret) {
-                   aliveFiled.insert(fd);
-               }
                filedLiberties = fd->pieceFiled;
                if (fd) {
                    if (aliveFiled.count(fd)) {
@@ -1537,6 +1650,9 @@ public:
     //计算胜负
     // 计算并输出胜负和数目
     void calculateScore() {
+        getGameResult();
+
+        return;
         blackLiberties.clear();
         whiteLiberties.clear();
         float blackScore = 0, whiteScore = 0;
@@ -1619,30 +1735,19 @@ public:
     }
 
 
-
-    void calc() {
+    //终局判定
+    void calc(std::vector<std::vector<Piece>> & boarder, bool firstTime) {
         filedLiberties.clear();
         indexMap.clear();
+        //TODO:此处有内存泄漏，应删除Filed
+        indexMap.assign(HEIGHT, std::vector<Filed*>(WIDTH, nullptr));
         whiteFiled.clear();
         blackFiled.clear();
         spaceFiled.clear();
-
+        fuzzFiled.clear();
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
-        std::vector<std::set<std::pair<int, int>>> aceFuzzList;
-        //获得多个区域的子区域
-//        for (int i = 0; i < 19; i++) {
-//            for (int j = 0; j < 19; j++) {
-//                if (board[i][j].color != 2 && visited[i][j] == false) {
-//                    floodFill(i, j, visited);
-//                    Filed *filed = new Filed;
-//                    filed->row = i; filed->col = j; filed->color = board[i][j].color;
-//                    filed->pieceFiled = filedLiberties;
-//                    for (auto r : filedLiberties) {
-//                        indexMap[r.first][r.second] = filed;
-//                    }
-//                }
-//            }
-//        }
+
+//用于形式判断？
 //        visited.assign(HEIGHT, std::vector<bool>(WIDTH, false));
 //        for (int i = 0; i < 19; i++) {
 //            for (int j = 0; j < 19; j++) {
@@ -1651,13 +1756,15 @@ public:
 //                }
 //            }
 //        }
+
+        //获取所有的块，白棋块、黑棋块、气块
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
                 if (indexMap[i][j] == nullptr) {
-                    Filed* fd = floodFill7(i,j);
-                    if (board[i][j].color == 0) {
+                    Filed* fd = floodFill7(boarder, i,j);
+                    if (boarder[i][j].color == 0) {
                         blackFiled.push_back(fd);
-                    } else if (board[i][j].color == 1) {
+                    } else if (boarder[i][j].color == 1) {
                         whiteFiled.push_back(fd);
                     } else {
                         spaceFiled.push_back(fd);
@@ -1666,6 +1773,7 @@ public:
             }
         }
 
+        //获取这些棋块之间、棋块与周围的气的关系
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
                 //对某点的四周，判断是空还是同色子，还是异色子。
@@ -1673,14 +1781,22 @@ public:
                     int nx = i + dx[k];
                     int ny = j + dy[k];
                     if (isValid(nx,ny)) {
-                        if (board[i][j].color == 2 && board[nx][ny].color != 2) {
+                        //周围的气
+                        if (boarder[i][j].color == 2 && boarder[nx][ny].color != 2) {
                             if (std::find(indexMap[nx][ny]->aceFiled.begin(), indexMap[nx][ny]->aceFiled.end(), indexMap[i][j]) == indexMap[nx][ny]->aceFiled.end()) {
                                 indexMap[nx][ny]->aceFiled.push_back(indexMap[i][j]);
                             }
                         }
-                        else if (board[i][j].color != 2 && board[nx][ny].color == 2) {
-                            if (std::find(indexMap[nx][ny]->aceFiled.begin(), indexMap[nx][ny]->aceFiled.end(), indexMap[i][j]) == indexMap[nx][ny]->aceFiled.end()) {
+                        //周围的区域
+                        else if (boarder[i][j].color != 2 && boarder[nx][ny].color == 2) {
+                            if (std::find(indexMap[nx][ny]->roundFiled.begin(), indexMap[nx][ny]->roundFiled.end(), indexMap[i][j]) == indexMap[nx][ny]->roundFiled.end()) {
                                 indexMap[nx][ny]->roundFiled.push_back(indexMap[i][j]);
+                            }
+                        }
+                        //非同色相邻
+                        else if (boarder[nx][ny].color + boarder[i][j].color == 1) {
+                            if (std::find(indexMap[nx][ny]->neighborFiled.begin(), indexMap[nx][ny]->neighborFiled.end(), indexMap[i][j]) == indexMap[nx][ny]->neighborFiled.end()) {
+                                indexMap[nx][ny]->neighborFiled.push_back(indexMap[i][j]);
                             }
                         }
                     }
@@ -1690,25 +1806,211 @@ public:
 
         //现在已经获取了所有的区域
         //应该判断区域是否活棋（根据本身及其周围的气，先判断内气能否直接活，排除一些，再判断外气，是否有明显结果的对杀或者双活），再判断是否双活？
+        //获取明显的活棋，其他添加到未知列表fuzz
+        for (auto p : blackFiled) {
+            bool ret = isAlive(boarder, p);
+            if (ret) {
+                p->alived = true;
+                aliveFiled.insert(p);
+            }
+            else {
+                fuzzFiled.insert(p);
+            }
+        }
+        for (auto p : whiteFiled) {
+            bool ret = isAlive(boarder, p);
+            if (ret) {
+                p->alived = true;
+                aliveFiled.insert(p);
+            }
+            else {
+                fuzzFiled.insert(p);
+            }
+        }
 
-//        for (auto p : blackFiled) {
-//            bool ret = isAlive(p);
-//            if (ret) {
-//                aliveFiled.insert(p);
-//            }
-//        }
-//        for (auto p : whiteFiled) {
-//            bool ret = isAlive(p);
-//            if (ret) {
-//                aliveFiled.insert(p);
-//            }
-//        }
 
-        //根据这些确定的气的情况，初步判定棋块的死活状态。
-        //如果某块棋有>=2个眼，或者某个眼大小大于6。直接判定为活棋。
+        //对模糊的未判活区域进行是双活还是死棋判定。  如果一方是死棋，它邻近的其他方可以作为活棋
+        int lastSize = -1;
+        while (fuzzFiled.size() != 0 && lastSize != (int)fuzzFiled.size()) {
+            lastSize = fuzzFiled.size();
+            for (auto filed = fuzzFiled.begin(); filed != fuzzFiled.end(); ) {
+                //单子无双活？
+                if ((*filed)->pieceFiled.size() == 1) {
+                    deadFiled.insert(*filed);
+                    filed = fuzzFiled.erase(filed);
+                }
+                else {
+                    std::vector<Filed*> winResult;//对杀中胜的一方
+                    std::vector<Filed*> loseResult;//对杀中输的一方
+                    std::vector<Filed*> balanceResult;//双活的情况
+                    isShuanghuoOrDead(*filed, winResult, loseResult, balanceResult);//知道它和它的邻居是双活还是谁吃了谁，可能有三块以上棋块一起双活？
+                    //可能涉及到删除后边的filed，要操作好删除后的位置
+                    if (winResult.size() != 0) {
+                        for (auto t : winResult) {
+                            fuzzFiled.erase(t);
+                            aliveFiled.insert(t);
+                        }
+                    }
+                    if (loseResult.size() != 0) {
+                        for (auto t : loseResult) {
+                            fuzzFiled.erase(t);
+                            deadFiled.insert(t);
+                        }
+                    }
+                    if (balanceResult.size() != 0) {
+                        //将二者的公气，标注为平分，在计算时计算0.5个
+                    }
+                    if (winResult.size() != 0 || loseResult.size() != 0) {
+                        break;
+                    }
+                    if (winResult.size() == 0 && loseResult.size() == 0 && balanceResult.size() == 0) {
+                        filed++;
+                    }
+                }
+            }
+        }
 
-        //根据目前已知的棋块的死活状态，判定不确定的气的情况
-        //某些区域
+        //对于活棋的周围的空格，如果这个空格是四周被这个活棋包围的，那么这个空一定属于这一方。无论这个空是不是眼
+        for (auto r : aliveFiled) {
+            int color = r->color;
+            for (auto ace : r->aceFiled) {
+                if (surround(boarder, color, ace)) {
+                    ace->belong = r->color;
+                }
+            }
+        }
+
+        qDebug() << "Calc Over : lastSize " << lastSize;
+        if (lastSize == 0) {
+            return;
+        }
+        //这个lastSize是棋的块，这个一定是可以处理的，不可以处理的是空的块。因为可能有单官
+        //筛掉死棋，把它作为空
+        std::vector<std::vector<Piece>> newBoard = boarder;// x y
+        for (auto r : deadFiled) {
+            for (auto x : r->pieceFiled) {
+                newBoard[x.first][x.second].color = 2;
+            }
+        }
+        //对于去掉第一次筛掉的死棋的棋盘，再进行一次终局判定
+        if (firstTime == false) {
+            calc(newBoard, true);
+        }
+    }
+
+    //这片区域如果周围都是由这块活棋包围的，
+    bool surround(std::vector<std::vector<Piece>> &boarder, int color, Filed* ace) {
+        for (auto p : ace->pieceFiled) {
+            for (int i = 0; i < 4; i++) {
+                int nx = p.first + dx[i];
+                int ny = p.second + dy[i];
+                if (isValid(nx, ny)) {
+                    if (boarder[nx][ny].color == !color && boarder[nx][ny].color != 2) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    void getGameResult() {
+        calc(board, false);
+        double blackPiece = 0;
+        double whitePiece = 0;
+        double blackSpace = 0;
+        double whiteSpace = 0;
+        double blackScore = 0;
+        double whiteScore = 0;
+        for (auto r : spaceFiled) {
+            if (r->color != 2) {
+                continue;
+            }
+            if (r->belong == 0) {
+                blackSpace += r->pieceFiled.size();
+            }
+            else if (r->belong == 1) {
+                whiteSpace += r->pieceFiled.size();
+            }
+            else {
+                blackSpace += (double)r->pieceFiled.size() / 2.0;
+                whiteSpace += (double)r->pieceFiled.size() / 2.0;
+            }
+        }
+        for (auto r : blackFiled) {
+            blackPiece += r->pieceFiled.size();
+        }
+        for (auto r : whiteFiled) {
+            whitePiece += r->pieceFiled.size();
+        }
+        blackScore = blackSpace + blackPiece;
+        whiteScore = whiteSpace + whitePiece;
+        qDebug() << "blackSpace " << blackSpace << " blackPiece " << blackPiece << " blackScore " << blackScore << "finalScore" << blackScore - mSetting.komi / 2.0;
+        qDebug() << "whiteSpace " << whiteSpace << " whitePiece " << whitePiece << " whiteScore " << whiteScore << "finalScore" << whiteScore + mSetting.komi / 2.0;
+        if (std::abs((blackScore - mSetting.komi / 2.0) - (whiteScore + mSetting.komi / 2.0)) < 0.001) {
+            qDebug() << "All Win! " << blackScore - mSetting.komi / 2.0;
+        }
+        else if (blackScore - mSetting.komi / 2.0 > whiteScore + mSetting.komi / 2.0) {
+            qDebug() << "Black Win! " << (blackScore - whiteScore - mSetting.komi) / 2.0 << " zi";
+        }
+        else {
+            qDebug() << "White Win! " << (whiteScore - blackScore + mSetting.komi) / 2.0 << " zi";
+        }
+        int blackx = 0;
+        int whitex = 0;
+        int spacex = 0;
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                if (board[i][j].color == 0) {
+                    blackx++;
+                }
+                else if (board[i][j].color == 1) {
+                    whitex++;
+                }
+                else {
+                    spacex++;
+                }
+            }
+        }
+        qDebug() << "[debug]rrrrrr " << blackx << " " << whitex << " " << spacex;
+    }
+
+    //result存储哪些棋块赢了，哪块棋输了
+    bool isShuanghuoOrDead(Filed* filed, std::vector<Filed*>& winResult, std::vector<Filed*>& loseResult, std::vector<Filed*>& balanceResult) {
+        //有眼杀瞎
+        if (filed->eyeSize == 0) {
+            bool flag = true;
+            for (auto r : filed->neighborFiled) {
+                //周围有不活且没眼的棋，说明要对杀或双活
+                if (!r->alived && r->eyeSize == 0) {
+                    flag = false;
+                }
+            }
+            if (flag) {
+                loseResult.push_back(filed);
+                for (auto r : filed->neighborFiled) {
+                    winResult.push_back(r);
+                }
+            }
+            else {
+                //TODO:判定双活或者对杀，终局基本上是双活
+                //judgeShuanghuo(filed);
+            }
+        }
+        //活棋对有眼，且有眼的一方做不出第二只眼，这里不判断是否做出来了，因为已经点终局判定了，所以当死棋处理
+        //如果对方不服，可以继续对弈，作出第二只眼。
+        if (filed->eyeSize == 1) {
+            bool flag = true;
+            for (auto r : filed->neighborFiled) {
+                if (!r->alived) {
+                    flag = false;
+                }
+            }
+            if (flag) {
+                loseResult.push_back(filed);
+            }
+        }
+        return true;
     }
 
     //获取这块棋围起来的区域，以及它本身。
@@ -1839,7 +2141,7 @@ public:
         return false;
     }
     //判断某子是否能被征吃死
-    //TODO:待实现
+    //TODO:待实现征子
     bool canbeZhengzi(int row, int col, int color) {
         std::vector<std::vector<Piece>> bod = board;
         return true;
@@ -2098,7 +2400,7 @@ public:
                                stack.push({nx, ny});
                                visited[nx][ny] = true;
                            }
-                           Filed* filed = floodFill7(newX, newY);
+                           Filed* filed = floodFill7(board, newX, newY);
                         }
                     }
                 }
@@ -2109,14 +2411,14 @@ public:
 
 
     //对这一点进行连片
-    Filed* floodFill7(int x, int y) {
+    Filed* floodFill7(std::vector<std::vector<Piece>> & boarder, int x, int y) {
         std::stack<std::pair<int, int>> stack;
         if (indexMap[x][y] != nullptr) {
             return indexMap[x][y];
         }
         Filed* filed = new Filed;
         stack.push({x, y});
-        int color = board[x][y].color;
+        int color = boarder[x][y].color;
         filed->row = x; filed->col = y; filed->color = color;
         std::set<std::pair<int, int>> liberties;
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
@@ -2131,31 +2433,31 @@ public:
                         continue;
                     }
                     visited[newX][newY] = true;
-                    if (board[newX][newY].color == color) {
+                    if (boarder[newX][newY].color == color) {
                         stack.push({newX, newY});
                     }
                     //非空格点 以空格斜对角相连
-                    if (color != 2 && board[newX][newY].color == 2) {
+                    if (color != 2 && boarder[newX][newY].color == 2) {
                         for (int i = 0; i < 4; i++) {
                            int nx = newX + dx[i];
                            int ny = newY + dy[i];
                            if (!isValid(nx, ny)) continue;
-                           if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                           if (boarder[nx][ny].color == color && visited[nx][ny] == false) {
                                stack.push({nx, ny});
                                visited[nx][ny] = true;
                            }
                         }
                     }
                     //非空格点，被其他颜色的卡住，但是其他颜色的点只有1气，或者2气但是能征死，基于当前颜色先手判断
-                    else if (color != 2 && board[newX][newY].color == !color) {
-                        int ace = getAceOfPoint(board, newX, newY, !color);
+                    else if (color != 2 && boarder[newX][newY].color == !color) {
+                        int ace = getAceOfPoint(boarder, newX, newY, !color);
                         //绝对判定，当然可能存在倒扑
                         if (ace == 1) {
                             for (int i = 0; i < 4; i++) {
                                int nx = newX + dx[i];
                                int ny = newY + dy[i];
                                if (!isValid(nx, ny)) continue;
-                               if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                               if (boarder[nx][ny].color == color && visited[nx][ny] == false) {
                                    stack.push({nx, ny});
                                    visited[nx][ny] = true;
                                }
@@ -2168,7 +2470,7 @@ public:
                                    int nx = newX + dx[i];
                                    int ny = newY + dy[i];
                                    if (!isValid(nx, ny)) continue;
-                                   if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                                   if (boarder[nx][ny].color == color && visited[nx][ny] == false) {
                                        stack.push({nx, ny});
                                        visited[nx][ny] = true;
                                    }
@@ -2622,7 +2924,18 @@ public:
         root = sgfParser.parse(filename, setupInfo);
         showSGF(root, nullptr, 0, 0);
         repaint();
+        parsesetupInfo(setupInfo, mSetting);
         return true;
+    }
+
+    void parsesetupInfo(std::map<std::string, std::string> &setupInfo, GameSettings& mSetting) {
+        if (setupInfo.count("Komi")) {
+            double komi = std::stof(setupInfo["Komi"]);
+            if (komi >= 0 && komi <= 100) {
+                mSetting.komi = komi;
+            }
+            qDebug() << "Read KM " << mSetting.komi;
+        }
     }
 
     bool saveSGF(const std::string &filename) {
@@ -3199,7 +3512,7 @@ private:
     std::string mDingShiBookPath;
 public:
     std::vector<std::vector<Piece>> board;// x y
-    std::map<std::string, std::string> setupInfo;
+    std::map<std::string, std::string> setupInfo;//读取棋局获得的信息
     int allNumber;//总手数
     int mStepN;
     bool mTryMode;
@@ -3221,6 +3534,7 @@ public:
     std::set<Filed*> aliveFiled;
     std::set<Filed*> fuzzFiled;
     std::set<Filed*> deadFiled;
+    GameSettings mSetting;
 };
 
 /*TODO:
@@ -3317,7 +3631,12 @@ public:
     19 * 19 = 361，181 180 黑贴3.75子，
     x - (361 - x) = 7.5, 2x = 361 + 7.5 = 368.5 = 185（黑赢） 177（白赢）
                                                   176      184
+    目前初步实现了终局判定功能，有3个TODO未解决。
+    是否终局还没实现，应该是在排除双活之后，如果还有belong=-1的情况的话，就是单官，那么应该提示未终局
 
+    形式判断需要更细致的判断。如角部 拆二拆三 连接分断 对杀 打劫 双活。
+
+    TODO:将单官和双活的空填上颜色，一半黑，一半白。
 */
 
 
