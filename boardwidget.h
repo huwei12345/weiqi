@@ -23,6 +23,7 @@
 #include "piece.h"
 #include "sgfparser.h"
 #include "timecontrol.h"
+#include <algorithm>
 extern int dx[4];
 extern int dy[4];
 
@@ -147,7 +148,20 @@ public:
         mTryMode = false;
         PracticeMode = false;
         seqIndex = -1;
+        indexMap.assign(HEIGHT, std::vector<Filed*>(WIDTH, nullptr));
     }
+
+
+    class Filed {
+    public:
+        int row;
+        int col;
+        int color;
+        std::set<std::pair<int, int>> pieceFiled;
+        std::vector<Filed*> aceFiled;
+        std::vector<Filed*> roundFiled;
+    };
+
     // 打印棋盘（调试用）
     void printBoard() {
         for (int i = 0; i < HEIGHT; ++i) {
@@ -459,16 +473,17 @@ protected:
             if (isEye(p.first, p.second, 1)) {
                 wEye++;
             }
+            qDebug() << "isEyes " << p.first << p.second;
         }
-        qDebug() << "bCnt " << bEye << " wCnt " << wEye;
         if (bEye != 0 && wEye != 0) {
+            qDebug() << "bCnt " << bEye << " wCnt " << wEye;
             return 0;//都不是
         }
         else if (bEye > 0) {
-            return bEye;
+            return liberties.size();
         }
         else if (wEye > 0) {
-            return -wEye;
+            return 0 - (int)liberties.size();
         }
         return 0;
     }
@@ -512,6 +527,29 @@ protected:
         //第二轮继续遍历空，对所有的未判定空，判定是否有双活的情况。
         //第三轮继续遍历空，如果这个空的几个周围都是活棋，说明没有终局，这是一个单官。
         //如果一边是确定的活棋，一边是不确定的活棋。先保留，可能存在双活。
+    }
+
+
+    //判断某块棋能否活棋，1.具备两眼。 2.具备一眼，并能一手再做一眼 (3.可以通过对杀将对手杀死.)
+    //不能活棋 1.无眼 2.具备一眼，但不能一手棋再做一眼
+    bool isAlive(Filed* filed) {
+        //游戏终局除了双活的情况。一个空要么是黑的眼，要么是白的眼，如果无法判定，说明这个空没下完，无法点目。
+        int count = 0;
+        for (auto p : filed->aceFiled) {
+            int size = isEyes(p->pieceFiled);
+            if (filed->color == 1) {
+                size = -size;
+            }
+            if (size > 0) {
+                count++;
+            }
+            if (size >= 5) {
+                return true;
+            }
+        }
+        if (count >= 2) {
+            return true;
+        }
     }
 
     bool judgeJieZheng(std::vector<std::vector<Piece>>& boarder) {
@@ -1449,8 +1487,30 @@ public:
                int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
                int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
                qDebug() << showPiece(row, col);
-               std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
-               floodFill(row, col, visited);
+//               std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
+//               floodFill(row, col, visited);
+               if (hasCalc == false) {
+                   calc();
+                   hasCalc = true;
+               }
+               Filed* fd = indexMap[row][col];
+               bool ret = isAlive(fd);
+               if (ret) {
+                   aliveFiled.insert(fd);
+               }
+               filedLiberties = fd->pieceFiled;
+               if (fd) {
+                   if (aliveFiled.count(fd)) {
+                       qDebug() << "isAlive";
+                   }
+                   else {
+                       qDebug() << "no Alive";
+                   }
+               }
+               else {
+                   qDebug() << "error";
+               }
+               repaint();
            }
         }
 
@@ -1558,53 +1618,91 @@ public:
         repaint();
     }
 
-    class Filed {
-    public:
-        int row;
-        int col;
-        int color;
-        std::set<std::pair<int, int>> pieceFiled;
-        std::vector<std::set<std::pair<int, int>>> acefiled;//确定的眼，单官不算
-    };
+
 
     void calc() {
+        filedLiberties.clear();
+        indexMap.clear();
+        whiteFiled.clear();
+        blackFiled.clear();
+        spaceFiled.clear();
+
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
-        std::vector<Filed> filedList;
         std::vector<std::set<std::pair<int, int>>> aceFuzzList;
-        std::vector<std::vector<int>> indexMap(HEIGHT, std::vector<int>(WIDTH, -1));
         //获得多个区域的子区域
+//        for (int i = 0; i < 19; i++) {
+//            for (int j = 0; j < 19; j++) {
+//                if (board[i][j].color != 2 && visited[i][j] == false) {
+//                    floodFill(i, j, visited);
+//                    Filed *filed = new Filed;
+//                    filed->row = i; filed->col = j; filed->color = board[i][j].color;
+//                    filed->pieceFiled = filedLiberties;
+//                    for (auto r : filedLiberties) {
+//                        indexMap[r.first][r.second] = filed;
+//                    }
+//                }
+//            }
+//        }
+//        visited.assign(HEIGHT, std::vector<bool>(WIDTH, false));
+//        for (int i = 0; i < 19; i++) {
+//            for (int j = 0; j < 19; j++) {
+//                if (indexMap[i][j] != nullptr && visited[i][j] == false) {
+//                    getFiledAndInner(indexMap[i][j], indexMap);
+//                }
+//            }
+//        }
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
-                if (board[i][j].color != 2 && visited[i][j] == false) {
-                    floodFill(i, j, visited);
-                    Filed filed;
-                    filed.row = i; filed.col = j; filed.color = board[i][j].color;
-                    filed.pieceFiled = filedLiberties;
+                if (indexMap[i][j] == nullptr) {
+                    Filed* fd = floodFill7(i,j);
+                    if (board[i][j].color == 0) {
+                        blackFiled.push_back(fd);
+                    } else if (board[i][j].color == 1) {
+                        whiteFiled.push_back(fd);
+                    } else {
+                        spaceFiled.push_back(fd);
+                    }
                 }
             }
         }
-        for (int i = 0; i < (int)filedList.size(); i++) {
-            for (auto r : filedList[i].pieceFiled) {
-                indexMap[r.first][r.second] = i;
-            }
-        }
-        visited.assign(HEIGHT, std::vector<bool>(WIDTH, false));
-        //获取所有的气区域
+
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
-                if (board[i][j].color == 2 && visited[i][j] == false) {
-                    floodFill(i, j, visited);
-                    int index = -1;
-                    bool ret = getBelongFiled(filedLiberties, filedList, index);
-                    if (ret > 0 && index >= 0) {
-                        filedList[index].acefiled.push_back(filedLiberties);
-                    }
-                    else {
-                        aceFuzzList.push_back(filedLiberties);
+                //对某点的四周，判断是空还是同色子，还是异色子。
+                for (int k = 0; k < 4; k++) {
+                    int nx = i + dx[k];
+                    int ny = j + dy[k];
+                    if (isValid(nx,ny)) {
+                        if (board[i][j].color == 2 && board[nx][ny].color != 2) {
+                            if (std::find(indexMap[nx][ny]->aceFiled.begin(), indexMap[nx][ny]->aceFiled.end(), indexMap[i][j]) == indexMap[nx][ny]->aceFiled.end()) {
+                                indexMap[nx][ny]->aceFiled.push_back(indexMap[i][j]);
+                            }
+                        }
+                        else if (board[i][j].color != 2 && board[nx][ny].color == 2) {
+                            if (std::find(indexMap[nx][ny]->aceFiled.begin(), indexMap[nx][ny]->aceFiled.end(), indexMap[i][j]) == indexMap[nx][ny]->aceFiled.end()) {
+                                indexMap[nx][ny]->roundFiled.push_back(indexMap[i][j]);
+                            }
+                        }
                     }
                 }
             }
         }
+
+        //现在已经获取了所有的区域
+        //应该判断区域是否活棋（根据本身及其周围的气，先判断内气能否直接活，排除一些，再判断外气，是否有明显结果的对杀或者双活），再判断是否双活？
+
+//        for (auto p : blackFiled) {
+//            bool ret = isAlive(p);
+//            if (ret) {
+//                aliveFiled.insert(p);
+//            }
+//        }
+//        for (auto p : whiteFiled) {
+//            bool ret = isAlive(p);
+//            if (ret) {
+//                aliveFiled.insert(p);
+//            }
+//        }
 
         //根据这些确定的气的情况，初步判定棋块的死活状态。
         //如果某块棋有>=2个眼，或者某个眼大小大于6。直接判定为活棋。
@@ -1616,12 +1714,51 @@ public:
     //获取这块棋围起来的区域，以及它本身。
     //由于已经终局，不考虑单官，所有的空要么是双活，要么必然属于一方
     //但是死子也是一个片，死子调用这个函数会把所有的空也获取到的，这时候还是要判断是否是死子，或者就用之前的比子法。
-    void getFiledAndInner(const std::set<std::pair<int, int>> &filedLiberties, std::set<std::pair<int, int>> &result) {
+    void getFiledAndInner(Filed *filed, std::vector<std::vector<Filed*>> &indexMap) {
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
         int territory[3] = {0};
+        auto filedLiberties = filed->pieceFiled;
         for (auto piece : filedLiberties) {
+            int x = piece.first;
+            int y = piece.second;
             //还应该把空周围的反颜色的子也算在里面。 当然这可能存在双活的情况。（这种情况，可以对这个子对应的区域和filedLiberties进行分析是否是双活）
-            floodFill5(piece.first, piece.second, visited, territory, result);
+            std::stack<std::pair<int, int>> stack;
+            stack.push({x, y});
+            int color = board[x][y].color;
+            visited[x][y] = true;
+            //空不应对多个区域只判断一次，因为有双活，但在一个区域时应当只判断一次
+            std::vector<std::vector<bool>> otherVisited(HEIGHT, std::vector<bool>(WIDTH, false));
+            //bool isBordered = true;  // 检查该区域是否被边界围住
+            while (!stack.empty()) {
+                std::pair<int, int> pos = stack.top();
+                stack.pop();
+                for (int i = 0; i < 4; i++) {
+                    int newX = pos.first + dx[i], newY = pos.second + dy[i];
+                    if (isValid(newX, newY)) {
+                        if (visited[newX][newY] == true || otherVisited[newX][newY] == true) {
+                            continue;
+                        }
+                        if (board[newX][newY].color == color) {
+                            stack.push({newX, newY});
+                            visited[newX][newY] = true;
+                        } else if (board[newX][newY].color == 2) {
+                            territory[2]++;
+                            otherVisited[newX][newY] = true;
+                            floodFill(newX, newY, visited);
+                            Filed *acefiled = new Filed;
+                            acefiled->pieceFiled = filedLiberties;
+                            acefiled->row = newX;
+                            acefiled->col = newY;
+                            acefiled->color = 2;
+                            filed->aceFiled.push_back(acefiled);//属于这块的气
+                            acefiled->roundFiled.push_back(filed);
+                            for (auto p : filedLiberties) {
+                                indexMap[p.first][p.second] = acefiled;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1892,6 +2029,161 @@ public:
             }
         }
         return isBordered;
+    }
+
+
+    //能整体连片，能推理两块棋是否相连。
+    bool floodFill6(int x, int y, std::vector<std::vector<bool>>& visited, int territory[3], std::set<std::pair<int, int>>& liberties) {
+        std::stack<std::pair<int, int>> stack;
+        stack.push({x, y});
+        int color = board[x][y].color;
+        visited[x][y] = true;
+        bool isBordered = true;  // 检查该区域是否被边界围住
+        std::vector<std::vector<bool>> Spacevisited(HEIGHT, std::vector<bool>(WIDTH, false));
+        std::vector<std::vector<bool>> Othervisited(HEIGHT, std::vector<bool>(WIDTH, false));
+        while (!stack.empty()) {
+            std::pair<int, int> pos = stack.top();
+            stack.pop();
+            liberties.insert({pos.first, pos.second});
+            for (int i = 0; i < 4; i++) {
+                int newX = pos.first + dx[i], newY = pos.second + dy[i];
+                if (isValid(newX, newY)) {
+                    if (board[newX][newY].color == color && visited[newX][newY] == false) {
+                        stack.push({newX, newY});
+                        visited[newX][newY] = true;
+                        territory[color]++;
+                    } else if (board[newX][newY].color == !color) {
+                        if (Othervisited[newX][newY] == true) {
+                            continue;
+                        }
+                        Othervisited[newX][newY] = true;
+                        territory[!color]++;
+                        int ace = getAceOfPoint(board, newX, newY, !color);
+                        //绝对判定，当然可能存在倒扑
+                        if (ace == 1) {
+                            for (int i = 0; i < 4; i++) {
+                               int nx = newX + dx[i];
+                               int ny = newY + dy[i];
+                               if (!isValid(nx, ny)) continue;
+                               if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                                   stack.push({nx, ny});
+                                   visited[nx][ny] = true;
+                               }
+                            }
+                        }
+                        //非绝对判定，基于当前本方下，也可能存在倒扑
+                        if (ace == 2) {
+                            if (canbeZhengzi(newX, newY, !color)) {
+                                for (int i = 0; i < 4; i++) {
+                                   int nx = newX + dx[i];
+                                   int ny = newY + dy[i];
+                                   if (!isValid(nx, ny)) continue;
+                                   if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                                       stack.push({nx, ny});
+                                       visited[nx][ny] = true;
+                                   }
+                                }
+                            }
+                        }
+                    } else if (board[newX][newY].color == 2) {
+                        if (Spacevisited[newX][newY] == true) {
+                            continue;
+                        }
+                        Spacevisited[newX][newY] = true;
+                        for (int i = 0; i < 4; i++) {
+                           int nx = newX + dx[i];
+                           int ny = newY + dy[i];
+                           if (!isValid(nx, ny)) continue;
+                           if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                               stack.push({nx, ny});
+                               visited[nx][ny] = true;
+                           }
+                           Filed* filed = floodFill7(newX, newY);
+                        }
+                    }
+                }
+            }
+        }
+        return isBordered;
+    }
+
+
+    //对这一点进行连片
+    Filed* floodFill7(int x, int y) {
+        std::stack<std::pair<int, int>> stack;
+        if (indexMap[x][y] != nullptr) {
+            return indexMap[x][y];
+        }
+        Filed* filed = new Filed;
+        stack.push({x, y});
+        int color = board[x][y].color;
+        filed->row = x; filed->col = y; filed->color = color;
+        std::set<std::pair<int, int>> liberties;
+        std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
+        while (!stack.empty()) {
+            std::pair<int, int> pos = stack.top();
+            stack.pop();
+            liberties.insert({pos.first, pos.second});
+            for (int i = 0; i < 4; i++) {
+                int newX = pos.first + dx[i], newY = pos.second + dy[i];
+                if (isValid(newX, newY)) {
+                    if (visited[newX][newY] == true) {
+                        continue;
+                    }
+                    visited[newX][newY] = true;
+                    if (board[newX][newY].color == color) {
+                        stack.push({newX, newY});
+                    }
+                    //非空格点 以空格斜对角相连
+                    if (color != 2 && board[newX][newY].color == 2) {
+                        for (int i = 0; i < 4; i++) {
+                           int nx = newX + dx[i];
+                           int ny = newY + dy[i];
+                           if (!isValid(nx, ny)) continue;
+                           if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                               stack.push({nx, ny});
+                               visited[nx][ny] = true;
+                           }
+                        }
+                    }
+                    //非空格点，被其他颜色的卡住，但是其他颜色的点只有1气，或者2气但是能征死，基于当前颜色先手判断
+                    else if (color != 2 && board[newX][newY].color == !color) {
+                        int ace = getAceOfPoint(board, newX, newY, !color);
+                        //绝对判定，当然可能存在倒扑
+                        if (ace == 1) {
+                            for (int i = 0; i < 4; i++) {
+                               int nx = newX + dx[i];
+                               int ny = newY + dy[i];
+                               if (!isValid(nx, ny)) continue;
+                               if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                                   stack.push({nx, ny});
+                                   visited[nx][ny] = true;
+                               }
+                            }
+                        }
+                        //非绝对判定，基于当前本方下，也可能存在倒扑
+                        if (ace == 2) {
+                            if (canbeZhengzi(newX, newY, !color)) {
+                                for (int i = 0; i < 4; i++) {
+                                   int nx = newX + dx[i];
+                                   int ny = newY + dy[i];
+                                   if (!isValid(nx, ny)) continue;
+                                   if (board[nx][ny].color == color && visited[nx][ny] == false) {
+                                       stack.push({nx, ny});
+                                       visited[nx][ny] = true;
+                                   }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        filed->pieceFiled = liberties;
+        for (auto p : liberties) {
+            indexMap[p.first][p.second] = filed;
+        }
+        return filed;
     }
 
     // 统计已提子数目
@@ -2919,8 +3211,16 @@ public:
     bool PracticeMode = false;
 
 
-
+    bool hasCalc = false;
     std::set<std::pair<int, int>> filedLiberties;
+    std::vector<std::vector<Filed*>> indexMap;
+    std::vector<Filed*> whiteFiled;
+    std::vector<Filed*> blackFiled;
+    std::vector<Filed*> spaceFiled;
+
+    std::set<Filed*> aliveFiled;
+    std::set<Filed*> fuzzFiled;
+    std::set<Filed*> deadFiled;
 };
 
 /*TODO:
