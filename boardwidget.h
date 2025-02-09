@@ -131,7 +131,7 @@ public:
 
         board.assign(BOARDWIDTH, std::vector<Piece>(BOARDWIDTH));
         zeroBoard = board;
-        currentPlayer = Qt::black;
+        currentPlayer = BLACK;
         moveNumber = 1;
         allNumber = 1;
         blackEaten = 0;
@@ -253,7 +253,7 @@ protected:
         if (!mTryMode) {
             // 绘制鼠标悬浮位置的小方框
             if (hoverRow != -1 && hoverCol != -1 && isValid(hoverRow, hoverCol)) {
-                if (currentPlayer == Qt::black) {
+                if (currentPlayer == BLACK) {
                     painter.setBrush(QBrush(Qt::black));
                     painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
                 }
@@ -932,7 +932,7 @@ protected:
             putPiece(row, col, color, boarder);
             showPoint(row, col, color);
             setMoveNum(node, OtherBranchPut);
-            currentPlayer = (color == 0 ? Qt::white : Qt::black);
+            currentPlayer = (color == BLACK ? WHITE : BLACK);
             //pieceSeq.push_back(board[row][col]);
             return true;
         }
@@ -1218,7 +1218,7 @@ protected:
         if (!isValid(row, col)) {
             return;
         }
-        int color = currentPlayer == Qt::black ? 0 : 1;
+        int color = currentPlayer == BLACK ? BLACK : WHITE;
         qDebug() << showPiece(row, col, color);
 
         if (!isValid(row, col)) {
@@ -1259,7 +1259,7 @@ protected:
         }
         // 输出点击的棋盘坐标
         // 检查该位置是否已经有棋子
-        int color = currentPlayer == Qt::black ? 0 : 1;
+        int color = currentPlayer == BLACK ? BLACK : WHITE;
         qDebug() << showPiece(row, col, color);
         //检查分支上已经有这个子了，就不用再放了，移动一下状态就行了。
         if (historyNode != nullptr) {
@@ -1294,7 +1294,7 @@ protected:
             }
             setMoveNum(node, isOtherBranch);
             showTreeItem(historyNode);
-            currentPlayer = (currentPlayer == Qt::black ? Qt::white : Qt::black);
+            currentPlayer = (currentPlayer == BLACK ? WHITE : BLACK);
         }
         // 触发重绘
         repaint();
@@ -1358,7 +1358,7 @@ public:
         historyNode = node;
         Piece piece = historyNode->move;
         board = historyNode->boardHistory;
-        currentPlayer = piece.color == 0 ? Qt::white : Qt::black;
+        currentPlayer = piece.color == BLACK ? WHITE : BLACK;
         qDebug() << "jump " << historyNode->moveNum << " board " << board.size();
         QTreeWidgetItem* item = treeItemMap[historyNode];
         pieceTree->setCurrentItem(item);
@@ -1390,6 +1390,13 @@ public:
         return node;
     }
 
+    void passOnePiece() {
+        qDebug() << (currentPlayer == BLACK ? "BLACK " : "WHITE ") << "pass One Piece";
+        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+        repaint();
+    }
+
+
     void undo() {
         if (mTryMode == true) {
             undoTry();
@@ -1403,14 +1410,14 @@ public:
         if (p == nullptr) {
             historyNode = nullptr;
             board = zeroBoard;
-            currentPlayer = Qt::black;
+            currentPlayer = BLACK;
             qDebug() << "can not undo";
             repaint();
             return;
         }
         historyNode = p;
         board = historyNode->boardHistory;
-        currentPlayer = currentPlayer == Qt::black ? Qt::white : Qt::black;
+        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
         qDebug() << "undo " << historyNode->moveNum;
         QTreeWidgetItem* item = treeItemMap[historyNode];
         pieceTree->setCurrentItem(item);
@@ -1431,7 +1438,7 @@ public:
             //空棋盘
             historyNode = root;
             board = historyNode->boardHistory;
-            currentPlayer = Qt::black;
+            currentPlayer = BLACK;
             qDebug() << "redo " << historyNode->moveNum << " board " << board.size();
             repaint();
             return;
@@ -1445,7 +1452,7 @@ public:
         qDebug() << "before redo " << historyNode->moveNum;
         historyNode = historyNode->branches[0];
         board = historyNode->boardHistory;
-        currentPlayer = currentPlayer == Qt::black ? Qt::white : Qt::black;
+        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
         qDebug() << "after redo " << historyNode->moveNum;
         QTreeWidgetItem* item = treeItemMap[historyNode];
         pieceTree->setCurrentItem(item);
@@ -1550,13 +1557,14 @@ public:
                    qDebug() << "not black";
                    return; // 如果该位置已被占据，则不放置棋子
                }
-               int color = (currentPlayer == Qt::black ? 0 : 1);
                std::vector<std::vector<Piece>> ans;
-               remember(board, row, col, color, mStepN, ans);
+               remember(board, row, col, currentPlayer, mStepN, ans);
            } else if (event->key() == Qt::Key_T && event->modifiers() == Qt::ControlModifier) {
                //调试用
-               DingShiShow* ds = new DingShiShow();
-               ds->show();
+//               DingShiShow* ds = new DingShiShow();
+//               ds->show();
+               //停一手
+               passOnePiece();
            } else if ((event->key() == Qt::Key_B || event->key() == Qt::Key_W) && event->modifiers() == Qt::ControlModifier) {
                if (!mTryMode) {
                    qDebug() << "please open TryMode";
@@ -1625,7 +1633,7 @@ public:
 //               }
                repaint();
            } else if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
-               currentPlayer = currentPlayer == Qt::black ? Qt::white : Qt::black;
+               currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
                qDebug() << "currentPlayer " << currentPlayer;
                repaint();
            } else if (event->key() == Qt::Key_G && event->modifiers() == Qt::ControlModifier) {
@@ -3214,7 +3222,7 @@ public:
         allNumber = 0;
         blackEaten = 0;
         whiteEaten = 0;
-        currentPlayer = Qt::black;
+        currentPlayer = BLACK;
         repaint();
         clearJudge();
         clearRoot();
@@ -3259,10 +3267,58 @@ public:
     //定时不要超过25步，否则复杂度极大
     //获取当前棋盘已放置棋子的所有顺序pieceSeqList
     //color当前谁走
-    //顺序可能不一定是一黑一白，可能有守角定式，就是说推断到最前后只剩黑或者只剩白的情况也要继续添加？
+    //不可识别守角定式版本
+//    void getEverySeq(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& pieceSeqList, int color) {
+//        std::vector<Piece> pieceSeq;
+//        for (int i = 0; i < BOARDWIDTH; i++) {
+//            for (int j = 0; j < BOARDWIDTH; j++) {
+//                if (boarder[i][j].color != 2) {
+//                    pieceSeq.push_back(boarder[i][j]);
+//                }
+//            }
+//        }
+//        printBoard2(boarder);
+//        qDebug() << pieceSeq[0].row << " " << pieceSeq[0].col;
+//        qDebug() << showPiece(pieceSeq[0]);
+//        color = pieceSeq.size() % 2 == 0? color : !color;
+//        int n = 0;
+//        std::set<int> st;
+//        std::vector<Piece> seq;
+//        getSeq(pieceSeq, n, pieceSeqList, seq, color, st);
+//        for (auto r : pieceSeqList) {
+//            std::cout << "seq: ";
+//            for (auto x : r) {
+//                std::cout << showPiece(x).toStdString() + " ";
+//            }
+//            std::cout << std::endl;
+//        }
+//    }
+
+
+    void getSeq(std::vector<Piece> pieceSeq, int index, std::vector<std::vector<Piece>>& res, std::vector<Piece> cur, int curColor, std::set<int> st) {
+        if (index == (int)pieceSeq.size() && cur.size() == pieceSeq.size()) {
+            res.push_back(cur);
+            return;
+        }
+        for (size_t i = 0; i < pieceSeq.size(); i++) {
+            if (pieceSeq[i].color == curColor && !st.count(i)) {
+                st.insert(i);
+                cur.push_back(pieceSeq[i]);
+                getSeq(pieceSeq, index + 1, res, cur, (int)(!curColor), st);
+                cur.pop_back();
+                st.erase(i);
+            }
+        }
+    }
+
+    //顺序可能不一定是一黑一白，可能有守角定式（黑先连下2-3手），就是说推断到最前后只剩黑或者只剩白的情况也要继续添加？
     //规定守角定式最多在黑开局的情况下。前边再多2手黑棋。也就是最多3子守角，白棋开始破空。
     //如何判断前2手是哪两手
-    void getEverySeq(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& pieceSeqList, int color) {
+    //方式1对多出的N手棋进行标定顺序。
+    //方式2 不允许一方多余另一方4子。最多三子，降低复杂度
+    //不影响定式添加，只影响定式搜索。
+    //另外最好搜索局面不要超过12手  12! / 2 ? 接近int上限
+    void getEverySeq2(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& pieceSeqList, int color) {
         std::vector<Piece> pieceSeq;
         int whiteCnt = 0;
         int blackCnt = 0;
@@ -3283,44 +3339,80 @@ public:
         qDebug() << pieceSeq[0].row << " " << pieceSeq[0].col;
         qDebug() << showPiece(pieceSeq[0]);
         //推断当前颜色 所有子回退后，定式的第一子是黑还是白，守角定式？规定前边的0-2手铺垫必须是同色
-        if (blackCnt > whiteCnt + 1) {
-            color = 0;
-        }
-        else if (whiteCnt > blackCnt + 1) {
-            color = 1;
-        }
-        else {
-            pieceSeq.size() % 2 == 0? color : !color;
-        }
+        //最好不要推第一手颜色，而根据当前手，往上一直推，推到剩余子为一个颜色
+        int moreColor = BLACK;
         int n = 0;
         std::set<int> st;
         std::vector<Piece> seq;
-        getSeq(pieceSeq, n, pieceSeqList, seq, color, st);
-        for (auto r : pieceSeqList) {
-            std::cout << "seq: ";
-            for (auto x : r) {
-                std::cout << showPiece(x).toStdString() + " ";
-            }
-            std::cout << std::endl;
+        if (blackCnt > whiteCnt + 1) {
+            moreColor = 0;
+            getSeq2(pieceSeq, n, pieceSeqList, seq, !color, st);
+            reverseList(pieceSeqList);
+            qDebug() << (moreColor == BLACK ? " black more " : " white more ");
+        }
+        else if (whiteCnt > blackCnt + 1) {
+            moreColor = 1;
+            getSeq2(pieceSeq, n, pieceSeqList, seq, !color, st);
+            reverseList(pieceSeqList);
+            qDebug() << (moreColor == WHITE ? " white more " : " black more ");
+        }
+        else {
+            moreColor = 2;//不多
+            //保持原逻辑
+            color = pieceSeq.size() % 2 == 0? color : !color;
+            getSeq(pieceSeq, n, pieceSeqList, seq, color, st);
+        }
+        //调试打印， 卡慢，即使不开打印，也最好不要超过11步
+//        for (auto r : pieceSeqList) {
+//            std::cout << "seq: ";
+//            for (auto x : r) {
+//                std::cout << showPiece(x).toStdString() + " ";
+//            }
+//            std::cout << std::endl;
+//        }
+//        std::cout << std::endl;
+    }
+    void reverseList(std::vector<std::vector<Piece>>& pieceSeqList) {
+        for (auto &seq : pieceSeqList) {
+            std::reverse(seq.begin(), seq.end());
         }
     }
 
-    void getSeq(std::vector<Piece> pieceSeq, int index, std::vector<std::vector<Piece>>& res, std::vector<Piece> cur, int curColor, std::set<int> st) {
+    void getSeq2(std::vector<Piece> pieceSeq, int index, std::vector<std::vector<Piece>>& res, std::vector<Piece> cur, int curColor, std::set<int> st) {
         if (index == (int)pieceSeq.size() && cur.size() == pieceSeq.size()) {
             res.push_back(cur);
             return;
         }
+        bool flag = false;
         for (size_t i = 0; i < pieceSeq.size(); i++) {
             if (pieceSeq[i].color == curColor && !st.count(i)) {
                 st.insert(i);
                 cur.push_back(pieceSeq[i]);
-                getSeq(pieceSeq, index + 1, res, cur, (int)(!curColor), st);
+                getSeq2(pieceSeq, index + 1, res, cur, (int)(!curColor), st);
                 cur.pop_back();
                 st.erase(i);
+                flag = true;
+            }
+        }
+        if (!flag && pieceSeq.size() - cur.size() > 0) {
+            //余下几子，与当前需要的颜色不同，说明此子与上一子颜色相同，这样的子最多允许2个
+            if (pieceSeq.size() - cur.size() > 2) {
+                qDebug() << "Not Allow So Much Same Color First Step";
+                res.clear();
+                return;
+            }
+            for (size_t i = 0; i < pieceSeq.size(); i++) {
+                if (!st.count(i)) {
+                    st.insert(i);
+                    cur.push_back(pieceSeq[i]);
+                    getSeq2(pieceSeq, index + 1, res, cur, (int)(curColor), st);
+                    cur.pop_back();
+                    st.erase(i);
+                    flag = true;
+                }
             }
         }
     }
-
 
     //无法处理打劫问题，只能根据当前盘面与当前落子点和颜色推断如何下（依据是定式库）。
     //最好做多个小图显示，或者将第一手以虚子显示。然后逐渐补齐。
@@ -3330,7 +3422,7 @@ public:
             return;
         }
         std::vector<std::vector<Piece>> seqList;
-        getEverySeq(boarder, seqList, color);
+        getEverySeq2(boarder, seqList, color);
         int rotate = 0;
         if (seqList.size() == 0) {
             return;
@@ -3680,7 +3772,7 @@ public:
             refresh();
         }
         else {
-            mTryColor = (currentPlayer == Qt::black ? 0 : 1);
+            mTryColor = currentPlayer;
             repaint();
         }
     }
@@ -3842,7 +3934,7 @@ private:
     int hoverRow; // 当前鼠标所在行
     int hoverCol; // 当前鼠标所在列
 
-    Qt::GlobalColor currentPlayer; // 当前玩家（黑棋或白棋）
+    int currentPlayer; // 当前玩家（黑棋或白棋）
     QPixmap blackPiece; // 黑棋图片
     QPixmap whitePiece; // 白棋图片
 
@@ -4006,7 +4098,11 @@ public:
     如果是拆二拆三，采用向下补全。
     然后调用终局判定函数。
 
-    TODO:定式如何摆那种黑棋守角的定式，就是黑先有2颗子的情况。。。
+    TODO:定式如何摆那种黑棋守角的定式，就是黑先有2颗子的情况。。。(解决)
+    守角定式已实现，添加了停一手功能，原有SGF存储和落子不受影响，在识别定式过程中，分支判断了黑多还是白多还是不多的情况。
+    对与多出来的子，作为后缀子添加。然后再反转seq。
+
+    停一手已实现
 */
 
 #endif

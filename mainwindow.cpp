@@ -3,6 +3,7 @@
 
 #include <QClipboard>
 #include <QFileDialog>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -319,5 +320,42 @@ void MainWindow::on_WinBtn_clicked(bool checked)
     else {
         goWidget->clearCalcResult();
     }
+}
+
+
+void MainWindow::on_toolButton_19_clicked()
+{
+    goWidget->passOnePiece();
+}
+
+//自动播放
+void MainWindow::on_autoPlay_clicked()
+{
+    int currentValue = ui->horizontalSlider->value() + 1;
+    if (currentValue >= 0 && currentValue <= goWidget->allNumber) {
+        qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << currentValue;
+        ui->horizontalSlider->setValue(currentValue);
+    }
+    //TODO: 定式调用以上代码
+}
+
+void MainWindow::Quit() {
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "退出", "你确定要退出吗？",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        QApplication::quit(); // 如果用户点击“Yes”，则退出应用程序
+    }
+}
+
+//退出
+void MainWindow::on_toolButton_9_clicked()
+{
+    Quit();
+}
+
+void MainWindow::on_actiontuichu_triggered()
+{
+    Quit();
 }
 

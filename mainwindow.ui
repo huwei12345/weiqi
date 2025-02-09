@@ -201,6 +201,19 @@
         </widget>
        </item>
        <item>
+        <spacer name="horizontalSpacer_8">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
         <widget class="QToolButton" name="judgeBtn">
          <property name="text">
           <string>形式判断</string>
@@ -459,6 +472,19 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="autoPlay">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>▶</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QToolButton" name="rightOne">
          <property name="text">
           <string>&gt;</string>
@@ -503,8 +529,154 @@
      <height>25</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionduqu"/>
+    <addaction name="actioncunchu"/>
+    <addaction name="actionshezhi"/>
+    <addaction name="actionyonghu"/>
+    <addaction name="separator"/>
+    <addaction name="actiontuichu"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>编辑</string>
+    </property>
+    <addaction name="actionundo"/>
+    <addaction name="actionredo"/>
+    <addaction name="actionjump"/>
+    <addaction name="actiondelete"/>
+    <addaction name="actiontry"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>工具</string>
+    </property>
+    <addaction name="actionjudgeWin"/>
+    <addaction name="actionjudgeSituation"/>
+    <addaction name="actionAIAnalysis"/>
+    <addaction name="actionnextStep"/>
+   </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>选项</string>
+    </property>
+    <addaction name="actiontheme"/>
+    <addaction name="actionsearchStep"/>
+    <addaction name="actionshezhi_2"/>
+   </widget>
+   <widget class="QMenu" name="menu_5">
+    <property name="title">
+     <string>帮助</string>
+    </property>
+    <addaction name="action"/>
+    <addaction name="separator"/>
+    <addaction name="actionguanyu"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
+   <addaction name="menu_5"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionguanyu">
+   <property name="text">
+    <string>关于</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>帮助内容</string>
+   </property>
+  </action>
+  <action name="actionduqu">
+   <property name="text">
+    <string>读取</string>
+   </property>
+  </action>
+  <action name="actioncunchu">
+   <property name="text">
+    <string>存储</string>
+   </property>
+  </action>
+  <action name="actiontuichu">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="actionshezhi">
+   <property name="text">
+    <string>设置</string>
+   </property>
+  </action>
+  <action name="actionyonghu">
+   <property name="text">
+    <string>用户</string>
+   </property>
+  </action>
+  <action name="actionundo">
+   <property name="text">
+    <string>撤销</string>
+   </property>
+  </action>
+  <action name="actionredo">
+   <property name="text">
+    <string>重做</string>
+   </property>
+  </action>
+  <action name="actionjump">
+   <property name="text">
+    <string>跳转</string>
+   </property>
+  </action>
+  <action name="actiondelete">
+   <property name="text">
+    <string>删除</string>
+   </property>
+  </action>
+  <action name="actiontry">
+   <property name="text">
+    <string>试下</string>
+   </property>
+  </action>
+  <action name="actionsearchStep">
+   <property name="text">
+    <string>设置搜索步数</string>
+   </property>
+  </action>
+  <action name="actiontheme">
+   <property name="text">
+    <string>主题</string>
+   </property>
+  </action>
+  <action name="actionjudgeWin">
+   <property name="text">
+    <string>判定胜负</string>
+   </property>
+  </action>
+  <action name="actionjudgeSituation">
+   <property name="text">
+    <string>形势判断</string>
+   </property>
+  </action>
+  <action name="actionAIAnalysis">
+   <property name="text">
+    <string>智能分析</string>
+   </property>
+  </action>
+  <action name="actionnextStep">
+   <property name="text">
+    <string>定式下一步</string>
+   </property>
+  </action>
+  <action name="actionshezhi_2">
+   <property name="text">
+    <string>设置</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

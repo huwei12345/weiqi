@@ -10,12 +10,14 @@
 #define UI_MAINWINDOW_H
 
 #include <QtCore/QVariant>
+#include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSlider>
@@ -32,6 +34,25 @@ QT_BEGIN_NAMESPACE
 class Ui_MainWindow
 {
 public:
+    QAction *actionguanyu;
+    QAction *action;
+    QAction *actionduqu;
+    QAction *actioncunchu;
+    QAction *actiontuichu;
+    QAction *actionshezhi;
+    QAction *actionyonghu;
+    QAction *actionundo;
+    QAction *actionredo;
+    QAction *actionjump;
+    QAction *actiondelete;
+    QAction *actiontry;
+    QAction *actionsearchStep;
+    QAction *actiontheme;
+    QAction *actionjudgeWin;
+    QAction *actionjudgeSituation;
+    QAction *actionAIAnalysis;
+    QAction *actionnextStep;
+    QAction *actionshezhi_2;
     QWidget *centralwidget;
     QVBoxLayout *verticalLayout;
     QTextEdit *textEdit;
@@ -55,6 +76,7 @@ public:
     QToolButton *toolButton_4;
     QToolButton *clearBtn;
     QToolButton *toolButton;
+    QSpacerItem *horizontalSpacer_8;
     QToolButton *judgeBtn;
     QToolButton *toolButton_10;
     QToolButton *toolButton_11;
@@ -88,12 +110,18 @@ public:
     QToolButton *Begin;
     QToolButton *leftFive;
     QToolButton *leftOne;
+    QPushButton *autoPlay;
     QToolButton *rightOne;
     QToolButton *rightFive;
     QToolButton *End;
     QLineEdit *pieceEdit;
     QPushButton *pushButton;
     QMenuBar *menubar;
+    QMenu *menu;
+    QMenu *menu_2;
+    QMenu *menu_3;
+    QMenu *menu_4;
+    QMenu *menu_5;
     QStatusBar *statusbar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -101,6 +129,44 @@ public:
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
         MainWindow->resize(1058, 688);
+        actionguanyu = new QAction(MainWindow);
+        actionguanyu->setObjectName(QString::fromUtf8("actionguanyu"));
+        action = new QAction(MainWindow);
+        action->setObjectName(QString::fromUtf8("action"));
+        actionduqu = new QAction(MainWindow);
+        actionduqu->setObjectName(QString::fromUtf8("actionduqu"));
+        actioncunchu = new QAction(MainWindow);
+        actioncunchu->setObjectName(QString::fromUtf8("actioncunchu"));
+        actiontuichu = new QAction(MainWindow);
+        actiontuichu->setObjectName(QString::fromUtf8("actiontuichu"));
+        actionshezhi = new QAction(MainWindow);
+        actionshezhi->setObjectName(QString::fromUtf8("actionshezhi"));
+        actionyonghu = new QAction(MainWindow);
+        actionyonghu->setObjectName(QString::fromUtf8("actionyonghu"));
+        actionundo = new QAction(MainWindow);
+        actionundo->setObjectName(QString::fromUtf8("actionundo"));
+        actionredo = new QAction(MainWindow);
+        actionredo->setObjectName(QString::fromUtf8("actionredo"));
+        actionjump = new QAction(MainWindow);
+        actionjump->setObjectName(QString::fromUtf8("actionjump"));
+        actiondelete = new QAction(MainWindow);
+        actiondelete->setObjectName(QString::fromUtf8("actiondelete"));
+        actiontry = new QAction(MainWindow);
+        actiontry->setObjectName(QString::fromUtf8("actiontry"));
+        actionsearchStep = new QAction(MainWindow);
+        actionsearchStep->setObjectName(QString::fromUtf8("actionsearchStep"));
+        actiontheme = new QAction(MainWindow);
+        actiontheme->setObjectName(QString::fromUtf8("actiontheme"));
+        actionjudgeWin = new QAction(MainWindow);
+        actionjudgeWin->setObjectName(QString::fromUtf8("actionjudgeWin"));
+        actionjudgeSituation = new QAction(MainWindow);
+        actionjudgeSituation->setObjectName(QString::fromUtf8("actionjudgeSituation"));
+        actionAIAnalysis = new QAction(MainWindow);
+        actionAIAnalysis->setObjectName(QString::fromUtf8("actionAIAnalysis"));
+        actionnextStep = new QAction(MainWindow);
+        actionnextStep->setObjectName(QString::fromUtf8("actionnextStep"));
+        actionshezhi_2 = new QAction(MainWindow);
+        actionshezhi_2->setObjectName(QString::fromUtf8("actionshezhi_2"));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         verticalLayout = new QVBoxLayout(centralwidget);
@@ -205,6 +271,10 @@ public:
         toolButton->setObjectName(QString::fromUtf8("toolButton"));
 
         horizontalLayout->addWidget(toolButton);
+
+        horizontalSpacer_8 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+        horizontalLayout->addItem(horizontalSpacer_8);
 
         judgeBtn = new QToolButton(processWidget);
         judgeBtn->setObjectName(QString::fromUtf8("judgeBtn"));
@@ -362,6 +432,12 @@ public:
 
         horizontalLayout_2->addWidget(leftOne);
 
+        autoPlay = new QPushButton(watchWidget);
+        autoPlay->setObjectName(QString::fromUtf8("autoPlay"));
+        autoPlay->setMaximumSize(QSize(30, 16777215));
+
+        horizontalLayout_2->addWidget(autoPlay);
+
         rightOne = new QToolButton(watchWidget);
         rightOne->setObjectName(QString::fromUtf8("rightOne"));
 
@@ -394,10 +470,47 @@ public:
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
         menubar->setGeometry(QRect(0, 0, 1058, 25));
+        menu = new QMenu(menubar);
+        menu->setObjectName(QString::fromUtf8("menu"));
+        menu_2 = new QMenu(menubar);
+        menu_2->setObjectName(QString::fromUtf8("menu_2"));
+        menu_3 = new QMenu(menubar);
+        menu_3->setObjectName(QString::fromUtf8("menu_3"));
+        menu_4 = new QMenu(menubar);
+        menu_4->setObjectName(QString::fromUtf8("menu_4"));
+        menu_5 = new QMenu(menubar);
+        menu_5->setObjectName(QString::fromUtf8("menu_5"));
         MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
         statusbar->setObjectName(QString::fromUtf8("statusbar"));
         MainWindow->setStatusBar(statusbar);
+
+        menubar->addAction(menu->menuAction());
+        menubar->addAction(menu_2->menuAction());
+        menubar->addAction(menu_3->menuAction());
+        menubar->addAction(menu_4->menuAction());
+        menubar->addAction(menu_5->menuAction());
+        menu->addAction(actionduqu);
+        menu->addAction(actioncunchu);
+        menu->addAction(actionshezhi);
+        menu->addAction(actionyonghu);
+        menu->addSeparator();
+        menu->addAction(actiontuichu);
+        menu_2->addAction(actionundo);
+        menu_2->addAction(actionredo);
+        menu_2->addAction(actionjump);
+        menu_2->addAction(actiondelete);
+        menu_2->addAction(actiontry);
+        menu_3->addAction(actionjudgeWin);
+        menu_3->addAction(actionjudgeSituation);
+        menu_3->addAction(actionAIAnalysis);
+        menu_3->addAction(actionnextStep);
+        menu_4->addAction(actiontheme);
+        menu_4->addAction(actionsearchStep);
+        menu_4->addAction(actionshezhi_2);
+        menu_5->addAction(action);
+        menu_5->addSeparator();
+        menu_5->addAction(actionguanyu);
 
         retranslateUi(MainWindow);
 
@@ -407,6 +520,25 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "MainWindow", nullptr));
+        actionguanyu->setText(QCoreApplication::translate("MainWindow", "\345\205\263\344\272\216", nullptr));
+        action->setText(QCoreApplication::translate("MainWindow", "\345\270\256\345\212\251\345\206\205\345\256\271", nullptr));
+        actionduqu->setText(QCoreApplication::translate("MainWindow", "\350\257\273\345\217\226", nullptr));
+        actioncunchu->setText(QCoreApplication::translate("MainWindow", "\345\255\230\345\202\250", nullptr));
+        actiontuichu->setText(QCoreApplication::translate("MainWindow", "\351\200\200\345\207\272", nullptr));
+        actionshezhi->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256", nullptr));
+        actionyonghu->setText(QCoreApplication::translate("MainWindow", "\347\224\250\346\210\267", nullptr));
+        actionundo->setText(QCoreApplication::translate("MainWindow", "\346\222\244\351\224\200", nullptr));
+        actionredo->setText(QCoreApplication::translate("MainWindow", "\351\207\215\345\201\232", nullptr));
+        actionjump->setText(QCoreApplication::translate("MainWindow", "\350\267\263\350\275\254", nullptr));
+        actiondelete->setText(QCoreApplication::translate("MainWindow", "\345\210\240\351\231\244", nullptr));
+        actiontry->setText(QCoreApplication::translate("MainWindow", "\350\257\225\344\270\213", nullptr));
+        actionsearchStep->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256\346\220\234\347\264\242\346\255\245\346\225\260", nullptr));
+        actiontheme->setText(QCoreApplication::translate("MainWindow", "\344\270\273\351\242\230", nullptr));
+        actionjudgeWin->setText(QCoreApplication::translate("MainWindow", "\345\210\244\345\256\232\350\203\234\350\264\237", nullptr));
+        actionjudgeSituation->setText(QCoreApplication::translate("MainWindow", "\345\275\242\345\212\277\345\210\244\346\226\255", nullptr));
+        actionAIAnalysis->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\345\210\206\346\236\220", nullptr));
+        actionnextStep->setText(QCoreApplication::translate("MainWindow", "\345\256\232\345\274\217\344\270\213\344\270\200\346\255\245", nullptr));
+        actionshezhi_2->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256", nullptr));
         QTreeWidgetItem *___qtreewidgetitem = pieceTree->headerItem();
         ___qtreewidgetitem->setText(1, QCoreApplication::translate("MainWindow", "moveNum", nullptr));
         ___qtreewidgetitem->setText(0, QCoreApplication::translate("MainWindow", "point", nullptr));
@@ -440,10 +572,16 @@ public:
         Begin->setText(QCoreApplication::translate("MainWindow", "|<", nullptr));
         leftFive->setText(QCoreApplication::translate("MainWindow", "<<", nullptr));
         leftOne->setText(QCoreApplication::translate("MainWindow", "<", nullptr));
+        autoPlay->setText(QCoreApplication::translate("MainWindow", "\342\226\266", nullptr));
         rightOne->setText(QCoreApplication::translate("MainWindow", ">", nullptr));
         rightFive->setText(QCoreApplication::translate("MainWindow", ">>", nullptr));
         End->setText(QCoreApplication::translate("MainWindow", "|>", nullptr));
         pushButton->setText(QCoreApplication::translate("MainWindow", "\350\267\263\350\275\254", nullptr));
+        menu->setTitle(QCoreApplication::translate("MainWindow", "\346\226\207\344\273\266", nullptr));
+        menu_2->setTitle(QCoreApplication::translate("MainWindow", "\347\274\226\350\276\221", nullptr));
+        menu_3->setTitle(QCoreApplication::translate("MainWindow", "\345\267\245\345\205\267", nullptr));
+        menu_4->setTitle(QCoreApplication::translate("MainWindow", "\351\200\211\351\241\271", nullptr));
+        menu_5->setTitle(QCoreApplication::translate("MainWindow", "\345\270\256\345\212\251", nullptr));
     } // retranslateUi
 
 };

@@ -24,6 +24,7 @@ public:
 
     void showSetupInfo(std::map<std::string, std::string> setupInfo);
 
+    void Quit();
 signals:
     void keyEventCaptured(QKeyEvent *event);
 
@@ -72,6 +73,14 @@ private slots:
     void on_toolButton_4_clicked(bool checked);
     void on_WinBtn_clicked(bool checked);
 
+    void on_toolButton_19_clicked();
+
+
+    void on_toolButton_9_clicked();
+
+    void on_autoPlay_clicked();
+
+    void on_actiontuichu_triggered();
 
 private:
     Ui::MainWindow *ui;
