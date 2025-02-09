@@ -16,11 +16,13 @@ CONFIG += c++11
 #LIBS += -lopencv_world4100
 
 SOURCES += \
+    aboutdialog.cpp \
     boardwidget.cpp \
     dingshishow.cpp \
     dingshishowwidget.cpp \
     gameresearch.cpp \
     gamesettings.cpp \
+    helppage.cpp \
     imagerecognition.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -31,11 +33,13 @@ SOURCES += \
     timecontrol.cpp
 
 HEADERS += \
+    aboutdialog.h \
     boardwidget.h \
     dingshishow.h \
     dingshishowwidget.h \
     gameresearch.h \
     gamesettings.h \
+    helppage.h \
     imagerecognition.h \
     mainwindow.h \
     piece.h \
@@ -45,6 +49,8 @@ HEADERS += \
     timecontrol.h
 
 FORMS += \
+    aboutdialog.ui \
+    helppage.ui \
     mainwindow.ui
 
 # Default rules for deployment.

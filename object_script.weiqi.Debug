@@ -1,8 +1,10 @@
+debug/aboutdialog.o
 debug/boardwidget.o
 debug/dingshishow.o
 debug/dingshishowwidget.o
 debug/gameresearch.o
 debug/gamesettings.o
+debug/helppage.o
 debug/imagerecognition.o
 debug/main.o
 debug/mainwindow.o
@@ -12,9 +14,11 @@ debug/screenshot.o
 debug/sgfparser.o
 debug/timecontrol.o
 debug/qrc_src.o
+debug/moc_aboutdialog.o
 debug/moc_boardwidget.o
 debug/moc_dingshishow.o
 debug/moc_dingshishowwidget.o
+debug/moc_helppage.o
 debug/moc_mainwindow.o
 debug/moc_screencapture.o
 debug/moc_screenshot.o

@@ -2,5 +2,6 @@
     <qresource prefix="/images">
         <file>black.png</file>
         <file>white.png</file>
+        <file>appIcon.jpg</file>
     </qresource>
 </RCC>

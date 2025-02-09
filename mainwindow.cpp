@@ -1,4 +1,6 @@
-﻿#include "mainwindow.h"
+﻿#include "aboutdialog.h"
+#include "helppage.h"
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 #include <QClipboard>
@@ -23,7 +25,9 @@ MainWindow::MainWindow(QWidget *parent)
     // 设置上下文菜单策略为菜单触发
     ui->pieceTree->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    setWindowTitle("围棋练习助手");
+    setWindowTitle(tr("围棋练习助手"));
+    QIcon windowIcon(QPixmap(":/images/appIcon.jpg")); // 假设你的图标文件位于资源文件中或者项目目录下
+    setWindowIcon(windowIcon);
 }
 
 MainWindow::~MainWindow()
@@ -357,5 +361,19 @@ void MainWindow::on_toolButton_9_clicked()
 void MainWindow::on_actiontuichu_triggered()
 {
     Quit();
+}
+
+
+void MainWindow::on_actionguanyu_triggered()
+{
+    AboutDialog* dialog = new AboutDialog(this);
+    dialog->exec();
+}
+
+
+void MainWindow::on_action_triggered()
+{
+    HelpPage* page = new HelpPage();
+    page->show();
 }
 

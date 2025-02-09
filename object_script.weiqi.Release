@@ -1,8 +1,10 @@
+release/aboutdialog.o
 release/boardwidget.o
 release/dingshishow.o
 release/dingshishowwidget.o
 release/gameresearch.o
 release/gamesettings.o
+release/helppage.o
 release/imagerecognition.o
 release/main.o
 release/mainwindow.o
@@ -12,9 +14,11 @@ release/screenshot.o
 release/sgfparser.o
 release/timecontrol.o
 release/qrc_src.o
+release/moc_aboutdialog.o
 release/moc_boardwidget.o
 release/moc_dingshishow.o
 release/moc_dingshishowwidget.o
+release/moc_helppage.o
 release/moc_mainwindow.o
 release/moc_screencapture.o
 release/moc_screenshot.o

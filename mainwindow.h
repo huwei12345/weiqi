@@ -81,6 +81,10 @@ private slots:
     void on_autoPlay_clicked();
 
     void on_actiontuichu_triggered();
+    void on_actionguanyu_triggered();
+
+
+    void on_action_triggered();
 
 private:
     Ui::MainWindow *ui;
