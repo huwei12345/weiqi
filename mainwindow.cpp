@@ -106,8 +106,14 @@ void MainWindow::on_clearBtn_clicked()
 void MainWindow::on_judgeBtn_clicked(bool checked)
 {
     qDebug() << (checked ? "open Judge" : "close Judge");
-    auto p = goWidget->calculateScore2(checked);
-    qDebug() << "black " << p.first << " white " << p.second;
+    //auto p = goWidget->calculateScore2(checked);
+    if (checked) {
+        goWidget->r();
+    }
+    else {
+        goWidget->v();
+    }
+    //qDebug() << "black " << p.first << " white " << p.second;
 }
 
 // reset
@@ -221,10 +227,31 @@ void MainWindow::on_toolButton_27_clicked()
 
     if (!image.isNull()) {
         // 显示图片
-        ui->ImageLabel->setPixmap(QPixmap::fromImage(image));
+        //ui->ImageLabel->setPixmap(QPixmap::fromImage(image));
+        // 创建 QLabel 来显示图片
+            QLabel *label = new QLabel;
+            // 加载图片
+            QPixmap r = QPixmap::fromImage(image);
+            label->setPixmap(r);
+            // 设置窗口标题
+            label->setWindowTitle("Image Display");
+            // 调整 QLabel 以适应图片大小
+            label->setAlignment(Qt::AlignCenter);
+            label->setScaledContents(true);
+            // 根据图片大小调整窗口尺寸
+            label->resize(r.size());
+            // 显示窗口
+            label->show();
         recTool->recogniton2(image, goWidget->board);
     } else {
-        ui->ImageLabel->setText("No image in clipboard");
+        //ui->ImageLabel->setText("No image in clipboard");
+        QLabel *label = new QLabel;
+        // 加载图片
+        label->setText("No image in clipboard");
+        label->setWindowTitle("Image Display");
+        // 显示窗口
+        label->resize(QSize(400, 400));
+        label->show();
     }
 }
 
@@ -280,5 +307,17 @@ void MainWindow::on_toolButton_4_clicked(bool checked)
 {
     qDebug() << (checked ? "start TryMode" : "close TryMode");
     goWidget->openTryMode(checked);
+}
+
+
+void MainWindow::on_WinBtn_clicked(bool checked)
+{
+    qDebug() << (checked ? "start calc" : "close calc");
+    if (checked) {
+        goWidget->calculateScore();
+    }
+    else {
+        goWidget->clearCalcResult();
+    }
 }
 

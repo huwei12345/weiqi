@@ -42,7 +42,6 @@ public:
     QWidget *widget_2;
     QHBoxLayout *horizontalLayout_6;
     QTreeWidget *pieceTree;
-    QLabel *ImageLabel;
     QSpacerItem *horizontalSpacer;
     QWidget *processWidget;
     QHBoxLayout *horizontalLayout;
@@ -142,11 +141,6 @@ public:
 
         horizontalLayout_6->addWidget(pieceTree);
 
-        ImageLabel = new QLabel(widget_2);
-        ImageLabel->setObjectName(QString::fromUtf8("ImageLabel"));
-
-        horizontalLayout_6->addWidget(ImageLabel);
-
         horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         horizontalLayout_6->addItem(horizontalSpacer);
@@ -183,6 +177,7 @@ public:
 
         WinBtn = new QToolButton(processWidget);
         WinBtn->setObjectName(QString::fromUtf8("WinBtn"));
+        WinBtn->setCheckable(true);
 
         horizontalLayout->addWidget(WinBtn);
 
@@ -415,7 +410,6 @@ public:
         QTreeWidgetItem *___qtreewidgetitem = pieceTree->headerItem();
         ___qtreewidgetitem->setText(1, QCoreApplication::translate("MainWindow", "moveNum", nullptr));
         ___qtreewidgetitem->setText(0, QCoreApplication::translate("MainWindow", "point", nullptr));
-        ImageLabel->setText(QCoreApplication::translate("MainWindow", "Image", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "\347\240\224\347\251\266", nullptr));
         storeBtn->setText(QCoreApplication::translate("MainWindow", "\345\255\230\345\202\250", nullptr));
         LoadBtn->setText(QCoreApplication::translate("MainWindow", "\350\257\273\345\217\226", nullptr));

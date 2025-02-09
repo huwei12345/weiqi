@@ -94,13 +94,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="ImageLabel">
-            <property name="text">
-             <string>Image</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <spacer name="horizontalSpacer">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -166,6 +159,9 @@
         <widget class="QToolButton" name="WinBtn">
          <property name="text">
           <string>判定胜负</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

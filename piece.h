@@ -7,6 +7,7 @@
 extern const int BOARDWIDTH;
 extern const int HEIGHT;
 extern const int WIDTH;
+extern const int BOARD_SIZE;
 enum PieceColor {BLACK = 0, WHITE = 1, SPACE = 2};
 enum Direction {TOP = 0, BOTTOM, LEFT, RIGHT, TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT};
 enum BoardModeType {

@@ -93,7 +93,7 @@ static const uint qt_meta_data_MainWindow[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      22,   14, // methods
+      23,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -101,30 +101,31 @@ static const uint qt_meta_data_MainWindow[] = {
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    1,  124,    2, 0x06 /* Public */,
+       1,    1,  129,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       5,    0,  127,    2, 0x08 /* Private */,
-       6,    0,  128,    2, 0x08 /* Private */,
-       7,    0,  129,    2, 0x08 /* Private */,
-       8,    0,  130,    2, 0x08 /* Private */,
-       9,    1,  131,    2, 0x08 /* Private */,
-      11,    0,  134,    2, 0x08 /* Private */,
-      12,    2,  135,    2, 0x08 /* Private */,
-      16,    0,  140,    2, 0x08 /* Private */,
-      17,    1,  141,    2, 0x08 /* Private */,
-      19,    0,  144,    2, 0x08 /* Private */,
-      20,    0,  145,    2, 0x08 /* Private */,
-      21,    0,  146,    2, 0x08 /* Private */,
-      22,    0,  147,    2, 0x08 /* Private */,
-      23,    0,  148,    2, 0x08 /* Private */,
-      24,    0,  149,    2, 0x08 /* Private */,
-      25,    0,  150,    2, 0x08 /* Private */,
-      26,    0,  151,    2, 0x08 /* Private */,
-      27,    0,  152,    2, 0x08 /* Private */,
-      28,    2,  153,    2, 0x08 /* Private */,
-      31,    1,  158,    2, 0x08 /* Private */,
-      33,    1,  161,    2, 0x08 /* Private */,
+       5,    0,  132,    2, 0x08 /* Private */,
+       6,    0,  133,    2, 0x08 /* Private */,
+       7,    0,  134,    2, 0x08 /* Private */,
+       8,    0,  135,    2, 0x08 /* Private */,
+       9,    1,  136,    2, 0x08 /* Private */,
+      11,    0,  139,    2, 0x08 /* Private */,
+      12,    2,  140,    2, 0x08 /* Private */,
+      16,    0,  145,    2, 0x08 /* Private */,
+      17,    1,  146,    2, 0x08 /* Private */,
+      19,    0,  149,    2, 0x08 /* Private */,
+      20,    0,  150,    2, 0x08 /* Private */,
+      21,    0,  151,    2, 0x08 /* Private */,
+      22,    0,  152,    2, 0x08 /* Private */,
+      23,    0,  153,    2, 0x08 /* Private */,
+      24,    0,  154,    2, 0x08 /* Private */,
+      25,    0,  155,    2, 0x08 /* Private */,
+      26,    0,  156,    2, 0x08 /* Private */,
+      27,    0,  157,    2, 0x08 /* Private */,
+      28,    2,  158,    2, 0x08 /* Private */,
+      31,    1,  163,    2, 0x08 /* Private */,
+      33,    1,  166,    2, 0x08 /* Private */,
+       7,    1,  169,    2, 0x08 /* Private */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3,    4,
@@ -150,6 +151,7 @@ static const uint qt_meta_data_MainWindow[] = {
     QMetaType::Void,
     QMetaType::Void, 0x80000000 | 13, 0x80000000 | 13,   29,   30,
     QMetaType::Void, QMetaType::QPoint,   32,
+    QMetaType::Void, QMetaType::Bool,   10,
     QMetaType::Void, QMetaType::Bool,   10,
 
        0        // eod
@@ -183,6 +185,7 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 19: _t->on_pieceTree_currentItemChanged((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< QTreeWidgetItem*(*)>(_a[2]))); break;
         case 20: _t->on_pieceTree_customContextMenuRequested((*reinterpret_cast< const QPoint(*)>(_a[1]))); break;
         case 21: _t->on_toolButton_4_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 22: _t->on_WinBtn_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -226,13 +229,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 22)
+        if (_id < 23)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 22;
+        _id -= 23;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 22)
+        if (_id < 23)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 22;
+        _id -= 23;
     }
     return _id;
 }

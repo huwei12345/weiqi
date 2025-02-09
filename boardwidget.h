@@ -26,7 +26,6 @@
 #include <algorithm>
 extern int dx[4];
 extern int dy[4];
-
 class TreeData {
 public:
     std::weak_ptr<SGFTreeNode> node;
@@ -149,6 +148,12 @@ public:
         PracticeMode = false;
         seqIndex = -1;
         indexMap.assign(HEIGHT, std::vector<Filed*>(WIDTH, nullptr));
+
+        for (int i = 0; i < BOARDWIDTH; ++i) {
+            for (int j = 0; j < BOARDWIDTH; ++j) {
+                ownership[i][j] = 2;
+            }
+        }
     }
 
 
@@ -271,20 +276,20 @@ protected:
             }
         }
 
-        for (auto p : blackLiberties) {
-            painter.setBrush(QBrush(Qt::black));
-            painter.drawRect(margin + p.second * gridSize - 5, margin + p.first * gridSize - 5, 10, 10);
-        }
+//        for (auto p : blackLiberties) {
+//            painter.setBrush(QBrush(Qt::black));
+//            painter.drawRect(margin + p.second * gridSize - 5, margin + p.first * gridSize - 5, 10, 10);
+//        }
 
-        for (auto p : whiteLiberties) {
-            painter.setBrush(QBrush(Qt::white));
-            painter.drawRect(margin + p.second * gridSize - 5, margin + p.first * gridSize - 5, 10, 10);
-        }
+//        for (auto p : whiteLiberties) {
+//            painter.setBrush(QBrush(Qt::white));
+//            painter.drawRect(margin + p.second * gridSize - 5, margin + p.first * gridSize - 5, 10, 10);
+//        }
 
-        for (auto p : eatenNowList) {
-            painter.setBrush(QBrush(Qt::green));
-            painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
-        }
+//        for (auto p : eatenNowList) {
+//            painter.setBrush(QBrush(Qt::green));
+//            painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+//        }
 
         for (auto p : filedLiberties) {
             painter.setBrush(QBrush(Qt::green));
@@ -307,12 +312,29 @@ protected:
                                 painter.setBrush(QBrush(Qt::gray));
                                 painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
                             }
+                            else {
+                                painter.setBrush(QBrush(Qt::red));
+                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+                            }
                         }
                     }
                 }
             }
         }
         //当前棋子加一个小红旗标示
+
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                if (ownership[i][j] == 0) {
+                    painter.setBrush(QBrush(Qt::yellow));
+                    painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                }
+                else if (ownership[i][j] == 1) {
+                    painter.setBrush(QBrush(Qt::gray));
+                    painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                }
+            }
+        }
     }
 
     void updateMoveLabel(QPainter& painter, int gridSize) {
@@ -850,11 +872,11 @@ protected:
         return eaten;
     }
 
-    bool checkAllowPut(int row, int col, int color) {
-        if (isOccupied(row, col)) {
+    bool checkAllowPut(int row, int col, int color, std::vector<std::vector<Piece>>& boarder) {
+        if (isOccupied(boarder, row, col)) {
             return false;
         }
-        auto newBoard = board;
+        auto newBoard = boarder;
         newBoard[row][col].color = color;
         //开始吃子
         int eatenNum = 0;
@@ -888,7 +910,7 @@ protected:
             }
         }
         if (eatenNum != 0) {
-            board = newBoard;
+            boarder = newBoard;
         }
         else if (eatenNum == 0 && ace == 0) {
             //不能添加
@@ -902,12 +924,12 @@ protected:
         return true;
     }
 
-    bool putPiece(std::shared_ptr<SGFTreeNode>& node, int OtherBranchPut) {
+    bool putPiece(std::shared_ptr<SGFTreeNode>& node, int OtherBranchPut, std::vector<std::vector<Piece>>& boarder) {
         int row = node->move.row;
         int col = node->move.col;
         int color = node->move.color;
-        if (checkAllowPut(row, col, color)) {
-            putPiece(row, col, color);
+        if (checkAllowPut(row, col, color, boarder)) {
+            putPiece(row, col, color, boarder);
             showPoint(row, col, color);
             setMoveNum(node, OtherBranchPut);
             currentPlayer = (color == 0 ? Qt::white : Qt::black);
@@ -921,17 +943,18 @@ protected:
         return true;
     }
 
-    void putPiece(int row, int col, int color) {
-        board[row][col].color = color;
-        board[row][col].row = row;
-        board[row][col].col = col;
+    void putPiece(int row, int col, int color, std::vector<std::vector<Piece>>& boarder) {
+        boarder[row][col].color = color;
+        boarder[row][col].row = row;
+        boarder[row][col].col = col;
         //board[row][col].moveNumber = moveNumber++;  // 记录下棋的手数
         //pieceSeq.push_back(board[row][col]);
+        //printBoard2(boarder);
     }
 
     bool putPieceTry(int row, int col, int color) {
-        if (checkAllowPut(row, col, color)) {
-            putPiece(row, col, color);
+        if (checkAllowPut(row, col, color, board)) {
+            putPiece(row, col, color, board);
             showPoint(row, col, color);
             return true;
         }
@@ -1047,6 +1070,7 @@ protected:
             else {
                 pieceTree->addTopLevelItem(item);
             }
+            pieceTree->setCurrentItem(item);
             return;
         }
 
@@ -1084,6 +1108,7 @@ protected:
         else {
             parentItem->addChild(item);
         }
+        pieceTree->setCurrentItem(item);
     }
 
     void addFrontChild(QTreeWidgetItem* parent, QTreeWidgetItem* son) {
@@ -1249,8 +1274,8 @@ protected:
             return; // 如果该位置已被占据，则不放置棋子
         }
         // 交替放置棋子
-        if (checkAllowPut(row, col, color)) {
-            putPiece(row, col, color);
+        if (checkAllowPut(row, col, color, board)) {
+            putPiece(row, col, color, board);
             std::shared_ptr<SGFTreeNode> node = std::make_shared<SGFTreeNode>();
             Piece piece;
             piece.row = row; piece.col = col; piece.color = color;
@@ -1565,33 +1590,39 @@ public:
                repaint();
 
            } else if (event->key() == Qt::Key_D && event->modifiers() == Qt::ControlModifier) {
-               if (PracticeMode != true) {
-                   qDebug() << "please open PracticeMode";
-                   return;
-               }
-               //删除节点
-               int margin = 30;
-               int gridSize = (width() - 2 * margin) / 19;
-               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
-               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
-               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
-               if (!isValid(row, col)) {
-                   return;
-               }
-               // 检查该位置是否已经有棋子
-               if (!isOccupied(row, col)) {
-                   qDebug() << "no piece";
-                   return; // 如果该位置已被占据，则不放置棋子
-               }
-               qDebug() << "delPiece " << showPiece(row, col);
-               delPiece(row, col);
-               mTryMode = true;
-               for (auto p = mTryModeSeq.begin(); p != mTryModeSeq.end(); p++) {
-                   if (p->row == row && p->col == col) {
-                       mTryModeSeq.erase(p);//标示删除
-                       break;
-                   }
-               }
+                auto item = pieceTree->currentItem();
+                if (item == nullptr) {
+                    return;
+                }
+                deleteSGFTreeItem(item);
+
+//               if (PracticeMode != true) {
+//                   qDebug() << "please open PracticeMode";
+//                   return;
+//               }
+//               //删除节点
+//               int margin = 30;
+//               int gridSize = (width() - 2 * margin) / 19;
+//               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+//               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+//               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+//               if (!isValid(row, col)) {
+//                   return;
+//               }
+//               // 检查该位置是否已经有棋子
+//               if (!isOccupied(row, col)) {
+//                   qDebug() << "no piece";
+//                   return; // 如果该位置已被占据，则不放置棋子
+//               }
+//               qDebug() << "delPiece " << showPiece(row, col);
+//               delPiece(row, col);
+//               mTryMode = true;
+//               for (auto p = mTryModeSeq.begin(); p != mTryModeSeq.end(); p++) {
+//                   if (p->row == row && p->col == col) {
+//                       mTryModeSeq.erase(p);//标示删除
+//                       break;
+//                   }
+//               }
                repaint();
            } else if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
                currentPlayer = currentPlayer == Qt::black ? Qt::white : Qt::black;
@@ -1607,8 +1638,13 @@ public:
 //               std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
 //               floodFill(row, col, visited);
                if (hasCalc == false) {
-                   calc(board, false);
+                   calcGame(board, false);
                    hasCalc = true;
+               }
+               else {
+                   hasCalc = false;
+                   clearCalcResult();
+                   return;
                }
                Filed* fd = indexMap[row][col];
                filedLiberties = fd->pieceFiled;
@@ -1624,6 +1660,15 @@ public:
                    qDebug() << "error";
                }
                repaint();
+           } else if (event->key() == Qt::Key_J && event->modifiers() == Qt::ControlModifier) {
+               int margin = 30;
+               int gridSize = (width() - 2 * margin) / 19;
+               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+               if (board[row][col].color != 2) {
+                   qDebug() << canbeZhengzi(board, row, col);
+               }
            }
         }
 
@@ -1651,7 +1696,7 @@ public:
     // 计算并输出胜负和数目
     void calculateScore() {
         getGameResult();
-
+        repaint();
         return;
         blackLiberties.clear();
         whiteLiberties.clear();
@@ -1725,7 +1770,7 @@ public:
         std::cout << "Black Score: " << blackScore << std::endl;
         std::cout << "White Score: " << whiteScore << std::endl;
         if (blackScore > whiteScore) {
-            std::cout << "Black wins! " << blackScore - whiteScore << std::endl;
+            std::cout << "Black wins! " << (blackScore - whiteScore) << " KM " << (blackScore - whiteScore) / 2 << std::endl;
         } else if (whiteScore > blackScore) {
             std::cout << "White wins! " << whiteScore - blackScore << std::endl;
         } else {
@@ -1734,9 +1779,23 @@ public:
         repaint();
     }
 
+    void clearCalcResult() {
+        //进行一些清理
+        filedLiberties.clear();
+        indexMap.clear();
+        //TODO:此处有内存泄漏，应删除Filed
+        indexMap.assign(HEIGHT, std::vector<Filed*>(WIDTH, nullptr));
+        whiteFiled.clear();
+        blackFiled.clear();
+        spaceFiled.clear();
+        aliveFiled.clear();
+        fuzzFiled.clear();
+        deadFiled.clear();
+        repaint();
+    }
 
     //终局判定
-    void calc(std::vector<std::vector<Piece>> & boarder, bool firstTime) {
+    void calcGame(std::vector<std::vector<Piece>> & boarder, bool firstTime) {
         filedLiberties.clear();
         indexMap.clear();
         //TODO:此处有内存泄漏，应删除Filed
@@ -1745,6 +1804,8 @@ public:
         blackFiled.clear();
         spaceFiled.clear();
         fuzzFiled.clear();
+        aliveFiled.clear();
+        deadFiled.clear();
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
 
 //用于形式判断？
@@ -1838,12 +1899,14 @@ public:
                 if ((*filed)->pieceFiled.size() == 1) {
                     deadFiled.insert(*filed);
                     filed = fuzzFiled.erase(filed);
+                    continue;
                 }
+
                 else {
                     std::vector<Filed*> winResult;//对杀中胜的一方
                     std::vector<Filed*> loseResult;//对杀中输的一方
                     std::vector<Filed*> balanceResult;//双活的情况
-                    isShuanghuoOrDead(*filed, winResult, loseResult, balanceResult);//知道它和它的邻居是双活还是谁吃了谁，可能有三块以上棋块一起双活？
+                    isShuanghuoOrDead(boarder, *filed, winResult, loseResult, balanceResult);//知道它和它的邻居是双活还是谁吃了谁，可能有三块以上棋块一起双活？
                     //可能涉及到删除后边的filed，要操作好删除后的位置
                     if (winResult.size() != 0) {
                         for (auto t : winResult) {
@@ -1894,7 +1957,7 @@ public:
         }
         //对于去掉第一次筛掉的死棋的棋盘，再进行一次终局判定
         if (firstTime == false) {
-            calc(newBoard, true);
+            calcGame(newBoard, true);
         }
     }
 
@@ -1915,7 +1978,7 @@ public:
     }
 
     void getGameResult() {
-        calc(board, false);
+        calcGame(board, false);
         double blackPiece = 0;
         double whitePiece = 0;
         double blackSpace = 0;
@@ -1951,10 +2014,10 @@ public:
             qDebug() << "All Win! " << blackScore - mSetting.komi / 2.0;
         }
         else if (blackScore - mSetting.komi / 2.0 > whiteScore + mSetting.komi / 2.0) {
-            qDebug() << "Black Win! " << (blackScore - whiteScore - mSetting.komi) / 2.0 << " zi";
+            qDebug() << "Black Win! " << (blackScore - whiteScore - mSetting.komi) / 2.0 << " zi" << " equal " << (blackScore - whiteScore - mSetting.komi) << "mu";
         }
         else {
-            qDebug() << "White Win! " << (whiteScore - blackScore + mSetting.komi) / 2.0 << " zi";
+            qDebug() << "White Win! " << (whiteScore - blackScore + mSetting.komi) / 2.0 << " zi" << " equal " << (blackScore - whiteScore - mSetting.komi) << "mu";
         }
         int blackx = 0;
         int whitex = 0;
@@ -1976,7 +2039,7 @@ public:
     }
 
     //result存储哪些棋块赢了，哪块棋输了
-    bool isShuanghuoOrDead(Filed* filed, std::vector<Filed*>& winResult, std::vector<Filed*>& loseResult, std::vector<Filed*>& balanceResult) {
+    bool isShuanghuoOrDead(std::vector<std::vector<Piece>> &boarder, Filed* filed, std::vector<Filed*>& winResult, std::vector<Filed*>& loseResult, std::vector<Filed*>& balanceResult) {
         //有眼杀瞎
         if (filed->eyeSize == 0) {
             bool flag = true;
@@ -1991,6 +2054,7 @@ public:
                 for (auto r : filed->neighborFiled) {
                     winResult.push_back(r);
                 }
+                return true;
             }
             else {
                 //TODO:判定双活或者对杀，终局基本上是双活
@@ -2008,6 +2072,25 @@ public:
             }
             if (flag) {
                 loseResult.push_back(filed);
+                return true;
+            }
+        }
+
+        int x = filed->row;
+        int y = filed->col;
+        int color = filed->color;
+        int ace = getAceOfPoint(boarder, x, y, color);
+        //0气删掉
+        bool flag = true;
+        for (auto r : filed->neighborFiled) {
+            if (getAceOfPoint(boarder, r->row, r->col, r->color) - ace < 2) {
+                flag = false;
+            }
+        }
+        if (flag == true) {
+            loseResult.push_back(filed);
+            for (auto r : filed->neighborFiled) {
+                winResult.push_back(r);
             }
         }
         return true;
@@ -2140,11 +2223,106 @@ public:
         }
         return false;
     }
-    //判断某子是否能被征吃死
+    //判断某点子是否能被征吃死
     //TODO:待实现征子
-    bool canbeZhengzi(int row, int col, int color) {
-        std::vector<std::vector<Piece>> bod = board;
-        return true;
+    //这还是很难的，应该考虑将白棋作为1片，征子开始，白棋始终作为片存在，黑棋基本作为单子存在，当然有偶然连接。
+    //这是1块白棋和多块黑棋之间的只有1个喘息机会的对决。过程中，白棋行子时，一定只有1气。黑棋行子时，白棋有2气。
+    //白棋行子，可以将1气的部分长出来，也可以将周围黑棋中只有1气的子提掉。
+    //但提掉黑子，不一定能消除征子，却可能导致征子方向改变，或者滚打包收。
+    //如果白气能在某种情况下落子后，能有3气，那么一定不会被征死。
+    //如果有两个黑块被吃，那么一定不能征死。
+    bool canbeZhengzi(std::vector<std::vector<Piece>> & boarder, int row, int col) {
+        int color = boarder[row][col].color;
+        int ace = getAceOfPoint(boarder, row, col, color);
+        if (ace <= 1) {
+            return true;
+        }
+        if (ace > 2) {
+            return false;
+        }
+        std::vector<std::vector<Piece>> bod = boarder;
+        return canbeZhengzi(row, col, color, bod);
+    }
+
+    bool canbeZhengzi(int row, int col, int color, std::vector<std::vector<Piece>> & boarder) {
+        //此时一定有2气
+        bool b[4] = {0};
+        std::vector<std::vector<Piece>> oldBod = boarder;
+        for (int i  = 0; i < 4; i++) {
+            int nx = row + dx[i];
+            int ny = col + dy[i];
+            if (!isValid(nx, ny)) {
+                continue;
+            }
+            if (boarder[nx][ny].color == 2) {
+                //是否允许落子其他颜色
+                if (checkAllowPut(nx, ny, !color, boarder)) {
+                    putPiece(nx, ny, !color, boarder);
+                }
+                else {
+                    b[i] = false;
+                    boarder = oldBod;
+                    continue;
+                }
+                if (getAceOfPoint(boarder, nx, ny, !color) == 1) {
+                    //落子之后只有1气，会被提掉
+                    //可能改变方向
+                    //getAceOfPoint(boarder,);
+                }
+                //逃跑一步,这步一定是确定的位置
+                int j = 0;
+                for (j = 0; j < 4; j++) {
+                    if (!isValid(row + dx[j], col + dy[j])) {
+                        continue;
+                    }
+                    if  (boarder[row + dx[j]][col + dy[j]].color == 2) {
+                        break;
+                    }
+                }
+                if (j == 4) {
+                    boarder = oldBod;
+                    continue;
+                }
+                putPiece(row + dx[j], col + dy[j], color, boarder);
+                if (getAceOfPoint(boarder, row, col, color) <= 1) {
+                    //跑了以后也没气，被征死了
+                    return true;
+                }
+                else if (getAceOfPoint(boarder, row, col, color) >= 3) {
+                    boarder = oldBod;
+                    continue;
+                }
+
+
+                bool fgg = false;
+                for (int k = 0; k < 4; k++) {
+                    int rx = row + dx[j] + dx[k];
+                    int ry = col + dy[j] + dy[k];
+                    if (!isValid(rx, ry)) {
+                        continue;
+                    }
+                    if (getAceOfPoint(boarder, rx, ry, !color) <= 1) {
+                        //此时有两种情况。 1.判断若黑棋继续征吃，白是否能继续跑1步。如果可以跑那么必然不能征吃。
+                        //2.如果不能跑，说明可以调转方向征子。
+                        //说明引征到了，这里有概率调转方向
+                        //此处可以吃掉此子，但此时轮黑棋下，黑棋肯定不能送白棋连上，必然继续朝征子方向打吃，白棋提子后
+                        //
+                        //判断此时白棋如果2气。继续判定征子zhengzi（）。如果黑棋没有其他子接应，必然会失败，但如果有接应，可以调转方向征吃
+                        fgg = true;
+                    }
+                }
+                if (fgg) {
+                    boarder = oldBod;
+                    continue;
+                }
+                b[i] = canbeZhengzi(row + dx[j], col + dy[j], color, boarder);
+                if (b[i] == true) {
+                    return true;
+                }
+                boarder = oldBod;
+            }
+        }
+        return b[0] || b[1] || b[2] || b[3];
     }
 
     //不考虑虎口连接，只考虑直连
@@ -2261,7 +2439,7 @@ public:
                         }
                         //非绝对判定，基于当前本方下，也可能存在倒扑
                         if (ace == 2) {
-                            if (canbeZhengzi(newX, newY, !color)) {
+                            if (canbeZhengzi(newX, newY, !color, board)) {
                                 for (int i = 0; i < 4; i++) {
                                    int nx = newX + dx[i];
                                    int ny = newY + dy[i];
@@ -2375,7 +2553,7 @@ public:
                         }
                         //非绝对判定，基于当前本方下，也可能存在倒扑
                         if (ace == 2) {
-                            if (canbeZhengzi(newX, newY, !color)) {
+                            if (canbeZhengzi(newX, newY, !color, board)) {
                                 for (int i = 0; i < 4; i++) {
                                    int nx = newX + dx[i];
                                    int ny = newY + dy[i];
@@ -2465,7 +2643,7 @@ public:
                         }
                         //非绝对判定，基于当前本方下，也可能存在倒扑
                         if (ace == 2) {
-                            if (canbeZhengzi(newX, newY, !color)) {
+                            if (canbeZhengzi(boarder, newX, newY)) {
                                 for (int i = 0; i < 4; i++) {
                                    int nx = newX + dx[i];
                                    int ny = newY + dy[i];
@@ -2816,7 +2994,7 @@ public:
 
         if (compress == 1) {
             Piece& piece = node->move;
-            putPiece(node, isBranch);
+            putPiece(node, isBranch, board);
             item = new QTreeWidgetItem;
 
             QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
@@ -2857,7 +3035,7 @@ public:
         else {
             while (1) {
                 Piece& piece = node->move;
-                putPiece(node, isBranch);
+                putPiece(node, isBranch, board);
                 item = new QTreeWidgetItem;
                 QString str = colToChar(piece.col) + QString::number(19 - piece.row) + " " + (piece.color == 0 ? "B" : "W");
                 QString str2 = QString::number(node->moveNum) + "  ";
@@ -2945,20 +3123,47 @@ public:
 
     bool deleteSGFNode(std::shared_ptr<SGFTreeNode> node) {
         auto parent = node->parent.lock();
-        historyNode = parent;
-        for (auto r =  parent->branches.begin(); r != parent->branches.end(); r++ ) {
+        if (parent == nullptr || parent == root) {
+            historyNode = root;
+        }
+        else {
+            historyNode = parent;
+        }
+        board = historyNode->boardHistory;
+        int cnt = 0;
+        for (auto r = parent->branches.begin(); r != parent->branches.end(); r++ ) {
             if (*r == node) {
-                parent->branches.erase(r);
-                break;
+                if (cnt != 0) {
+                    //删的是一个非主分支，直接删就行
+                    parent->branches.erase(r);
+                    break;
+                }
+                else {
+                    //删的是主分支branch[0]，次分支不动，主分支由删除分支的b[0]代替。
+                    if (node->branches.size() >= 1) {
+                        auto bb = node->branches[0];
+                        node->branches.erase(node->branches.begin());
+                        bb->parent = parent;
+                        parent->branches.erase(r);
+                        parent->branches.insert(parent->branches.begin(), bb);
+                    }
+                    else {
+                        parent->branches.erase(r);
+                    }
+                    break;
+                }
             }
+            cnt++;
         }
         node->parent.reset();
-        node->branches.clear();//digui?
+        node->branches.clear();//递归删除
         return true;
     }
 
 public:
     //slot deleteItem
+    //删除节点有些问题，当删除的是主分支时：感觉是应该把所有分支都删掉，因为主分支如果不删，删1个子对后续棋局造成了极大的影响。比如提子，比如黑白，比如劫争
+    //还是都删好
     bool deleteSGFTreeItem(QTreeWidgetItem* item) {
         if (item == nullptr) {
             return false;
@@ -2995,6 +3200,7 @@ public:
             }
             std::cout << std::endl;
         }
+        std::cout << std::endl;
     }
 
 public:
@@ -3040,6 +3246,7 @@ public:
         }
         return sgfParser.saveSGF(filename, DingShiBook, DingShiSetupInfo);
     }
+
     //A B C
     //A C B
     //B A C
@@ -3052,20 +3259,39 @@ public:
     //定时不要超过25步，否则复杂度极大
     //获取当前棋盘已放置棋子的所有顺序pieceSeqList
     //color当前谁走
+    //顺序可能不一定是一黑一白，可能有守角定式，就是说推断到最前后只剩黑或者只剩白的情况也要继续添加？
+    //规定守角定式最多在黑开局的情况下。前边再多2手黑棋。也就是最多3子守角，白棋开始破空。
+    //如何判断前2手是哪两手
     void getEverySeq(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& pieceSeqList, int color) {
         std::vector<Piece> pieceSeq;
+        int whiteCnt = 0;
+        int blackCnt = 0;
         for (int i = 0; i < BOARDWIDTH; i++) {
             for (int j = 0; j < BOARDWIDTH; j++) {
                 if (boarder[i][j].color != 2) {
                     pieceSeq.push_back(boarder[i][j]);
+                    if (boarder[i][j].color == 0) {
+                        blackCnt++;
+                    }
+                    else if (boarder[i][j].color == 1) {
+                        whiteCnt++;
+                    }
                 }
             }
         }
         printBoard2(boarder);
         qDebug() << pieceSeq[0].row << " " << pieceSeq[0].col;
         qDebug() << showPiece(pieceSeq[0]);
-        //推断当前颜色 所有子回退后，定式的第一子是黑还是白
-        color = pieceSeq.size() % 2 == 0? color : !color;
+        //推断当前颜色 所有子回退后，定式的第一子是黑还是白，守角定式？规定前边的0-2手铺垫必须是同色
+        if (blackCnt > whiteCnt + 1) {
+            color = 0;
+        }
+        else if (whiteCnt > blackCnt + 1) {
+            color = 1;
+        }
+        else {
+            pieceSeq.size() % 2 == 0? color : !color;
+        }
         int n = 0;
         std::set<int> st;
         std::vector<Piece> seq;
@@ -3097,7 +3323,7 @@ public:
 
 
     //无法处理打劫问题，只能根据当前盘面与当前落子点和颜色推断如何下（依据是定式库）。
-    //目前没有显示，只是打印分支，最好做多个小图显示，或者将第一手以虚子显示。然后逐渐补齐。
+    //最好做多个小图显示，或者将第一手以虚子显示。然后逐渐补齐。
     void remember(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
         if (DingShiBook == nullptr) {
             qDebug() << "no DingShiBook";
@@ -3468,10 +3694,147 @@ public:
         repaint();
     }
 
+
+    struct Region {
+        int ownerColor;
+        int liberties;
+        std::vector<std::pair<int, int>> points;
+    };
+
+
+    int ownership[19][19];
+    std::vector<Region> regions;
+
+    void initializeBoard() {
+        for (int i = 0; i < BOARDWIDTH; ++i) {
+            for (int j = 0; j < BOARDWIDTH; ++j) {
+                board[i][j].color = 2;
+                ownership[i][j] = 2;
+            }
+        }
+    }
+
+    void identifyRegions() {
+        bool visited[19][19] = {false};
+        regions.clear();
+        for (int i = 0; i < BOARD_SIZE; ++i) {
+            for (int j = 0; j < BOARD_SIZE; ++j) {
+                if (board[i][j].color != 2 && !visited[i][j]) {
+                    Region region;
+                    region.ownerColor = board[i][j].color;
+                    region.liberties = 0;
+                    std::queue<std::pair<int, int>> q;
+                    q.push({i, j});
+                    visited[i][j] = true;
+
+                    while (!q.empty()) {
+                        auto r = q.front();
+                        int x = r.first;
+                        int y = r.second;
+                        q.pop();
+                        region.points.push_back({x, y});
+
+                        for (int k = 0; k < 4; k++) {
+                            int nx = x + dx[k];
+                            int ny = y + dy[k];
+
+                            if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE) {
+                                if (board[nx][ny].color == region.ownerColor && !visited[nx][ny]) {
+                                    visited[nx][ny] = true;
+                                    q.push({nx, ny});
+                                } else if (board[nx][ny].color == 2) {
+                                    region.liberties++;
+                                }
+                            }
+                        }
+                    }
+                    regions.push_back(region);
+                }
+            }
+        }
+    }
+
+    void calculateOwnership() {
+        for (int i = 0; i < BOARD_SIZE; ++i) {
+            for (int j = 0; j < BOARD_SIZE; ++j) {
+                ownership[i][j] = 2;
+            }
+        }
+
+        for (const auto& region : regions) {
+            for (const auto &r : region.points) {
+                int x = r.first;
+                int y = r.second;
+                for (int k = 0; k < 4; k++) {
+                    int nx = x + dx[k];
+                    int ny = y + dy[k];
+
+                    if (nx >= 0 && nx < BOARD_SIZE && ny >= 0 && ny < BOARD_SIZE) {
+                        if (board[nx][ny].color == 2) {
+                            if (ownership[nx][ny] == 2) {
+                                ownership[nx][ny] = region.ownerColor;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    bool r() {
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                ownership[i][j] = 2;
+            }
+        }
+        identifyRegions();
+        calculateOwnership();
+        return true;
+    }
+
+    bool v() {
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                ownership[i][j] = 2;
+            }
+        }
+        regions.clear();
+        return true;
+    }
+
+    void completeBoard(std::vector<std::vector<Piece>> &board, std::vector<std::vector<Piece>> &newBoard) {
+        //考虑每一片棋的辐射范围
+        //形式判断采用补全棋盘的方式，如果是厚势，那么斜45°补全。
+        //如果是拆二拆三，采用向下补全。
+        //然后调用终局判定函数。
+        //吸引力 磁力 辐射
+    }
+    void c() {
+        auto newBoard = zeroBoard;
+        completeBoard(board, newBoard);
+        if (hasCalc == false) {
+            calcGame(board, false);
+            hasCalc = true;
+        }
+        else {
+            hasCalc = false;
+            clearCalcResult();
+            return;
+        }
+    }
+
 private:
     bool isOccupied(int row, int col) {
         // 检查是否有棋子在这个位置
         if (board[row][col].color != 2) {
+            return true;
+        }
+        return false;
+    }
+
+    bool isOccupied(std::vector<std::vector<Piece>> &boarder, int row, int col) {
+        // 检查是否有棋子在这个位置
+        if (boarder[row][col].color != 2) {
             return true;
         }
         return false;
@@ -3637,72 +4000,13 @@ public:
     形式判断需要更细致的判断。如角部 拆二拆三 连接分断 对杀 打劫 双活。
 
     TODO:将单官和双活的空填上颜色，一半黑，一半白。
-*/
 
 
-/*
-    //node由于它的branch中由一个元素变为2个元素，所以进行压缩，将后面所有的兄弟节点压入第一个元素，然后放入第二个元素
-    void treeCompress(std::shared_ptr<SGFTreeNode> node, std::shared_ptr<SGFTreeNode> son) {
-        //还有一种情况，就是这个点虽然在tree上没有分支，但是有2个子。也要压缩。
-        if (node->branches.size() != 2) {
-            return;
-        }
-        if (node == root) {
-            QTreeWidgetItem *sonItem = treeItemMap[node];
-            QList<QTreeWidgetItem*> wlist;
-            for (int i = 1; i < pieceTree->topLevelItemCount(); ++i) {
-                wlist.push_back(pieceTree->topLevelItem(i));
-            }
-            if (sonItem->childCount() == 0) {
-                for (int i = 0; i < wlist.size(); i++) {
-                     pieceTree->takeTopLevelItem(1);
-                     sonItem->addChild(wlist[i]);
-                }
-            }
-            else {
-                //TODO: 应该递归压缩
-                compress(root->branches[0]);
-                pieceTree->addTopLevelItem(treeItemMap[son]);
-            }
-            return;
-        }
+    形式判断采用补全棋盘的方式，如果是厚势，那么斜45°补全。
+    如果是拆二拆三，采用向下补全。
+    然后调用终局判定函数。
 
-        compress(node->branches[0]);
-        QTreeWidgetItem* sonItem = treeItemMap[son];
-        QTreeWidgetItem* item = treeItemMap[node];
-        item->addChild(sonItem);
-//        if (item->childCount() == 0) {
-//            auto ppitem = item->parent();
-//            if (ppitem == nullptr) {
-//                return;
-//            }
-//            //平层子压缩
-//            if (item != ppitem->child(0)) {
-//                return;
-//            }
-//            auto dage = ppitem->child(1);//新大哥
-//            QList<QTreeWidgetItem*> wlist;
-//            for (int i = 2; i < ppitem->childCount(); i++) {
-//                wlist.push_back(ppitem->child(i));
-//            }
-//            for (int i = 0; i < wlist.size(); i++) {
-//                 ppitem->removeChild(wlist[i]);
-//                 dage->addChild(wlist[i]);
-//            }
-//            ppitem->removeChild(dage);
-//            item->addChild(dage);
-//        }
-//        else {
-//            QList<QTreeWidgetItem*> wlist;
-//            for (int i = 0; i < item->childCount(); i++) {
-//                wlist.push_back(item->child(i));
-//            }
-//            for (int i = 1; i < wlist.size(); i++) {
-//                item->removeChild(wlist[i]);
-//                wlist[0]->addChild(wlist[i]);
-//            }
-//        }
-    }
+    TODO:定式如何摆那种黑棋守角的定式，就是黑先有2颗子的情况。。。
 */
 
 #endif

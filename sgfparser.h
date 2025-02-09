@@ -182,7 +182,27 @@ public:
         }
         file << ";";
         for (auto& r : setupInfo) {
-            file << r.first << "[" << r.second << "]";
+            if (r.first == std::string("Komi")) {
+                file << "KM" << "[" << r.second << "]";
+            } else if (r.first == std::string("FileFormat")) {
+                file << "FF" << "[" << r.second << "]";
+            } else if (r.first == std::string("Charset")) {
+                file << "CA" << "[" << r.second << "]";
+            } else if (r.first == std::string("GameType")) {
+                file << "GM" << "[" << r.second << "]";
+            } else if (r.first == std::string("BoardSize")) {
+                file << "SZ" << "[" << r.second << "]";
+            } else if (r.first == std::string("AP")) {
+                file << "AP" << "[" << r.second << "]";
+            } else if (r.first == std::string("BlackPlayer")) {
+                file << "PB" << "[" << r.second << "]";
+            } else if (r.first == std::string("WhitePlayer")) {
+                file << "PW" << "[" << r.second << "]";
+            } else if (r.first == std::string("Date")) {
+                file << "DT" << "[" << r.second << "]";
+            } else {
+                file << r.first << "[" << r.second << "]";
+            }
         }
     }
 
