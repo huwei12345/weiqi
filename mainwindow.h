@@ -109,6 +109,12 @@ private slots:
 
     void on_actiontry_triggered(bool checked);
 
+    void on_actionshezhi_2_triggered();
+
+    void on_actionshezhi_triggered();
+
+    void on_actiontheme_triggered();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;

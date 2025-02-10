@@ -660,6 +660,7 @@ protected:
         //第二轮继续遍历空，对所有的未判定空，判定是否有双活的情况。
         //第三轮继续遍历空，如果这个空的几个周围都是活棋，说明没有终局，这是一个单官。
         //如果一边是确定的活棋，一边是不确定的活棋。先保留，可能存在双活。
+        return true;
     }
 
 
@@ -1357,7 +1358,6 @@ public:
             return;
         }
         historyNode = node;
-        Piece piece = historyNode->move;
         board = historyNode->boardHistory;
         swapCurrentPlayer();
         qDebug() << "jump " << historyNode->moveNum << " board " << board.size();
@@ -2154,6 +2154,7 @@ public:
 
     bool getBelongFiled(const std::set<std::pair<int, int>> &filedLiberties, std::vector<Filed> filedList, int& index) {
         //如果这些气和某些区域相邻，那么判断这个气是否某个区域的眼。
+        return true;
     }
 
     bool floodFill(int row, int col, std::vector<std::vector<bool>> &visited) {
@@ -4133,7 +4134,7 @@ public:
     守角定式已实现，添加了停一手功能，原有SGF存储和落子不受影响，在识别定式过程中，分支判断了黑多还是白多还是不多的情况。
     对与多出来的子，作为后缀子添加。然后再反转seq。
 
-    停一手已实现
+    停一手已实现(完成）
 */
 
 #endif

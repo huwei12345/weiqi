@@ -70,7 +70,8 @@ Ctrl + W 落下白子
 Ctrl + G 终局判定
 Ctrl + D 删除棋子树上的某子或某分支
 Ctrl + T 停一手
-上下左右可以向棋局下一步走（焦点必须在树上）</string>
+上下左右可以向棋局下一步走（焦点必须在树上）
+右键 显示行列与棋块的气</string>
      </property>
      <property name="backgroundVisible">
       <bool>true</bool>

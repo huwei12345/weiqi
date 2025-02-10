@@ -138,6 +138,7 @@ void MainWindow::on_toolButton_clicked()
 
 void MainWindow::on_pieceTree_itemClicked(QTreeWidgetItem *item, int column)
 {
+    Q_UNUSED(column);
     TreeData data = item->data(0, 1).value<TreeData>();
     auto p = data.node.lock();
     qDebug() << p->moveNum;
@@ -284,6 +285,7 @@ void MainWindow::on_addDSBtn_clicked()
 
 void MainWindow::on_pieceTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
+    Q_UNUSED(previous);
     if (current) {
         // 输出当前选中的项的文本
         qDebug() << "Current selected item: " << current->text(0);
@@ -430,7 +432,6 @@ void MainWindow::on_actionjudgeWin_triggered()
 
 void MainWindow::on_actionnextStep_triggered()
 {
-    bool ok = false;
     QString pos = QInputDialog::getText(this, tr("Enter Position"),
                                       tr("请输入下一步想下的位置 例[A13]: "));
     if (pos.size() == 0) {
@@ -499,3 +500,21 @@ void MainWindow::on_actiontry_triggered(bool checked)
     goWidget->openTryMode(checked);
 }
 
+
+//TODO: 设置与主题尝试用QML制作试试
+void MainWindow::on_actionshezhi_2_triggered()
+{
+
+}
+
+
+void MainWindow::on_actionshezhi_triggered()
+{
+
+}
+
+
+void MainWindow::on_actiontheme_triggered()
+{
+
+}
