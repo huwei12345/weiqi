@@ -5,6 +5,7 @@
 
 #include <QClipboard>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -28,6 +29,13 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle(tr("围棋练习助手"));
     QIcon windowIcon(QPixmap(":/images/appIcon.jpg")); // 假设你的图标文件位于资源文件中或者项目目录下
     setWindowIcon(windowIcon);
+
+    connect(goWidget, &GoBoardWidget::playerChange, this, &MainWindow::playerChange);
+    blackPiece = QPixmap(":/images/black.png"); // 使用资源文件
+    blackPiece = blackPiece.scaled(QSize(15,15), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    whitePiece = QPixmap(":/images/white.png"); // 使用资源文件
+    whitePiece = whitePiece.scaled(QSize(15,15), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    ui->pieceLabel->setPixmap(blackPiece);
 }
 
 MainWindow::~MainWindow()
@@ -121,7 +129,7 @@ void MainWindow::on_judgeBtn_clicked(bool checked)
     //qDebug() << "black " << p.first << " white " << p.second;
 }
 
-// reset
+// reset 仅清空形势判断残余
 void MainWindow::on_toolButton_clicked()
 {
     goWidget->clearJudge();
@@ -352,6 +360,18 @@ void MainWindow::Quit() {
     }
 }
 
+void MainWindow::playerChange(int currentPlayer)
+{
+    if (currentPlayer == BLACK) {
+        qDebug() << "BLACK";
+        ui->pieceLabel->setPixmap(blackPiece);
+    }
+    else if (currentPlayer == WHITE) {
+        qDebug() << "WHITE";
+        ui->pieceLabel->setPixmap(whitePiece);
+    }
+}
+
 //退出
 void MainWindow::on_toolButton_9_clicked()
 {
@@ -375,5 +395,107 @@ void MainWindow::on_action_triggered()
 {
     HelpPage* page = new HelpPage();
     page->show();
+}
+
+
+void MainWindow::on_actionsearchStep_triggered()
+{
+    //TODO: 或许可以放在定式集结果界面动态改变
+    bool ok = false;
+    int number = QInputDialog::getInt(this, tr("Enter stepNumber"),
+                                      tr("请设置搜索定式后续的stepN步（1-1000）: "), 0, 1, 1000, 1, &ok);
+    if (ok) {
+        // 用户输入了数字，并且点击了OK
+        goWidget->setSearchStep(number);
+    }
+}
+
+void MainWindow::on_actioncunchu_triggered()
+{
+    emit on_storeBtn_clicked();
+}
+
+
+void MainWindow::on_actionduqu_triggered()
+{
+    emit on_LoadBtn_clicked();
+}
+
+
+void MainWindow::on_actionjudgeWin_triggered()
+{
+    emit on_WinBtn_clicked(true);
+}
+
+
+void MainWindow::on_actionnextStep_triggered()
+{
+    bool ok = false;
+    QString pos = QInputDialog::getText(this, tr("Enter Position"),
+                                      tr("请输入下一步想下的位置 例[A13]: "));
+    if (pos.size() == 0) {
+        qDebug() << "input error";
+        return;
+    }
+    if (!pos[0].isLetter()) {
+        qDebug() << "input error";
+        return;
+    }
+    pos[0] = pos[0].toUpper();
+    int col = 0;
+    if (pos[0] >= 'I') {
+        col = pos[0].toLatin1() - 'A' - 1;
+    }
+    else {
+        col = pos[0].toLatin1() - 'A';
+    }
+    QString tmp = pos.mid(1);
+    if (tmp.size() == 0) {
+        qDebug() << "input error";
+        return;
+    }
+    int row = 19 - tmp.toInt();
+    qDebug() << "input: row " << row << " col " << col << " " << showPiece(row, col);
+    std::vector<std::vector<Piece>> ans;
+    goWidget->remember(row, col, ans);
+}
+
+
+void MainWindow::on_actionundo_triggered()
+{
+    goWidget->undo();
+}
+
+
+void MainWindow::on_actionredo_triggered()
+{
+    goWidget->redo();
+}
+
+
+void MainWindow::on_actionjump_triggered()
+{
+    bool ok = false;
+    int number = QInputDialog::getInt(this, tr("Enter step"),
+                                      tr("请输入要跳转的手数: "), 0, 0, 1000, 1, &ok);
+    if (ok) {
+        goWidget->jumptoPiece(number);
+    }
+}
+
+
+void MainWindow::on_actiondelete_triggered()
+{
+    auto item = ui->pieceTree->currentItem();
+    //删除当前选中item
+    if (item != nullptr) {
+        goWidget->deleteSGFTreeItem(item);
+    }
+}
+
+void MainWindow::on_actiontry_triggered(bool checked)
+{
+    qDebug() << (checked ? "start TryMode" : "close TryMode");
+    goWidget->openTryMode(checked);
 }
 

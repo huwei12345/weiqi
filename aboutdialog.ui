@@ -125,7 +125,6 @@
    </property>
    <property name="font">
     <font>
-     <family>Script</family>
      <pointsize>27</pointsize>
      <bold>false</bold>
     </font>

@@ -53,6 +53,7 @@ public:
     QAction *actionAIAnalysis;
     QAction *actionnextStep;
     QAction *actionshezhi_2;
+    QAction *actionAIjudge;
     QWidget *centralwidget;
     QVBoxLayout *verticalLayout;
     QTextEdit *textEdit;
@@ -94,7 +95,7 @@ public:
     QSpacerItem *horizontalSpacer_5;
     QWidget *testWidget;
     QHBoxLayout *horizontalLayout_3;
-    QLabel *label_2;
+    QLabel *pieceLabel;
     QSpacerItem *horizontalSpacer_3;
     QToolButton *toolButton_20;
     QToolButton *toolButton_21;
@@ -153,6 +154,7 @@ public:
         actiondelete->setObjectName(QString::fromUtf8("actiondelete"));
         actiontry = new QAction(MainWindow);
         actiontry->setObjectName(QString::fromUtf8("actiontry"));
+        actiontry->setCheckable(true);
         actionsearchStep = new QAction(MainWindow);
         actionsearchStep->setObjectName(QString::fromUtf8("actionsearchStep"));
         actiontheme = new QAction(MainWindow);
@@ -167,6 +169,8 @@ public:
         actionnextStep->setObjectName(QString::fromUtf8("actionnextStep"));
         actionshezhi_2 = new QAction(MainWindow);
         actionshezhi_2->setObjectName(QString::fromUtf8("actionshezhi_2"));
+        actionAIjudge = new QAction(MainWindow);
+        actionAIjudge->setObjectName(QString::fromUtf8("actionAIjudge"));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         verticalLayout = new QVBoxLayout(centralwidget);
@@ -179,6 +183,7 @@ public:
         sizePolicy.setHeightForWidth(textEdit->sizePolicy().hasHeightForWidth());
         textEdit->setSizePolicy(sizePolicy);
         textEdit->setMaximumSize(QSize(16777215, 30));
+        textEdit->setReadOnly(true);
 
         verticalLayout->addWidget(textEdit);
 
@@ -355,10 +360,10 @@ public:
         horizontalLayout_3 = new QHBoxLayout(testWidget);
         horizontalLayout_3->setObjectName(QString::fromUtf8("horizontalLayout_3"));
         horizontalLayout_3->setContentsMargins(-1, 0, -1, 0);
-        label_2 = new QLabel(testWidget);
-        label_2->setObjectName(QString::fromUtf8("label_2"));
+        pieceLabel = new QLabel(testWidget);
+        pieceLabel->setObjectName(QString::fromUtf8("pieceLabel"));
 
-        horizontalLayout_3->addWidget(label_2);
+        horizontalLayout_3->addWidget(pieceLabel);
 
         horizontalSpacer_3 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
@@ -503,7 +508,9 @@ public:
         menu_2->addAction(actiontry);
         menu_3->addAction(actionjudgeWin);
         menu_3->addAction(actionjudgeSituation);
+        menu_3->addAction(actionAIjudge);
         menu_3->addAction(actionAIAnalysis);
+        menu_3->addSeparator();
         menu_3->addAction(actionnextStep);
         menu_4->addAction(actiontheme);
         menu_4->addAction(actionsearchStep);
@@ -531,6 +538,9 @@ public:
         actionredo->setText(QCoreApplication::translate("MainWindow", "\351\207\215\345\201\232", nullptr));
         actionjump->setText(QCoreApplication::translate("MainWindow", "\350\267\263\350\275\254", nullptr));
         actiondelete->setText(QCoreApplication::translate("MainWindow", "\345\210\240\351\231\244", nullptr));
+#if QT_CONFIG(shortcut)
+        actiondelete->setShortcut(QCoreApplication::translate("MainWindow", "Ctrl+D", nullptr));
+#endif // QT_CONFIG(shortcut)
         actiontry->setText(QCoreApplication::translate("MainWindow", "\350\257\225\344\270\213", nullptr));
         actionsearchStep->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256\346\220\234\347\264\242\346\255\245\346\225\260", nullptr));
         actiontheme->setText(QCoreApplication::translate("MainWindow", "\344\270\273\351\242\230", nullptr));
@@ -539,6 +549,7 @@ public:
         actionAIAnalysis->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\345\210\206\346\236\220", nullptr));
         actionnextStep->setText(QCoreApplication::translate("MainWindow", "\345\256\232\345\274\217\344\270\213\344\270\200\346\255\245", nullptr));
         actionshezhi_2->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256", nullptr));
+        actionAIjudge->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\350\243\201\345\210\244", nullptr));
         QTreeWidgetItem *___qtreewidgetitem = pieceTree->headerItem();
         ___qtreewidgetitem->setText(1, QCoreApplication::translate("MainWindow", "moveNum", nullptr));
         ___qtreewidgetitem->setText(0, QCoreApplication::translate("MainWindow", "point", nullptr));
@@ -550,6 +561,9 @@ public:
         toolButton_27->setText(QCoreApplication::translate("MainWindow", "\350\277\221\344\274\274\345\256\232\345\274\217", nullptr));
         toolButton_4->setText(QCoreApplication::translate("MainWindow", "\350\257\225\344\270\213", nullptr));
         clearBtn->setText(QCoreApplication::translate("MainWindow", "\346\270\205\347\251\272", nullptr));
+#if QT_CONFIG(tooltip)
+        toolButton->setToolTip(QCoreApplication::translate("MainWindow", "\344\273\205\346\270\205\347\251\272\345\275\242\345\212\277\345\210\244\346\226\255\346\256\213\344\275\231", nullptr));
+#endif // QT_CONFIG(tooltip)
         toolButton->setText(QCoreApplication::translate("MainWindow", "reset", nullptr));
         judgeBtn->setText(QCoreApplication::translate("MainWindow", "\345\275\242\345\274\217\345\210\244\346\226\255", nullptr));
         toolButton_10->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\350\243\201\345\210\244", nullptr));
@@ -561,7 +575,7 @@ public:
         toolButton_19->setText(QCoreApplication::translate("MainWindow", "\345\201\234\344\270\200\346\211\213", nullptr));
         toolButton_9->setText(QCoreApplication::translate("MainWindow", "\351\200\200\345\207\272", nullptr));
         toolButton_7->setText(QCoreApplication::translate("MainWindow", "\350\256\244\350\276\223", nullptr));
-        label_2->setText(QCoreApplication::translate("MainWindow", "\351\273\221\347\231\275", nullptr));
+        pieceLabel->setText(QCoreApplication::translate("MainWindow", "\351\273\221\347\231\275", nullptr));
         toolButton_20->setText(QCoreApplication::translate("MainWindow", "\346\211\213\346\225\260", nullptr));
         toolButton_21->setText(QCoreApplication::translate("MainWindow", "\347\247\273\345\212\250", nullptr));
         toolButton_22->setText(QCoreApplication::translate("MainWindow", "\345\210\240\351\231\244", nullptr));

@@ -63,7 +63,6 @@ public:
         label_5->setMinimumSize(QSize(100, 50));
         label_5->setMaximumSize(QSize(16777215, 16777215));
         QFont font1;
-        font1.setFamily(QString::fromUtf8("Script"));
         font1.setPointSize(27);
         font1.setBold(false);
         label_5->setFont(font1);

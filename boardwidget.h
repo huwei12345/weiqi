@@ -131,6 +131,7 @@ public:
 
         board.assign(BOARDWIDTH, std::vector<Piece>(BOARDWIDTH));
         zeroBoard = board;
+        //此处最好不要发信号
         currentPlayer = BLACK;
         moveNumber = 1;
         allNumber = 1;
@@ -932,7 +933,7 @@ protected:
             putPiece(row, col, color, boarder);
             showPoint(row, col, color);
             setMoveNum(node, OtherBranchPut);
-            currentPlayer = (color == BLACK ? WHITE : BLACK);
+            swapCurrentPlayer();
             //pieceSeq.push_back(board[row][col]);
             return true;
         }
@@ -1294,7 +1295,7 @@ protected:
             }
             setMoveNum(node, isOtherBranch);
             showTreeItem(historyNode);
-            currentPlayer = (currentPlayer == BLACK ? WHITE : BLACK);
+            swapCurrentPlayer();
         }
         // 触发重绘
         repaint();
@@ -1358,7 +1359,7 @@ public:
         historyNode = node;
         Piece piece = historyNode->move;
         board = historyNode->boardHistory;
-        currentPlayer = piece.color == BLACK ? WHITE : BLACK;
+        swapCurrentPlayer();
         qDebug() << "jump " << historyNode->moveNum << " board " << board.size();
         QTreeWidgetItem* item = treeItemMap[historyNode];
         pieceTree->setCurrentItem(item);
@@ -1392,7 +1393,7 @@ public:
 
     void passOnePiece() {
         qDebug() << (currentPlayer == BLACK ? "BLACK " : "WHITE ") << "pass One Piece";
-        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+        swapCurrentPlayer();
         repaint();
     }
 
@@ -1410,14 +1411,14 @@ public:
         if (p == nullptr) {
             historyNode = nullptr;
             board = zeroBoard;
-            currentPlayer = BLACK;
+            setCurrentPlayer(BLACK);
             qDebug() << "can not undo";
             repaint();
             return;
         }
         historyNode = p;
         board = historyNode->boardHistory;
-        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+        swapCurrentPlayer();
         qDebug() << "undo " << historyNode->moveNum;
         QTreeWidgetItem* item = treeItemMap[historyNode];
         pieceTree->setCurrentItem(item);
@@ -1438,7 +1439,7 @@ public:
             //空棋盘
             historyNode = root;
             board = historyNode->boardHistory;
-            currentPlayer = BLACK;
+            setCurrentPlayer(BLACK);
             qDebug() << "redo " << historyNode->moveNum << " board " << board.size();
             repaint();
             return;
@@ -1452,7 +1453,7 @@ public:
         qDebug() << "before redo " << historyNode->moveNum;
         historyNode = historyNode->branches[0];
         board = historyNode->boardHistory;
-        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+        swapCurrentPlayer();
         qDebug() << "after redo " << historyNode->moveNum;
         QTreeWidgetItem* item = treeItemMap[historyNode];
         pieceTree->setCurrentItem(item);
@@ -1553,10 +1554,6 @@ public:
                QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
                int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
                int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
-               if (isOccupied(row, col)) {
-                   qDebug() << "not black";
-                   return; // 如果该位置已被占据，则不放置棋子
-               }
                std::vector<std::vector<Piece>> ans;
                remember(board, row, col, currentPlayer, mStepN, ans);
            } else if (event->key() == Qt::Key_T && event->modifiers() == Qt::ControlModifier) {
@@ -1633,7 +1630,7 @@ public:
 //               }
                repaint();
            } else if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
-               currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+               swapCurrentPlayer();
                qDebug() << "currentPlayer " << currentPlayer;
                repaint();
            } else if (event->key() == Qt::Key_G && event->modifiers() == Qt::ControlModifier) {
@@ -3222,7 +3219,7 @@ public:
         allNumber = 0;
         blackEaten = 0;
         whiteEaten = 0;
-        currentPlayer = BLACK;
+        setCurrentPlayer(BLACK);
         repaint();
         clearJudge();
         clearRoot();
@@ -3421,6 +3418,10 @@ public:
             qDebug() << "no DingShiBook";
             return;
         }
+        if (isOccupied(row, col)) {
+            qDebug() << "not black";
+            return; // 如果该位置已被占据，则不放置棋子
+        }
         std::vector<std::vector<Piece>> seqList;
         getEverySeq2(boarder, seqList, color);
         int rotate = 0;
@@ -3468,6 +3469,14 @@ public:
         }
         adjustResultOrigin(res, rotate);//逆操作将结果调回原位
         showNextNStep2(res);
+    }
+
+    void remember(int row, int col, std::vector<std::vector<Piece>>& ans) {
+        remember(board, row, col, currentPlayer, mStepN, ans);
+    }
+
+    void setSearchStep(int step) {
+        mStepN = step;
     }
 
     //已知一种确定的顺序pieceSeq
@@ -3915,7 +3924,26 @@ public:
         }
     }
 
+
+    void setCurrentPlayer(int color) {
+        currentPlayer = color;
+        emit playerChange(currentPlayer);
+    }
+
+    void swapCurrentPlayer() {
+        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+        //同时设置界面label提示，或者通知mainWindow? emit playerChange(currentPlayer);
+        //setColorLabel(currentPlayer);
+        emit playerChange(currentPlayer);
+    }
+
+    int getCurrentPlayer() {
+        return currentPlayer;
+    }
+
 private:
+
+
     bool isOccupied(int row, int col) {
         // 检查是否有棋子在这个位置
         if (board[row][col].color != 2) {
@@ -3965,6 +3993,9 @@ private:
     std::shared_ptr<SGFTreeNode> DingShiBook;
     std::map<std::string, std::string> DingShiSetupInfo;   
     std::string mDingShiBookPath;
+
+signals:
+    void playerChange(int currentPlayer);
 public:
     std::vector<std::vector<Piece>> board;// x y
     std::map<std::string, std::string> setupInfo;//读取棋局获得的信息

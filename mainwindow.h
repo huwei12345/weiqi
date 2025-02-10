@@ -28,6 +28,9 @@ public:
 signals:
     void keyEventCaptured(QKeyEvent *event);
 
+public slots:
+    void playerChange(int currentPlayer);
+
 private slots:
 
     void on_LoadBtn_clicked();
@@ -86,10 +89,31 @@ private slots:
 
     void on_action_triggered();
 
+    void on_actionsearchStep_triggered();
+
+    void on_actioncunchu_triggered();
+
+    void on_actionduqu_triggered();
+
+    void on_actionjudgeWin_triggered();
+
+    void on_actionnextStep_triggered();
+
+    void on_actionundo_triggered();
+
+    void on_actionredo_triggered();
+
+    void on_actionjump_triggered();
+
+    void on_actiondelete_triggered();
+
+    void on_actiontry_triggered(bool checked);
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;
     ImageRecognition* recTool;
-
+    QPixmap blackPiece; // 黑棋图片
+    QPixmap whitePiece; // 白棋图片
 };
 #endif // MAINWINDOW_H

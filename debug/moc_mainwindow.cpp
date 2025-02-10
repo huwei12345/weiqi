@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_MainWindow_t {
-    QByteArrayData data[40];
-    char stringdata0[727];
+    QByteArrayData data[52];
+    char stringdata0[1011];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -37,45 +37,58 @@ QT_MOC_LITERAL(1, 11, 16), // "keyEventCaptured"
 QT_MOC_LITERAL(2, 28, 0), // ""
 QT_MOC_LITERAL(3, 29, 10), // "QKeyEvent*"
 QT_MOC_LITERAL(4, 40, 5), // "event"
-QT_MOC_LITERAL(5, 46, 18), // "on_LoadBtn_clicked"
-QT_MOC_LITERAL(6, 65, 19), // "on_storeBtn_clicked"
-QT_MOC_LITERAL(7, 85, 17), // "on_WinBtn_clicked"
-QT_MOC_LITERAL(8, 103, 19), // "on_clearBtn_clicked"
-QT_MOC_LITERAL(9, 123, 19), // "on_judgeBtn_clicked"
-QT_MOC_LITERAL(10, 143, 7), // "checked"
-QT_MOC_LITERAL(11, 151, 21), // "on_toolButton_clicked"
-QT_MOC_LITERAL(12, 173, 24), // "on_pieceTree_itemClicked"
-QT_MOC_LITERAL(13, 198, 16), // "QTreeWidgetItem*"
-QT_MOC_LITERAL(14, 215, 4), // "item"
-QT_MOC_LITERAL(15, 220, 6), // "column"
-QT_MOC_LITERAL(16, 227, 23), // "on_toolButton_2_clicked"
-QT_MOC_LITERAL(17, 251, 32), // "on_horizontalSlider_valueChanged"
-QT_MOC_LITERAL(18, 284, 5), // "value"
-QT_MOC_LITERAL(19, 290, 16), // "on_Begin_clicked"
-QT_MOC_LITERAL(20, 307, 14), // "on_End_clicked"
-QT_MOC_LITERAL(21, 322, 19), // "on_leftFive_clicked"
-QT_MOC_LITERAL(22, 342, 18), // "on_leftOne_clicked"
-QT_MOC_LITERAL(23, 361, 20), // "on_rightFive_clicked"
-QT_MOC_LITERAL(24, 382, 19), // "on_rightOne_clicked"
-QT_MOC_LITERAL(25, 402, 21), // "on_pushButton_clicked"
-QT_MOC_LITERAL(26, 424, 24), // "on_toolButton_27_clicked"
-QT_MOC_LITERAL(27, 449, 19), // "on_addDSBtn_clicked"
-QT_MOC_LITERAL(28, 469, 31), // "on_pieceTree_currentItemChanged"
-QT_MOC_LITERAL(29, 501, 7), // "current"
-QT_MOC_LITERAL(30, 509, 8), // "previous"
-QT_MOC_LITERAL(31, 518, 39), // "on_pieceTree_customContextMen..."
-QT_MOC_LITERAL(32, 558, 3), // "pos"
-QT_MOC_LITERAL(33, 562, 23), // "on_toolButton_4_clicked"
-QT_MOC_LITERAL(34, 586, 24), // "on_toolButton_19_clicked"
-QT_MOC_LITERAL(35, 611, 23), // "on_toolButton_9_clicked"
-QT_MOC_LITERAL(36, 635, 19), // "on_autoPlay_clicked"
-QT_MOC_LITERAL(37, 655, 25), // "on_actiontuichu_triggered"
-QT_MOC_LITERAL(38, 681, 25), // "on_actionguanyu_triggered"
-QT_MOC_LITERAL(39, 707, 19) // "on_action_triggered"
+QT_MOC_LITERAL(5, 46, 12), // "playerChange"
+QT_MOC_LITERAL(6, 59, 13), // "currentPlayer"
+QT_MOC_LITERAL(7, 73, 18), // "on_LoadBtn_clicked"
+QT_MOC_LITERAL(8, 92, 19), // "on_storeBtn_clicked"
+QT_MOC_LITERAL(9, 112, 17), // "on_WinBtn_clicked"
+QT_MOC_LITERAL(10, 130, 19), // "on_clearBtn_clicked"
+QT_MOC_LITERAL(11, 150, 19), // "on_judgeBtn_clicked"
+QT_MOC_LITERAL(12, 170, 7), // "checked"
+QT_MOC_LITERAL(13, 178, 21), // "on_toolButton_clicked"
+QT_MOC_LITERAL(14, 200, 24), // "on_pieceTree_itemClicked"
+QT_MOC_LITERAL(15, 225, 16), // "QTreeWidgetItem*"
+QT_MOC_LITERAL(16, 242, 4), // "item"
+QT_MOC_LITERAL(17, 247, 6), // "column"
+QT_MOC_LITERAL(18, 254, 23), // "on_toolButton_2_clicked"
+QT_MOC_LITERAL(19, 278, 32), // "on_horizontalSlider_valueChanged"
+QT_MOC_LITERAL(20, 311, 5), // "value"
+QT_MOC_LITERAL(21, 317, 16), // "on_Begin_clicked"
+QT_MOC_LITERAL(22, 334, 14), // "on_End_clicked"
+QT_MOC_LITERAL(23, 349, 19), // "on_leftFive_clicked"
+QT_MOC_LITERAL(24, 369, 18), // "on_leftOne_clicked"
+QT_MOC_LITERAL(25, 388, 20), // "on_rightFive_clicked"
+QT_MOC_LITERAL(26, 409, 19), // "on_rightOne_clicked"
+QT_MOC_LITERAL(27, 429, 21), // "on_pushButton_clicked"
+QT_MOC_LITERAL(28, 451, 24), // "on_toolButton_27_clicked"
+QT_MOC_LITERAL(29, 476, 19), // "on_addDSBtn_clicked"
+QT_MOC_LITERAL(30, 496, 31), // "on_pieceTree_currentItemChanged"
+QT_MOC_LITERAL(31, 528, 7), // "current"
+QT_MOC_LITERAL(32, 536, 8), // "previous"
+QT_MOC_LITERAL(33, 545, 39), // "on_pieceTree_customContextMen..."
+QT_MOC_LITERAL(34, 585, 3), // "pos"
+QT_MOC_LITERAL(35, 589, 23), // "on_toolButton_4_clicked"
+QT_MOC_LITERAL(36, 613, 24), // "on_toolButton_19_clicked"
+QT_MOC_LITERAL(37, 638, 23), // "on_toolButton_9_clicked"
+QT_MOC_LITERAL(38, 662, 19), // "on_autoPlay_clicked"
+QT_MOC_LITERAL(39, 682, 25), // "on_actiontuichu_triggered"
+QT_MOC_LITERAL(40, 708, 25), // "on_actionguanyu_triggered"
+QT_MOC_LITERAL(41, 734, 19), // "on_action_triggered"
+QT_MOC_LITERAL(42, 754, 29), // "on_actionsearchStep_triggered"
+QT_MOC_LITERAL(43, 784, 25), // "on_actioncunchu_triggered"
+QT_MOC_LITERAL(44, 810, 23), // "on_actionduqu_triggered"
+QT_MOC_LITERAL(45, 834, 27), // "on_actionjudgeWin_triggered"
+QT_MOC_LITERAL(46, 862, 27), // "on_actionnextStep_triggered"
+QT_MOC_LITERAL(47, 890, 23), // "on_actionundo_triggered"
+QT_MOC_LITERAL(48, 914, 23), // "on_actionredo_triggered"
+QT_MOC_LITERAL(49, 938, 23), // "on_actionjump_triggered"
+QT_MOC_LITERAL(50, 962, 25), // "on_actiondelete_triggered"
+QT_MOC_LITERAL(51, 988, 22) // "on_actiontry_triggered"
 
     },
     "MainWindow\0keyEventCaptured\0\0QKeyEvent*\0"
-    "event\0on_LoadBtn_clicked\0on_storeBtn_clicked\0"
+    "event\0playerChange\0currentPlayer\0"
+    "on_LoadBtn_clicked\0on_storeBtn_clicked\0"
     "on_WinBtn_clicked\0on_clearBtn_clicked\0"
     "on_judgeBtn_clicked\0checked\0"
     "on_toolButton_clicked\0on_pieceTree_itemClicked\0"
@@ -93,7 +106,16 @@ QT_MOC_LITERAL(39, 707, 19) // "on_action_triggered"
     "on_toolButton_19_clicked\0"
     "on_toolButton_9_clicked\0on_autoPlay_clicked\0"
     "on_actiontuichu_triggered\0"
-    "on_actionguanyu_triggered\0on_action_triggered"
+    "on_actionguanyu_triggered\0on_action_triggered\0"
+    "on_actionsearchStep_triggered\0"
+    "on_actioncunchu_triggered\0"
+    "on_actionduqu_triggered\0"
+    "on_actionjudgeWin_triggered\0"
+    "on_actionnextStep_triggered\0"
+    "on_actionundo_triggered\0on_actionredo_triggered\0"
+    "on_actionjump_triggered\0"
+    "on_actiondelete_triggered\0"
+    "on_actiontry_triggered"
 };
 #undef QT_MOC_LITERAL
 
@@ -103,7 +125,7 @@ static const uint qt_meta_data_MainWindow[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      29,   14, // methods
+      40,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -111,70 +133,92 @@ static const uint qt_meta_data_MainWindow[] = {
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    1,  159,    2, 0x06 /* Public */,
+       1,    1,  214,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       5,    0,  162,    2, 0x08 /* Private */,
-       6,    0,  163,    2, 0x08 /* Private */,
-       7,    0,  164,    2, 0x08 /* Private */,
-       8,    0,  165,    2, 0x08 /* Private */,
-       9,    1,  166,    2, 0x08 /* Private */,
-      11,    0,  169,    2, 0x08 /* Private */,
-      12,    2,  170,    2, 0x08 /* Private */,
-      16,    0,  175,    2, 0x08 /* Private */,
-      17,    1,  176,    2, 0x08 /* Private */,
-      19,    0,  179,    2, 0x08 /* Private */,
-      20,    0,  180,    2, 0x08 /* Private */,
-      21,    0,  181,    2, 0x08 /* Private */,
-      22,    0,  182,    2, 0x08 /* Private */,
-      23,    0,  183,    2, 0x08 /* Private */,
-      24,    0,  184,    2, 0x08 /* Private */,
-      25,    0,  185,    2, 0x08 /* Private */,
-      26,    0,  186,    2, 0x08 /* Private */,
-      27,    0,  187,    2, 0x08 /* Private */,
-      28,    2,  188,    2, 0x08 /* Private */,
-      31,    1,  193,    2, 0x08 /* Private */,
-      33,    1,  196,    2, 0x08 /* Private */,
-       7,    1,  199,    2, 0x08 /* Private */,
-      34,    0,  202,    2, 0x08 /* Private */,
-      35,    0,  203,    2, 0x08 /* Private */,
-      36,    0,  204,    2, 0x08 /* Private */,
-      37,    0,  205,    2, 0x08 /* Private */,
-      38,    0,  206,    2, 0x08 /* Private */,
-      39,    0,  207,    2, 0x08 /* Private */,
+       5,    1,  217,    2, 0x0a /* Public */,
+       7,    0,  220,    2, 0x08 /* Private */,
+       8,    0,  221,    2, 0x08 /* Private */,
+       9,    0,  222,    2, 0x08 /* Private */,
+      10,    0,  223,    2, 0x08 /* Private */,
+      11,    1,  224,    2, 0x08 /* Private */,
+      13,    0,  227,    2, 0x08 /* Private */,
+      14,    2,  228,    2, 0x08 /* Private */,
+      18,    0,  233,    2, 0x08 /* Private */,
+      19,    1,  234,    2, 0x08 /* Private */,
+      21,    0,  237,    2, 0x08 /* Private */,
+      22,    0,  238,    2, 0x08 /* Private */,
+      23,    0,  239,    2, 0x08 /* Private */,
+      24,    0,  240,    2, 0x08 /* Private */,
+      25,    0,  241,    2, 0x08 /* Private */,
+      26,    0,  242,    2, 0x08 /* Private */,
+      27,    0,  243,    2, 0x08 /* Private */,
+      28,    0,  244,    2, 0x08 /* Private */,
+      29,    0,  245,    2, 0x08 /* Private */,
+      30,    2,  246,    2, 0x08 /* Private */,
+      33,    1,  251,    2, 0x08 /* Private */,
+      35,    1,  254,    2, 0x08 /* Private */,
+       9,    1,  257,    2, 0x08 /* Private */,
+      36,    0,  260,    2, 0x08 /* Private */,
+      37,    0,  261,    2, 0x08 /* Private */,
+      38,    0,  262,    2, 0x08 /* Private */,
+      39,    0,  263,    2, 0x08 /* Private */,
+      40,    0,  264,    2, 0x08 /* Private */,
+      41,    0,  265,    2, 0x08 /* Private */,
+      42,    0,  266,    2, 0x08 /* Private */,
+      43,    0,  267,    2, 0x08 /* Private */,
+      44,    0,  268,    2, 0x08 /* Private */,
+      45,    0,  269,    2, 0x08 /* Private */,
+      46,    0,  270,    2, 0x08 /* Private */,
+      47,    0,  271,    2, 0x08 /* Private */,
+      48,    0,  272,    2, 0x08 /* Private */,
+      49,    0,  273,    2, 0x08 /* Private */,
+      50,    0,  274,    2, 0x08 /* Private */,
+      51,    1,  275,    2, 0x08 /* Private */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3,    4,
 
  // slots: parameters
+    QMetaType::Void, QMetaType::Int,    6,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Bool,   10,
+    QMetaType::Void, QMetaType::Bool,   12,
     QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 13, QMetaType::Int,   14,   15,
+    QMetaType::Void, 0x80000000 | 15, QMetaType::Int,   16,   17,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::Int,   18,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 13, 0x80000000 | 13,   29,   30,
-    QMetaType::Void, QMetaType::QPoint,   32,
-    QMetaType::Void, QMetaType::Bool,   10,
-    QMetaType::Void, QMetaType::Bool,   10,
+    QMetaType::Void, QMetaType::Int,   20,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, 0x80000000 | 15, 0x80000000 | 15,   31,   32,
+    QMetaType::Void, QMetaType::QPoint,   34,
+    QMetaType::Void, QMetaType::Bool,   12,
+    QMetaType::Void, QMetaType::Bool,   12,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Bool,   12,
 
        0        // eod
 };
@@ -186,34 +230,45 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         Q_UNUSED(_t)
         switch (_id) {
         case 0: _t->keyEventCaptured((*reinterpret_cast< QKeyEvent*(*)>(_a[1]))); break;
-        case 1: _t->on_LoadBtn_clicked(); break;
-        case 2: _t->on_storeBtn_clicked(); break;
-        case 3: _t->on_WinBtn_clicked(); break;
-        case 4: _t->on_clearBtn_clicked(); break;
-        case 5: _t->on_judgeBtn_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 6: _t->on_toolButton_clicked(); break;
-        case 7: _t->on_pieceTree_itemClicked((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
-        case 8: _t->on_toolButton_2_clicked(); break;
-        case 9: _t->on_horizontalSlider_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 10: _t->on_Begin_clicked(); break;
-        case 11: _t->on_End_clicked(); break;
-        case 12: _t->on_leftFive_clicked(); break;
-        case 13: _t->on_leftOne_clicked(); break;
-        case 14: _t->on_rightFive_clicked(); break;
-        case 15: _t->on_rightOne_clicked(); break;
-        case 16: _t->on_pushButton_clicked(); break;
-        case 17: _t->on_toolButton_27_clicked(); break;
-        case 18: _t->on_addDSBtn_clicked(); break;
-        case 19: _t->on_pieceTree_currentItemChanged((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< QTreeWidgetItem*(*)>(_a[2]))); break;
-        case 20: _t->on_pieceTree_customContextMenuRequested((*reinterpret_cast< const QPoint(*)>(_a[1]))); break;
-        case 21: _t->on_toolButton_4_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 22: _t->on_WinBtn_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
-        case 23: _t->on_toolButton_19_clicked(); break;
-        case 24: _t->on_toolButton_9_clicked(); break;
-        case 25: _t->on_autoPlay_clicked(); break;
-        case 26: _t->on_actiontuichu_triggered(); break;
-        case 27: _t->on_actionguanyu_triggered(); break;
-        case 28: _t->on_action_triggered(); break;
+        case 1: _t->playerChange((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 2: _t->on_LoadBtn_clicked(); break;
+        case 3: _t->on_storeBtn_clicked(); break;
+        case 4: _t->on_WinBtn_clicked(); break;
+        case 5: _t->on_clearBtn_clicked(); break;
+        case 6: _t->on_judgeBtn_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 7: _t->on_toolButton_clicked(); break;
+        case 8: _t->on_pieceTree_itemClicked((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
+        case 9: _t->on_toolButton_2_clicked(); break;
+        case 10: _t->on_horizontalSlider_valueChanged((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 11: _t->on_Begin_clicked(); break;
+        case 12: _t->on_End_clicked(); break;
+        case 13: _t->on_leftFive_clicked(); break;
+        case 14: _t->on_leftOne_clicked(); break;
+        case 15: _t->on_rightFive_clicked(); break;
+        case 16: _t->on_rightOne_clicked(); break;
+        case 17: _t->on_pushButton_clicked(); break;
+        case 18: _t->on_toolButton_27_clicked(); break;
+        case 19: _t->on_addDSBtn_clicked(); break;
+        case 20: _t->on_pieceTree_currentItemChanged((*reinterpret_cast< QTreeWidgetItem*(*)>(_a[1])),(*reinterpret_cast< QTreeWidgetItem*(*)>(_a[2]))); break;
+        case 21: _t->on_pieceTree_customContextMenuRequested((*reinterpret_cast< const QPoint(*)>(_a[1]))); break;
+        case 22: _t->on_toolButton_4_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 23: _t->on_WinBtn_clicked((*reinterpret_cast< bool(*)>(_a[1]))); break;
+        case 24: _t->on_toolButton_19_clicked(); break;
+        case 25: _t->on_toolButton_9_clicked(); break;
+        case 26: _t->on_autoPlay_clicked(); break;
+        case 27: _t->on_actiontuichu_triggered(); break;
+        case 28: _t->on_actionguanyu_triggered(); break;
+        case 29: _t->on_action_triggered(); break;
+        case 30: _t->on_actionsearchStep_triggered(); break;
+        case 31: _t->on_actioncunchu_triggered(); break;
+        case 32: _t->on_actionduqu_triggered(); break;
+        case 33: _t->on_actionjudgeWin_triggered(); break;
+        case 34: _t->on_actionnextStep_triggered(); break;
+        case 35: _t->on_actionundo_triggered(); break;
+        case 36: _t->on_actionredo_triggered(); break;
+        case 37: _t->on_actionjump_triggered(); break;
+        case 38: _t->on_actiondelete_triggered(); break;
+        case 39: _t->on_actiontry_triggered((*reinterpret_cast< bool(*)>(_a[1]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::IndexOfMethod) {
@@ -257,13 +312,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 29)
+        if (_id < 40)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 29;
+        _id -= 40;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 29)
+        if (_id < 40)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 29;
+        _id -= 40;
     }
     return _id;
 }
