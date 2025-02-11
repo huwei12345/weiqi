@@ -131,6 +131,7 @@ public:
 
         board.assign(BOARDWIDTH, std::vector<Piece>(BOARDWIDTH));
         zeroBoard = board;
+        mVirtualBoard = board;
         //此处最好不要发信号
         currentPlayer = BLACK;
         moveNumber = 1;
@@ -148,25 +149,43 @@ public:
         mTryMode = false;
         PracticeMode = false;
         seqIndex = -1;
-        indexMap.assign(HEIGHT, std::vector<Filed*>(WIDTH, nullptr));
+        indexMap.assign(HEIGHT, std::vector<std::shared_ptr<Filed>>(WIDTH, nullptr));
 
         for (int i = 0; i < BOARDWIDTH; ++i) {
             for (int j = 0; j < BOARDWIDTH; ++j) {
                 ownership[i][j] = 2;
             }
         }
+
+        mVirtualOpen = false;
+        mVirtualIndex = -1;
+        mVirtualMax = -1;
+        mVirtualRow = -1;
+        mVirtualCol = -1;
+        mVirtualColor = -1;
     }
 
 
     class Filed {
     public:
+        Filed() {
+            qDebug() << "create Filed";
+        }
+        ~Filed() {
+            qDebug() << "delete Filed";
+        }
+        void clear() {
+            aceFiled.clear();
+            roundFiled.clear();
+            neighborFiled.clear();
+        }
         int row;
         int col;
         int color;
         std::set<std::pair<int, int>> pieceFiled;
-        std::vector<Filed*> aceFiled;
-        std::vector<Filed*> roundFiled;
-        std::vector<Filed*> neighborFiled;
+        std::vector<std::shared_ptr<Filed>> aceFiled;
+        std::vector<std::shared_ptr<Filed>> roundFiled;
+        std::vector<std::shared_ptr<Filed>> neighborFiled;
         int eyeSize = 0;
         int eyeCnt = 0;
         bool alived = false;
@@ -336,6 +355,73 @@ protected:
                 }
             }
         }
+
+        //将virtualBoard中的子以虚子显示
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                if (mVirtualBoard[i][j].color == 1) {
+                painter.drawPixmap(margin + j * gridSize - whitePiece.width() / 2,
+                               margin + i * gridSize - whitePiece.height() / 2,
+                               whitePiece);
+                }
+                else if (mVirtualBoard[i][j].color == 0) {
+                    painter.drawPixmap(margin + j * gridSize - blackPiece.width() / 2,
+                                       margin + i * gridSize - blackPiece.height() / 2,
+                                       blackPiece);
+                }
+            }
+        }
+        //更新虚子手数
+        updateVirtualMoveLabel(painter, gridSize, mVirtualBoard);
+    }
+
+
+    void updateVirtualMoveLabel(QPainter& painter, int gridSize, std::vector<std::vector<Piece>>& virtualBoard) {
+        QPen penold = painter.pen();
+        int margin = 30; // 留出30像素的边距
+        // 构建显示文本
+        QString text;
+        for (int i = 0; i < BOARDWIDTH; i++) {
+            for (int j = 0; j < BOARDWIDTH; j++) {
+                if (virtualBoard[i][j].color == 2) {
+                    continue;
+                }
+                int row = margin + i * gridSize + 5;
+                int col = 0;
+                text = QString::number(virtualBoard[i][j].moveNumber);
+                if (virtualBoard[i][j].moveNumber < 10) {
+                    col = margin + j * gridSize - 5;
+                }
+                else if (virtualBoard[i][j].moveNumber >= 10 && virtualBoard[i][j].moveNumber < 100) {
+                    col = margin + j * gridSize - 10;
+                }
+                else if (virtualBoard[i][j].moveNumber >= 100) {
+                    col = margin + j * gridSize - 15;
+                }
+                QFont font = painter.font();
+                //font.setFamily("Arial");           // 设置字体为 Arial
+                font.setPointSize(10);             // 设置字体大小
+                font.setBold(true);                // 设置加粗
+                //font.setWeight(QFont::DemiBold);   // 设置半粗体
+                painter.setFont(font);
+                // 设置文本颜色
+                QPen pen;
+                if (virtualBoard[i][j].color == 0) {
+                    pen.setColor(Qt::white);            // 设置文本颜色为蓝色
+                    //painter.setBrush(QBrush(Qt::white));
+                }
+                else {
+                   pen.setColor(Qt::black);            // 设置文本颜色为蓝色
+                   //painter.setBrush(QBrush(Qt::red));
+                }
+                if (i == 0) {
+                    pen.setColor(Qt::red);
+                }
+                painter.setPen(pen);
+                painter.drawText(col, row, text);
+            }
+        }
+        painter.setPen(penold);
     }
 
     void updateMoveLabel(QPainter& painter, int gridSize) {
@@ -571,7 +657,7 @@ protected:
         return 0;
     }
 
-    int isEyes(std::vector<std::vector<Piece>> & boarder, Filed* spaceFiled) {
+    int isEyes(std::vector<std::vector<Piece>> & boarder, std::shared_ptr<Filed> spaceFiled) {
         int bEye = 0;
         int wEye = 0;
         auto &liberties = spaceFiled->pieceFiled;
@@ -666,7 +752,7 @@ protected:
 
     //判断某块棋能否活棋，1.具备两眼。 2.具备一眼，并能一手再做一眼 (3.可以通过对杀将对手杀死.)
     //不能活棋 1.无眼 2.具备一眼，但不能一手棋再做一眼
-    bool isAlive(std::vector<std::vector<Piece>> &boarder, Filed* filed) {
+    bool isAlive(std::vector<std::vector<Piece>> &boarder, std::shared_ptr<Filed> filed) {
         //游戏终局除了双活的情况。一个空要么是黑的眼，要么是白的眼，如果无法判定，说明这个空没下完，无法点目。
         int count = 0;
         int size = 0;
@@ -1629,10 +1715,34 @@ public:
 //                   }
 //               }
                repaint();
-           } else if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
-               swapCurrentPlayer();
-               qDebug() << "currentPlayer " << currentPlayer;
+           } else if (event->key() == Qt::Key_J && event->modifiers() == Qt::ControlModifier) {
+               //和Ctrl + R一样，但是采用虚字模式显示
+               int margin = 30;
+               int gridSize = (width() - 2 * margin) / 19;
+               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+               closeVirtualStep();
+               remember2(board, row, col, currentPlayer, mStepN, mVirtualAns);
+               if (mVirtualAns.size() != 0) {
+                   mVirtualOpen = true;
+                   mVirtualMax = mVirtualAns.size();
+                   mVirtualIndex = (mVirtualIndex + 1) % mVirtualMax;
+                   showInVirtualPiece(mVirtualAns, mVirtualIndex);
+                   repaint();
+                   mVirtualRow = row;
+                   mVirtualCol = col;
+                   mVirtualColor = currentPlayer;
+               }
+           } else if (event->key() == Qt::Key_K && event->modifiers() == Qt::ControlModifier) {
+               closeVirtualStep();
                repaint();
+           } else if (event->key() == Qt::Key_L && event->modifiers() == Qt::ControlModifier) {
+               if (mVirtualOpen) {
+                   mVirtualIndex = (mVirtualIndex + 1) % mVirtualMax;
+                   showInVirtualPiece(mVirtualAns, mVirtualIndex);
+                   repaint();
+               }
            } else if (event->key() == Qt::Key_G && event->modifiers() == Qt::ControlModifier) {
                int margin = 30;
                int gridSize = (width() - 2 * margin) / 19;
@@ -1651,7 +1761,7 @@ public:
                    clearCalcResult();
                    return;
                }
-               Filed* fd = indexMap[row][col];
+               std::shared_ptr<Filed> fd = indexMap[row][col];
                filedLiberties = fd->pieceFiled;
                if (fd) {
                    if (aliveFiled.count(fd)) {
@@ -1665,7 +1775,7 @@ public:
                    qDebug() << "error";
                }
                repaint();
-           } else if (event->key() == Qt::Key_J && event->modifiers() == Qt::ControlModifier) {
+           } else if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
                int margin = 30;
                int gridSize = (width() - 2 * margin) / 19;
                QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
@@ -1790,32 +1900,52 @@ public:
     void clearCalcResult() {
         //进行一些清理
         filedLiberties.clear();
+        for (int i = 0; i < BOARDWIDTH; i++) {
+            for (int j = 0; j < BOARDWIDTH; j++) {
+                if (indexMap[i][j] != nullptr) {
+                    auto r = indexMap[i][j];
+                    r->clear();
+                }
+            }
+        }
         indexMap.clear();
         //TODO:此处有内存泄漏，应删除Filed
-        indexMap.assign(HEIGHT, std::vector<Filed*>(WIDTH, nullptr));
+        indexMap.assign(BOARDWIDTH, std::vector<std::shared_ptr<Filed>>(BOARDWIDTH, nullptr));
+        for (auto r : whiteFiled) {
+            r->clear();
+        }
         whiteFiled.clear();
+        for (auto r : blackFiled) {
+            r->clear();
+        }
         blackFiled.clear();
+
+        for (auto r : spaceFiled) {
+            r->clear();
+        }
         spaceFiled.clear();
+
+        for (auto r : aliveFiled) {
+            r->clear();
+        }
         aliveFiled.clear();
+
+        for (auto r : fuzzFiled) {
+            r->clear();
+        }
         fuzzFiled.clear();
+
+        for (auto r : deadFiled) {
+            r->clear();
+        }
         deadFiled.clear();
         repaint();
     }
 
     //终局判定
     void calcGame(std::vector<std::vector<Piece>> & boarder, bool firstTime) {
-        filedLiberties.clear();
-        indexMap.clear();
-        //TODO:此处有内存泄漏，应删除Filed
-        indexMap.assign(HEIGHT, std::vector<Filed*>(WIDTH, nullptr));
-        whiteFiled.clear();
-        blackFiled.clear();
-        spaceFiled.clear();
-        fuzzFiled.clear();
-        aliveFiled.clear();
-        deadFiled.clear();
+        clearCalcResult();
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
-
 //用于形式判断？
 //        visited.assign(HEIGHT, std::vector<bool>(WIDTH, false));
 //        for (int i = 0; i < 19; i++) {
@@ -1825,12 +1955,11 @@ public:
 //                }
 //            }
 //        }
-
         //获取所有的块，白棋块、黑棋块、气块
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
                 if (indexMap[i][j] == nullptr) {
-                    Filed* fd = floodFill7(boarder, i,j);
+                    std::shared_ptr<Filed> fd = floodFill7(boarder, i,j);
                     if (boarder[i][j].color == 0) {
                         blackFiled.push_back(fd);
                     } else if (boarder[i][j].color == 1) {
@@ -1906,14 +2035,15 @@ public:
                 //单子无双活？
                 if ((*filed)->pieceFiled.size() == 1) {
                     deadFiled.insert(*filed);
+                    (*filed)->clear();
                     filed = fuzzFiled.erase(filed);
                     continue;
                 }
 
                 else {
-                    std::vector<Filed*> winResult;//对杀中胜的一方
-                    std::vector<Filed*> loseResult;//对杀中输的一方
-                    std::vector<Filed*> balanceResult;//双活的情况
+                    std::vector<std::shared_ptr<Filed>> winResult;//对杀中胜的一方
+                    std::vector<std::shared_ptr<Filed>> loseResult;//对杀中输的一方
+                    std::vector<std::shared_ptr<Filed>> balanceResult;//双活的情况
                     isShuanghuoOrDead(boarder, *filed, winResult, loseResult, balanceResult);//知道它和它的邻居是双活还是谁吃了谁，可能有三块以上棋块一起双活？
                     //可能涉及到删除后边的filed，要操作好删除后的位置
                     if (winResult.size() != 0) {
@@ -1970,7 +2100,7 @@ public:
     }
 
     //这片区域如果周围都是由这块活棋包围的，
-    bool surround(std::vector<std::vector<Piece>> &boarder, int color, Filed* ace) {
+    bool surround(std::vector<std::vector<Piece>> &boarder, int color, std::shared_ptr<Filed> ace) {
         for (auto p : ace->pieceFiled) {
             for (int i = 0; i < 4; i++) {
                 int nx = p.first + dx[i];
@@ -2047,7 +2177,7 @@ public:
     }
 
     //result存储哪些棋块赢了，哪块棋输了
-    bool isShuanghuoOrDead(std::vector<std::vector<Piece>> &boarder, Filed* filed, std::vector<Filed*>& winResult, std::vector<Filed*>& loseResult, std::vector<Filed*>& balanceResult) {
+    bool isShuanghuoOrDead(std::vector<std::vector<Piece>> &boarder, std::shared_ptr<Filed> filed, std::vector<std::shared_ptr<Filed>>& winResult, std::vector<std::shared_ptr<Filed>>& loseResult, std::vector<std::shared_ptr<Filed>>& balanceResult) {
         //有眼杀瞎
         if (filed->eyeSize == 0) {
             bool flag = true;
@@ -2107,7 +2237,7 @@ public:
     //获取这块棋围起来的区域，以及它本身。
     //由于已经终局，不考虑单官，所有的空要么是双活，要么必然属于一方
     //但是死子也是一个片，死子调用这个函数会把所有的空也获取到的，这时候还是要判断是否是死子，或者就用之前的比子法。
-    void getFiledAndInner(Filed *filed, std::vector<std::vector<Filed*>> &indexMap) {
+    void getFiledAndInner(std::shared_ptr<Filed> filed, std::vector<std::vector<std::shared_ptr<Filed>>> &indexMap) {
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
         int territory[3] = {0};
         auto filedLiberties = filed->pieceFiled;
@@ -2138,7 +2268,7 @@ public:
                             territory[2]++;
                             otherVisited[newX][newY] = true;
                             floodFill(newX, newY, visited);
-                            Filed *acefiled = new Filed;
+                            std::shared_ptr<Filed> acefiled = std::make_shared<Filed>();
                             acefiled->pieceFiled = filedLiberties;
                             acefiled->row = newX;
                             acefiled->col = newY;
@@ -2587,7 +2717,7 @@ public:
                                stack.push({nx, ny});
                                visited[nx][ny] = true;
                            }
-                           Filed* filed = floodFill7(board, newX, newY);
+                           std::shared_ptr<Filed> filed = floodFill7(board, newX, newY);
                         }
                     }
                 }
@@ -2598,12 +2728,12 @@ public:
 
 
     //对这一点进行连片
-    Filed* floodFill7(std::vector<std::vector<Piece>> & boarder, int x, int y) {
+    std::shared_ptr<Filed> floodFill7(std::vector<std::vector<Piece>> & boarder, int x, int y) {
         std::stack<std::pair<int, int>> stack;
         if (indexMap[x][y] != nullptr) {
             return indexMap[x][y];
         }
-        Filed* filed = new Filed;
+        std::shared_ptr<Filed> filed = std::make_shared<Filed>();
         stack.push({x, y});
         int color = boarder[x][y].color;
         filed->row = x; filed->col = y; filed->color = color;
@@ -3124,7 +3254,24 @@ public:
     }
 
     bool deleteSGFNode(std::shared_ptr<SGFTreeNode> node) {
+        if (node == nullptr) {
+            return false;
+        }
         auto parent = node->parent.lock();
+        for (auto r = parent->branches.begin(); r != parent->branches.end(); r++) {
+            if (*r == node) {
+                //删的是一个非主分支，直接删就行
+                parent->branches.erase(r);
+                for (auto son : node->branches) {
+                    deleteSGFNode(son);
+                }
+                node->branches.clear();
+                auto *item = treeItemMap[node];
+                deleteSGFTreeItemGUI(item, node);
+                treeItemMap.erase(node);
+                break;
+            }
+        }
         if (parent == nullptr || parent == root) {
             historyNode = root;
         }
@@ -3132,35 +3279,12 @@ public:
             historyNode = parent;
         }
         board = historyNode->boardHistory;
-        int cnt = 0;
-        for (auto r = parent->branches.begin(); r != parent->branches.end(); r++ ) {
-            if (*r == node) {
-                if (cnt != 0) {
-                    //删的是一个非主分支，直接删就行
-                    parent->branches.erase(r);
-                    break;
-                }
-                else {
-                    //删的是主分支branch[0]，次分支不动，主分支由删除分支的b[0]代替。
-                    if (node->branches.size() >= 1) {
-                        auto bb = node->branches[0];
-                        node->branches.erase(node->branches.begin());
-                        bb->parent = parent;
-                        parent->branches.erase(r);
-                        parent->branches.insert(parent->branches.begin(), bb);
-                    }
-                    else {
-                        parent->branches.erase(r);
-                    }
-                    break;
-                }
-            }
-            cnt++;
-        }
+        printBoard();
         node->parent.reset();
-        node->branches.clear();//递归删除
+        node.reset();
         return true;
     }
+
 
 public:
     //slot deleteItem
@@ -3170,22 +3294,26 @@ public:
         if (item == nullptr) {
             return false;
         }
-        auto p = item->parent();
         TreeData data = item->data(0, 1).value<TreeData>();
         auto node = data.node.lock();
+        deleteSGFNode(node);
+        repaint();
+    }
+
+    //只操作treeWidget
+    bool deleteSGFTreeItemGUI(QTreeWidgetItem* item, std::shared_ptr<SGFTreeNode> node) {
+        if (item == nullptr) {
+            return false;
+        }
+        auto p = item->parent();
         if (p == nullptr) {
             int index = pieceTree->indexOfTopLevelItem(item);
             pieceTree->takeTopLevelItem(index);
-            treeItemMap.erase(node);
-            deleteSGFNode(node);
-            return true;
         }
         else {
             p->removeChild(item);
-            treeItemMap.erase(node);
-            deleteSGFNode(node);
-            return true;
         }
+        return true;
     }
 
     // 打印棋盘 test BW
@@ -3468,6 +3596,66 @@ public:
         showNextNStep2(res);
     }
 
+
+    //同remember，但只获取结果，不进行显示
+    void remember2(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        if (DingShiBook == nullptr) {
+            qDebug() << "no DingShiBook";
+            return;
+        }
+        if (isOccupied(row, col)) {
+            qDebug() << "not black";
+            return; // 如果该位置已被占据，则不放置棋子
+        }
+        std::vector<std::vector<Piece>> seqList;
+        getEverySeq2(boarder, seqList, color);
+        int rotate = 0;
+        if (seqList.size() == 0) {
+            return;
+        }
+        {
+            //调整row col
+            auto pieceSeq = seqList[0];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            std::cout << std::endl;
+            if (rotate == BOTTOMRIGHT) {
+                col = 18 - col;
+            }
+            else if (rotate == TOPLEFT) {
+                row = 18 - row;
+            }
+            else if (rotate == TOPRIGHT) {
+                row = 18 - row;
+                col = 18 - col;
+            }
+        }
+        for (size_t i = 0; i < seqList.size(); i++) {
+            auto pieceSeq = seqList[i];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            //这种方式还有利于将错误棋局导向正确棋局
+            getNextStep(pieceSeq, DingShiBook, row, col, color, stepN, res);
+        }
+        {
+            //冗余代码，可以重构
+            //反转颜色再搜一遍
+            adjustColor(seqList);
+            //row col已经调整过了
+            std::vector<std::vector<Piece>> colorRes;
+            for (size_t i = 0; i < seqList.size(); i++) {
+                auto pieceSeq = seqList[i];
+                AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+                //这种方式还有利于将错误棋局导向正确棋局
+                getNextStep(pieceSeq, DingShiBook, row, col, !color, stepN, colorRes);
+            }
+            adjustColor(colorRes);
+            for (auto x : colorRes) {
+                res.push_back(x);
+            }
+        }
+        adjustResultOrigin(res, rotate);//逆操作将结果调回原位
+    }
+
+
     void remember(int row, int col, std::vector<std::vector<Piece>>& ans) {
         remember(board, row, col, currentPlayer, mStepN, ans);
     }
@@ -3549,7 +3737,7 @@ public:
         }
     }
 
-    //最多显示20种，所以应当先将stepN调小，越往后越大，前边变化多，后边变化少
+    //最多显示20种，所以应当先将stepN调小，越往后越大，前边变化多，后边变化少,仅打印
     void showNextNStep(std::vector<std::vector<Piece>> &res) {
         //将分支以多个方框并列显示在界面上侧
         //按照胜率或者按照常用程度排列
@@ -3594,7 +3782,18 @@ public:
         dsList->showDS();
     }
 
-
+    void showInVirtualPiece(std::vector<std::vector<Piece>> &res, int index) {
+        if (index < 0 || index >= res.size()) {
+            return;
+        }
+        auto pieceSeq = res[index];
+        mVirtualBoard = zeroBoard;
+        int cnt = 1;
+        for (auto piece : pieceSeq) {
+            mVirtualBoard[piece.row][piece.col].color = piece.color;
+            mVirtualBoard[piece.row][piece.col].moveNumber = cnt++;
+        }
+    }
 private:
 
 
@@ -3956,6 +4155,15 @@ private:
         }
         return false;
     }
+
+    void closeVirtualStep() {
+        mVirtualOpen = false;
+        mVirtualMax = -1;
+        mVirtualIndex = -1;
+        mVirtualBoard = zeroBoard;
+        mVirtualAns.clear();
+    }
+
     int hoverRow; // 当前鼠标所在行
     int hoverCol; // 当前鼠标所在列
 
@@ -3964,7 +4172,6 @@ private:
     QPixmap whitePiece; // 白棋图片
 
     std::vector<std::vector<Piece>> zeroBoard;// x y
-
     //这两个可能有用，可以用当前节点，反向迭代回根节点获取历史和已下节点
     std::vector<Piece> pieceSeq;
 
@@ -4009,15 +4216,26 @@ public:
 
     bool hasCalc = false;
     std::set<std::pair<int, int>> filedLiberties;
-    std::vector<std::vector<Filed*>> indexMap;
-    std::vector<Filed*> whiteFiled;
-    std::vector<Filed*> blackFiled;
-    std::vector<Filed*> spaceFiled;
+    std::vector<std::vector<std::shared_ptr<Filed>>> indexMap;
+    std::vector<std::shared_ptr<Filed>> whiteFiled;
+    std::vector<std::shared_ptr<Filed>> blackFiled;
+    std::vector<std::shared_ptr<Filed>> spaceFiled;
 
-    std::set<Filed*> aliveFiled;
-    std::set<Filed*> fuzzFiled;
-    std::set<Filed*> deadFiled;
+    std::set<std::shared_ptr<Filed>> aliveFiled;
+    std::set<std::shared_ptr<Filed>> fuzzFiled;
+    std::set<std::shared_ptr<Filed>> deadFiled;
     GameSettings mSetting;
+
+
+
+    std::vector<std::vector<Piece>> mVirtualBoard;
+    std::vector<std::vector<Piece>> mVirtualAns;
+    bool mVirtualOpen;
+    int mVirtualIndex;
+    int mVirtualMax;
+    int mVirtualRow;
+    int mVirtualCol;
+    int mVirtualColor;
 };
 
 /*log:
@@ -4135,12 +4353,15 @@ public:
 
     2025年2月11日
     TODOList:
-    1.完善删除节点逻辑（感觉应该把主分支后续也删掉，因为少1颗子，整个棋局都发生了变化。）
-    2.下一步功能添加虚子显示，按空格切换下一个定式
-    3.支持按步数顺序查找定式
-    4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。
+    1.完善删除节点逻辑（感觉应该把主分支后续也删掉，因为少1颗子，整个棋局都发生了变化。）（解决，若以后觉得不合理可以回退v0.0.1版本)
+
+    2.下一步功能添加虚子显示，按空格切换下一个定式（解决 按Ctrl + L 切换下一个定式）
+    3.支持按步数顺序查找定式，这样就不必排列组合当期已有子，或许支持现框选子？因为棋局很大，其他角可能下过了
+
+    4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（待优化）
     5.isEye优化
-    6.内存泄漏处理
+
+    6.内存泄漏处理 SGFTreeNode和Filed已无内存泄漏，基本完成，界面内存可能还有
     7.界面优化
     8.功能补充
     9.接入AI，形势判断、智能裁判，智能分析，AI对弈。

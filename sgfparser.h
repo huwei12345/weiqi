@@ -15,7 +15,9 @@ enum class Color { Black = 0, White = 1, None = 2};
 // SGF棋局树
 class SGFTreeNode {
 public:
-    SGFTreeNode() : branchNum(0), moveNum(0) { }
+    SGFTreeNode() : branchNum(0), moveNum(0) {
+        qDebug() << "create Node";
+    }
     Piece move;
     std::vector<std::shared_ptr<SGFTreeNode>> branches;  // 存储不同的分支
     std::weak_ptr<SGFTreeNode> parent;
@@ -32,6 +34,11 @@ public:
     // 获取父节点的shared_ptr，如果父节点已经被销毁，返回nullptr
     std::shared_ptr<SGFTreeNode> getParent() const {
         return parent.lock();  // lock()将weak_ptr转换为shared_ptr，如果父节点已销毁返回nullptr
+    }
+
+    ~SGFTreeNode() {
+        //debug
+        qDebug() << "delete Node";
     }
 };
 class SGFParser {
