@@ -125,6 +125,11 @@ public:
         whitePiece = QPixmap(":/images/white.png"); // 使用资源文件
         whitePiece = whitePiece.scaled(QSize(30,30), Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
+        mVirBlackPiece = blackPiece;
+        mVirWhitePiece = whitePiece;
+        setTransparent(mVirBlackPiece, 180);
+        setTransparent(mVirWhitePiece, 180);
+
         // 如果你用的是文件路径，可以像这样加载图片
         // blackPiece = QPixmap("/path/to/black.png");
         // whitePiece = QPixmap("/path/to/white.png");
@@ -201,6 +206,22 @@ public:
             std::cout << "\n";
         }
     }
+
+    //设置图片透明度
+    void setTransparent(QPixmap& pixmap, int level) {
+        QPixmap temp(pixmap.size());
+        temp.fill(Qt::transparent);
+        QPainter p1(&temp);
+        p1.setCompositionMode(QPainter::CompositionMode_Source);
+        p1.drawPixmap(0, 0, pixmap);
+        p1.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+
+        //根据QColor中第四个参数设置透明度，此处position的取值范围是0～255
+        p1.fillRect(temp.rect(), QColor(0, 0, 0, level));
+        p1.end();
+        pixmap = temp;
+    }
+
 protected:
     void paintEvent(QPaintEvent *event) override {
         Q_UNUSED(event)
@@ -362,12 +383,12 @@ protected:
                 if (mVirtualBoard[i][j].color == 1) {
                 painter.drawPixmap(margin + j * gridSize - whitePiece.width() / 2,
                                margin + i * gridSize - whitePiece.height() / 2,
-                               whitePiece);
+                               mVirWhitePiece);
                 }
                 else if (mVirtualBoard[i][j].color == 0) {
                     painter.drawPixmap(margin + j * gridSize - blackPiece.width() / 2,
                                        margin + i * gridSize - blackPiece.height() / 2,
-                                       blackPiece);
+                                       mVirBlackPiece);
                 }
             }
         }
@@ -4230,6 +4251,8 @@ public:
 
     std::vector<std::vector<Piece>> mVirtualBoard;
     std::vector<std::vector<Piece>> mVirtualAns;
+    QPixmap mVirBlackPiece; // 黑棋图片
+    QPixmap mVirWhitePiece; // 白棋图片
     bool mVirtualOpen;
     int mVirtualIndex;
     int mVirtualMax;
@@ -4355,21 +4378,25 @@ public:
     TODOList:
     1.完善删除节点逻辑（感觉应该把主分支后续也删掉，因为少1颗子，整个棋局都发生了变化。）（解决，若以后觉得不合理可以回退v0.0.1版本)
 
-    2.下一步功能添加虚子显示，按空格切换下一个定式（解决 按Ctrl + L 切换下一个定式）
-    3.支持按步数顺序查找定式，这样就不必排列组合当期已有子，或许支持现框选子？因为棋局很大，其他角可能下过了
+    2.下一步功能添加虚子显示，按空格切换下一个定式（解决
+        按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式）
+    3.支持按步数顺序查找定式，这样就不必排列组合当期已有子，
+        或许支持现框选子？因为棋局很大，其他角可能下过了
 
-    4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（待优化）
+    4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（复杂待优化）
     5.isEye优化
 
-    6.内存泄漏处理 SGFTreeNode和Filed已无内存泄漏，基本完成，界面内存可能还有
+    6.内存泄漏处理 SGFTreeNode和Filed已无内存泄漏，基本完成，（解决） 界面内存可能还有
     7.界面优化
     8.功能补充
-    9.接入AI，形势判断、智能裁判，智能分析，AI对弈。
-    10.分割功能，重构代码。下棋态、分析态、习题态。
-    11.连续黑子、白子。摆棋模式。
+
+    9.分割功能，重构代码。下棋态、分析态、习题态。
+    10.连续黑子、白子。摆棋模式。
+
+    11.接入AI，形势判断、智能裁判，智能分析，AI对弈。
 
     12.双活、单关判定？人为标注？
-    13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。
+    13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做
     14.三劫循环、四劫循环，不进行处理了。
 */
 
