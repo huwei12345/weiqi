@@ -994,7 +994,7 @@ protected:
             if (allNumber < node->moveNum) {
                 allNumber = node->moveNum;
             }
-            //TODO:这里需要改吗？上一个节点 historyNode目前对应所有结点，也可以只对应主线结点。
+            //TOSEE:这里需要改吗？上一个节点 historyNode目前对应所有结点，也可以只对应主线结点。
         }
         node->move.moveNumber = node->moveNum;
         board[node->move.row][node->move.col].moveNumber = node->moveNum;  // 记录下棋的手数
@@ -1231,7 +1231,7 @@ protected:
             return; // 如果该位置已被占据，则不放置棋子
         }
         qDebug() << "putPiece " << showPiece(row, col, mTryColor);
-        //TODO:此处putPiece应该符合吃子规则和填子规则。
+        //TOSEE:此处putPiece应该符合吃子规则和填子规则。
         putPieceTry(row, col, mTryColor);
         if (seqIndex != -1 && seqIndex < (int)mTryModeSeq.size() - 1) {
             mTryModeSeq.erase(mTryModeSeq.begin() + seqIndex + 1, mTryModeSeq.end());
@@ -1703,6 +1703,10 @@ public:
         getGameResult();
         repaint();
         return;
+    }
+
+    //UNUSE
+    void calculateScore3() {
         blackLiberties.clear();
         whiteLiberties.clear();
         float blackScore = 0, whiteScore = 0;
@@ -1751,7 +1755,7 @@ public:
                             qDebug() << "xxxxxxx " << showPiece(i, j, 2) << black << " w " << white;
                             if (white == 0 && black != 0) {
                                 blackLiberties.push_back({i, j});
-                                blackScore += 1;//TODO:可能不是1，而是块大小
+                                blackScore += 1;//TOSEE:可能不是1，而是块大小
                             }
                             else if (black == 0 && white != 0) {
                                 whiteLiberties.push_back({i, j});
@@ -1762,7 +1766,6 @@ public:
                 }
             }
         }
-
         // 计算提子数
         int eatenNowBlack = countCapturedStones2(0);
         blackScore +=  eatenNowBlack;
@@ -2743,6 +2746,7 @@ public:
     //传入的是一个有颜色的棋子
     //group : 返回棋块总体
     //liberties 返回棋块的外气和内气
+    //UNUSE
     bool bfs(int x, int y, int color, std::set<std::pair<int, int>>& group, std::set<std::pair<int, int>>& liberties, std::set<std::pair<int, int>>& eyes) {
         std::queue<std::pair<int, int>> q;
         q.push({x, y});
@@ -2795,14 +2799,6 @@ public:
 //                        continue;
 //                    }
 //                }
-
-
-
-
-
-
-
-
 
 
                 int hukou = 0;
@@ -2917,7 +2913,7 @@ public:
                         // 有两个眼，算作活棋
                         if (color == 1) {
                             blackScore += liberties.size();  // 黑棋占据的气
-                            //TODO: 形式判断时，需要判断是内气还是外气，外气不能算目数
+                            //TOSEE: 形式判断时，需要判断是内气还是外气，外气不能算目数
                         } else {
                             whiteScore += liberties.size();  // 白棋占据的气
                         }
@@ -2930,7 +2926,7 @@ public:
                         }
                     }
 
-                    //TODO:把眼和气都划分颜色，显示在界面上。
+                    //TOSEE:把眼和气都划分颜色，显示在界面上。
                     for (auto &liber : liberties) {
                         if (color == 0) {
                             blackLiberties.push_back(liber);
@@ -3488,7 +3484,7 @@ public:
     //也就是每个Node对应一个piece，和N个branch,其实像前缀树
     //row col color 当前准备下的位置
     //匹配规则完善逻辑 旋转 对称 黑白 4 * 2 * 2 = 16，得到结果后再翻转回来,还要筛出相同项（或者在入库时就统一在左下放置并筛出相同，然后记录变换） (定位) ->废弃
-    //TODO: 存的时候统一旋转位置放在左下，然后对称放两种。搜索的时候转化到左下就行了，结果再转化过去就行了
+    //TOSEE: 存的时候统一旋转位置放在左下，然后对称放两种。搜索的时候转化到左下就行了，结果再转化过去就行了
     //如何判断需要旋转，如果60%的棋子在左上右上右下，那么需要转换到左下，存的时候先正常存，再col row存一次
     //需要判断当前局面的位置，然后记录转化步骤，顺时针转90 180 270，然后得到结果后再将结果逆时针转90 180 270，然后显示。习题也可以这样借鉴。
     void getNextStep(std::vector<Piece> & pieceSeq, std::shared_ptr<SGFTreeNode>& book, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
@@ -3731,7 +3727,7 @@ private:
     }
 
 public:
-    //TODO: 存的时候统一旋转位置放在左下，然后对称放两种。搜索的时候转化到左下就行了，结果再转化过去就行了
+    //TOSEE: 存的时候统一旋转位置放在左下，然后对称放两种。搜索的时候转化到左下就行了，结果再转化过去就行了
     //如何判断需要旋转，如果60%的棋子在左上右上右下，那么需要转换到左下，存的时候先正常存，再对称存一次
     bool addDSintoBook() {
         if (DingShiBook == nullptr) {
@@ -3975,7 +3971,7 @@ private:
 
     std::shared_ptr<SGFTreeNode> historyNode;
 
-    //std::stack<std::vector<std::vector<Piece>>> history;  // 历史栈（用于撤销）  TODO:这个有问题
+    //std::stack<std::vector<std::vector<Piece>>> history;  // 历史栈（用于撤销）
     //std::stack<std::vector<std::vector<Piece>>> undoStack;  // 重做栈（用于重做）
     //std::stack<std::vector<std::vector<Piece>>> redoStack;  // 重做栈（用于重做）
     int moveNumber;//当前手数
@@ -4024,7 +4020,7 @@ public:
     GameSettings mSetting;
 };
 
-/*TODO:
+/*log:
 
  *  顶层分支(完成)
  *  统一读取出来的和下出来的子(完成)
@@ -4130,11 +4126,30 @@ public:
     如果是拆二拆三，采用向下补全。
     然后调用终局判定函数。
 
-    TODO:定式如何摆那种黑棋守角的定式，就是黑先有2颗子的情况。。。(解决)
+    TOSEE:定式如何摆那种黑棋守角的定式，就是黑先有2颗子的情况。。。(解决)
     守角定式已实现，添加了停一手功能，原有SGF存储和落子不受影响，在识别定式过程中，分支判断了黑多还是白多还是不多的情况。
     对与多出来的子，作为后缀子添加。然后再反转seq。
 
     停一手已实现(完成）
+
+
+    2025年2月11日
+    TODOList:
+    1.完善删除节点逻辑（感觉应该把主分支后续也删掉，因为少1颗子，整个棋局都发生了变化。）
+    2.下一步功能添加虚子显示，按空格切换下一个定式
+    3.支持按步数顺序查找定式
+    4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。
+    5.isEye优化
+    6.内存泄漏处理
+    7.界面优化
+    8.功能补充
+    9.接入AI，形势判断、智能裁判，智能分析，AI对弈。
+    10.分割功能，重构代码。下棋态、分析态、习题态。
+    11.连续黑子、白子。摆棋模式。
+
+    12.双活、单关判定？人为标注？
+    13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。
+    14.三劫循环、四劫循环，不进行处理了。
 */
 
 #endif
