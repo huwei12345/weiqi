@@ -115,6 +115,22 @@ private slots:
 
     void on_actiontheme_triggered();
 
+    void on_actionxuandian_triggered(bool checked);
+
+    void on_toolButton_22_clicked();
+
+    void on_BAlwaysBtn_clicked();
+
+    void on_WAlwaysBtn_clicked();
+
+    void on_toolButton_25_clicked();
+
+    void on_RetractPiece_clicked();
+
+    void on_giveUpBtn_clicked();
+
+    void on_toolButton_20_clicked();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;

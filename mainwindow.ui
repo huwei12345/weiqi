@@ -293,7 +293,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_6">
+        <widget class="QToolButton" name="RetractPiece">
          <property name="text">
           <string>悔棋</string>
          </property>
@@ -321,7 +321,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_7">
+        <widget class="QToolButton" name="giveUpBtn">
          <property name="text">
           <string>认输</string>
          </property>
@@ -394,14 +394,37 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_23">
+        <spacer name="horizontalSpacer_9">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Fixed</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>状态</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="BAlwaysBtn">
          <property name="text">
           <string>摆黑</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_24">
+        <widget class="QToolButton" name="WAlwaysBtn">
          <property name="text">
           <string>摆白</string>
          </property>
@@ -566,6 +589,7 @@
     <addaction name="actionAIAnalysis"/>
     <addaction name="separator"/>
     <addaction name="actionnextStep"/>
+    <addaction name="actionxuandian"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
@@ -694,6 +718,14 @@
   <action name="actionAIjudge">
    <property name="text">
     <string>智能裁判</string>
+   </property>
+  </action>
+  <action name="actionxuandian">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>定式选点</string>
    </property>
   </action>
  </widget>

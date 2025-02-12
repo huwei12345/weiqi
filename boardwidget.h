@@ -168,6 +168,9 @@ public:
         mVirtualRow = -1;
         mVirtualCol = -1;
         mVirtualColor = -1;
+
+        mPutPieceType = BWChange;
+        mShouShuState = SHOWSHOUSHU;
     }
 
 
@@ -222,6 +225,23 @@ public:
         pixmap = temp;
     }
 
+    bool isTryMode() {
+        return mTryMode;
+    }
+
+    void setBAlways() {
+        mPutPieceType = BAlways;
+        swapCurrentPlayer();
+    }
+
+    void setWAlways() {
+        mPutPieceType = WAlways;
+        swapCurrentPlayer();
+    }
+
+    void setBWChange() {
+        mPutPieceType = BWChange;
+    }
 protected:
     void paintEvent(QPaintEvent *event) override {
         Q_UNUSED(event)
@@ -283,12 +303,15 @@ protected:
                 }
             }
         }
-        //跟新手数显示
-        if (mTryMode == false) {
-            updateMoveLabel(painter, gridSize);
-        }
-        else {
-            updateTrySeq(painter, gridSize);
+
+        if (mShouShuState == SHOWSHOUSHU) {
+            //跟新手数显示
+            if (mTryMode == false) {
+                updateMoveLabel(painter, gridSize);
+            }
+            else {
+                updateTrySeq(painter, gridSize);
+            }
         }
 
         if (!mTryMode) {
@@ -1350,7 +1373,7 @@ protected:
         }
         undoTryStack.push(board);
         mTryMode = true;
-        mTryColor = !mTryColor;
+        swapCurrentPlayer();
         repaint();
     }
 
@@ -1805,6 +1828,14 @@ public:
                if (board[row][col].color != 2) {
                    qDebug() << canbeZhengzi(board, row, col);
                }
+           } else if (event->key() == Qt::Key_M && event->modifiers() == Qt::ControlModifier) {
+               int margin = 30;
+               int gridSize = (width() - 2 * margin) / 19;
+               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+               std::vector<std::vector<Piece>> ans;
+               remember3(board, row, col, currentPlayer, mStepN, ans);
            }
         }
 
@@ -3300,6 +3331,12 @@ public:
             historyNode = parent;
         }
         board = historyNode->boardHistory;
+        if (historyNode->move.color == 2) {
+            setCurrentPlayer(BLACK);
+        }
+        else {
+            setCurrentPlayer(!historyNode->move.color);
+        }
         printBoard();
         node->parent.reset();
         node.reset();
@@ -3681,6 +3718,174 @@ public:
         remember(board, row, col, currentPlayer, mStepN, ans);
     }
 
+
+    //按historyNode到root这一段，在定式书中搜索，另一种需要，与图像搜索应让用户进行选择
+    void remember3(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        if (DingShiBook == nullptr) {
+            qDebug() << "no DingShiBook";
+            return;
+        }
+        if (isOccupied(row, col)) {
+            qDebug() << "not black";
+            return; // 如果该位置已被占据，则不放置棋子
+        }
+        std::vector<std::vector<Piece>> seqList;
+        std::vector<Piece> seq;
+        auto pNode = historyNode;
+        while (pNode != root && pNode != nullptr) {
+            seq.push_back(pNode->move);
+            pNode = pNode->parent.lock();
+        }
+        std::reverse(seq.begin(), seq.end());
+        std::cout << "seq: ";
+        for (auto x : seq) {
+            std::cout << showPiece(x).toStdString() + " ";
+        }
+        std::cout << std::endl;
+        std::cout << std::endl;
+        seqList.push_back(seq);
+        int rotate = 0;
+        if (seqList.size() == 0) {
+            return;
+        }
+        {
+            //调整row col
+            auto pieceSeq = seqList[0];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            std::cout << std::endl;
+            if (rotate == BOTTOMRIGHT) {
+                col = 18 - col;
+            }
+            else if (rotate == TOPLEFT) {
+                row = 18 - row;
+            }
+            else if (rotate == TOPRIGHT) {
+                row = 18 - row;
+                col = 18 - col;
+            }
+        }
+        for (size_t i = 0; i < seqList.size(); i++) {
+            auto pieceSeq = seqList[i];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            //这种方式还有利于将错误棋局导向正确棋局
+            getNextStep(pieceSeq, DingShiBook, row, col, color, stepN, res);
+        }
+        {
+            //冗余代码，可以重构
+            //反转颜色再搜一遍
+            adjustColor(seqList);
+            //row col已经调整过了
+            std::vector<std::vector<Piece>> colorRes;
+            for (size_t i = 0; i < seqList.size(); i++) {
+                auto pieceSeq = seqList[i];
+                AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+                //这种方式还有利于将错误棋局导向正确棋局
+                getNextStep(pieceSeq, DingShiBook, row, col, !color, stepN, colorRes);
+            }
+            adjustColor(colorRes);
+            for (auto x : colorRes) {
+                res.push_back(x);
+            }
+        }
+        adjustResultOrigin(res, rotate);//逆操作将结果调回原位
+        showNextNStep2(res);
+    }
+
+    //按说不用按historyNode序列也可以获取选点
+    void remember4(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        if (DingShiBook == nullptr) {
+            qDebug() << "no DingShiBook";
+            return;
+        }
+        if (isOccupied(row, col)) {
+            qDebug() << "not black";
+            return; // 如果该位置已被占据，则不放置棋子
+        }
+        std::vector<std::vector<Piece>> seqList;
+        std::vector<Piece> seq;
+        auto pNode = historyNode;
+        pNode = pNode->parent.lock();
+        while (pNode != root && pNode != nullptr) {
+            seq.push_back(pNode->move);
+            pNode = pNode->parent.lock();
+        }
+        std::reverse(seq.begin(), seq.end());
+        std::cout << "seq: ";
+        for (auto x : seq) {
+            std::cout << showPiece(x).toStdString() + " ";
+        }
+        std::cout << std::endl;
+        std::cout << std::endl;
+        seqList.push_back(seq);
+        int rotate = 0;
+        if (seqList.size() == 0) {
+            return;
+        }
+        {
+            //调整row col
+            auto pieceSeq = seqList[0];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            std::cout << std::endl;
+            if (rotate == BOTTOMRIGHT) {
+                col = 18 - col;
+            }
+            else if (rotate == TOPLEFT) {
+                row = 18 - row;
+            }
+            else if (rotate == TOPRIGHT) {
+                row = 18 - row;
+                col = 18 - col;
+            }
+        }
+        for (size_t i = 0; i < seqList.size(); i++) {
+            auto pieceSeq = seqList[i];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            //这种方式还有利于将错误棋局导向正确棋局
+            getNextStep(pieceSeq, DingShiBook, row, col, color, stepN, res);
+        }
+        {
+            //冗余代码，可以重构
+            //反转颜色再搜一遍
+            adjustColor(seqList);
+            //row col已经调整过了
+            std::vector<std::vector<Piece>> colorRes;
+            for (size_t i = 0; i < seqList.size(); i++) {
+                auto pieceSeq = seqList[i];
+                AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+                //这种方式还有利于将错误棋局导向正确棋局
+                getNextStep(pieceSeq, DingShiBook, row, col, !color, stepN, colorRes);
+            }
+            adjustColor(colorRes);
+            for (auto x : colorRes) {
+                res.push_back(x);
+            }
+        }
+        adjustResultOrigin(res, rotate);//逆操作将结果调回原位
+    }
+
+    void showXuanDian() {
+        if (historyNode == root || historyNode == nullptr) {
+            return;
+        }
+        int row = historyNode->move.row;
+        int col = historyNode->move.col;
+        remember4(board, row, col, currentPlayer, 1, mVirtualAns);
+        if (mVirtualAns.size() != 0) {
+            mVirtualOpen = true;
+            mVirtualMax = mVirtualAns.size();
+            mVirtualIndex = (mVirtualIndex + 1) % mVirtualMax;
+            showXuanDianPiece(mVirtualAns);
+            repaint();
+            mVirtualRow = row;
+            mVirtualCol = col;
+            mVirtualColor = currentPlayer;
+        }
+    }
+
+    void clearXuanDian() {
+        closeVirtualStep();
+    }
+
     void setSearchStep(int step) {
         mStepN = step;
     }
@@ -3815,6 +4020,17 @@ public:
             mVirtualBoard[piece.row][piece.col].moveNumber = cnt++;
         }
     }
+
+    void showXuanDianPiece(std::vector<std::vector<Piece>> &res) {
+        mVirtualBoard = zeroBoard;
+        int cnt = 1;
+        for (auto seq : res) {
+            auto piece = seq[0];
+            mVirtualBoard[piece.row][piece.col].color = piece.color;
+            mVirtualBoard[piece.row][piece.col].moveNumber = cnt++;
+        }
+    }
+
 private:
 
 
@@ -3987,6 +4203,7 @@ public:
     void openTryMode(bool open) {
         mTryMode = open;
         if (mTryMode == false) {
+            setBWChange();
             mTryModeSeq.clear();
             seqIndex = -1;
             while (!undoTryStack.empty()) {
@@ -4000,6 +4217,7 @@ public:
         else {
             mTryColor = currentPlayer;
             repaint();
+            setBWChange();
         }
     }
     void refresh() {
@@ -4148,7 +4366,29 @@ public:
     }
 
     void swapCurrentPlayer() {
-        currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+        if (mTryMode) {
+            if (mPutPieceType == BWChange) {
+                mTryColor = mTryColor == BLACK ? WHITE : BLACK;
+            }
+            else if (mPutPieceType == BAlways) {
+                mTryColor = BLACK;
+
+            }
+            else if (mPutPieceType == WAlways) {
+                mTryColor = WHITE;
+            }
+        }
+        else {
+            if (mPutPieceType == BWChange) {
+                currentPlayer = currentPlayer == BLACK ? WHITE : BLACK;
+            }
+            else if (mPutPieceType == BAlways) {
+                currentPlayer = BLACK;
+            }
+            else if (mPutPieceType == WAlways) {
+                currentPlayer = WHITE;
+            }
+        }
         //同时设置界面label提示，或者通知mainWindow? emit playerChange(currentPlayer);
         //setColorLabel(currentPlayer);
         emit playerChange(currentPlayer);
@@ -4156,6 +4396,16 @@ public:
 
     int getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    void ChangeShouShuState() {
+        if (mShouShuState == SHOWSHOUSHU) {
+            mShouShuState = NOSHOWSHU;
+        }
+        else {
+            mShouShuState = SHOWSHOUSHU;
+        }
+        repaint();
     }
 
 private:
@@ -4227,6 +4477,7 @@ public:
     int allNumber;//总手数
     int mStepN;
     bool mTryMode;
+    PutPieceType mPutPieceType;
     int mTryColor;
     std::vector<Piece> mTryModeSeq;
     std::stack<std::vector<std::vector<Piece>>> undoTryStack;  // 重做栈（用于重做）
@@ -4234,6 +4485,7 @@ public:
     int seqIndex;
     bool PracticeMode = false;
 
+    ShouShuState mShouShuState;
 
     bool hasCalc = false;
     std::set<std::pair<int, int>> filedLiberties;
@@ -4246,8 +4498,6 @@ public:
     std::set<std::shared_ptr<Filed>> fuzzFiled;
     std::set<std::shared_ptr<Filed>> deadFiled;
     GameSettings mSetting;
-
-
 
     std::vector<std::vector<Piece>> mVirtualBoard;
     std::vector<std::vector<Piece>> mVirtualAns;
@@ -4380,9 +4630,9 @@ public:
 
     2.下一步功能添加虚子显示，按空格切换下一个定式（解决
         按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式）
-    3.支持按步数顺序查找定式，这样就不必排列组合当期已有子，
-        或许支持现框选子？因为棋局很大，其他角可能下过了
-
+    3.支持按步数顺序查找定式，这样就不必排列组合当期已有子，（解决）
+        或许支持现框选子？因为棋局很大，其他角可能下过了（须实现）
+    x.只显示1手，像AI那样？(选点待实现）
     4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（复杂待优化）
     5.isEye优化
 
@@ -4391,13 +4641,16 @@ public:
     8.功能补充
 
     9.分割功能，重构代码。下棋态、分析态、习题态。
-    10.连续黑子、白子。摆棋模式。
+
+    10.连续黑子、白子。摆棋模式。(解决 目前是试下模式支持摆黑摆白,摆棋模式也该支持，将子作为一个树上的节点添加并且存储SGF）
 
     11.接入AI，形势判断、智能裁判，智能分析，AI对弈。
 
     12.双活、单关判定？人为标注？
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做
     14.三劫循环、四劫循环，不进行处理了。
+
+    y.删除节点可以撤销吗
 */
 
 #endif

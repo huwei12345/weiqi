@@ -518,3 +518,93 @@ void MainWindow::on_actiontheme_triggered()
 {
 
 }
+
+void MainWindow::on_actionxuandian_triggered(bool checked)
+{
+    if (checked) {
+        goWidget->showXuanDian();
+    }
+    else {
+        goWidget->clearXuanDian();
+    }
+}
+
+
+void MainWindow::on_toolButton_22_clicked()
+{
+    auto item = ui->pieceTree->currentItem();
+    //删除当前选中item
+    if (item != nullptr) {
+        goWidget->deleteSGFTreeItem(item);
+    }
+}
+
+
+//仅试下模式可以使用摆黑摆白，或者以后有练习模式等
+void MainWindow::on_BAlwaysBtn_clicked()
+{
+    if (goWidget->isTryMode()) {
+        goWidget->setBAlways();
+    }
+    else {
+        qDebug() << "not in TryMode";
+    }
+}
+
+
+void MainWindow::on_WAlwaysBtn_clicked()
+{
+    if (goWidget->isTryMode()) {
+        goWidget->setWAlways();
+    }
+    else {
+        qDebug() << "not in TryMode";
+    }
+}
+
+
+void MainWindow::on_toolButton_25_clicked()
+{
+    goWidget->setBWChange();
+}
+
+
+//悔棋
+void MainWindow::on_RetractPiece_clicked()
+{
+//    if (goWidget->getCurrentPlayer() == BLACK) {
+//    }
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "悔棋", "你同意悔棋吗？",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return;
+    }
+    //连退两步
+    auto item = ui->pieceTree->currentItem();
+    //删除当前选中item
+    if (item != nullptr) {
+        goWidget->deleteSGFTreeItem(item);
+    }
+
+    item = ui->pieceTree->currentItem();
+    //删除当前选中item
+    if (item != nullptr) {
+        goWidget->deleteSGFTreeItem(item);
+    }
+}
+
+//认输
+void MainWindow::on_giveUpBtn_clicked()
+{
+    auto player = goWidget->getCurrentPlayer();
+    qDebug() << (player == BLACK ? "BLACK " : "WHITE ") << "Give Up";
+    qDebug() << (player == BLACK ? "WHITE " : "BLACK ") << "Win!!!";
+}
+
+
+void MainWindow::on_toolButton_20_clicked()
+{
+    goWidget->ChangeShouShuState();
+}
+

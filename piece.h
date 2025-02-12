@@ -21,6 +21,17 @@ enum BoardModeType {
     AIMode = 7
 };
 
+enum PutPieceType {
+    BWChange = 0,
+    BAlways,
+    WAlways
+};
+
+enum ShouShuState {
+    SHOWSHOUSHU = 0,
+    NOSHOWSHU,
+};
+
 class Piece {
 public:
     Piece() : color(2), aceCount(0), row(0), col(0), moveNumber(-1) {}
