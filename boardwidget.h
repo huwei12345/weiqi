@@ -24,8 +24,12 @@
 #include "sgfparser.h"
 #include "timecontrol.h"
 #include <algorithm>
+
 extern int dx[4];
 extern int dy[4];
+extern int ox[4];
+extern int oy[4];
+
 class TreeData {
 public:
     std::weak_ptr<SGFTreeNode> node;
@@ -614,24 +618,104 @@ protected:
         return false;
     }
 
-    bool inEdge() {
+    bool inEdge(int x, int y) {
         if (x == 0 || y == 0 || x == 18 || y == 18) {
             return true;
         }
         return false;
     }
 
+    bool judgeTwoSpaceInEdgeIsEye(std::shared_ptr<Filed> filed, int color) {
+        //已知这个空在边上
+        //如果两个点都在边上，那么是平铺的
+        std::vector<Piece> ans;
+        getAllNeighbor(board, filed, ans);
+        for (auto r : ans) {
+            if (r.color != color) {
+                return false;
+            }
+        }
+        auto st = filed->pieceFiled;
+        for (auto r : st) {
+            if (!inEdge(r.first, r.second)) {
+                //不是平铺的，是眼
+                return true;
+            }
+        }
+
+        //在边上，如果空是平躺的，基准4位必须是同色，且两个侧角不能都是异色的情况返回true
+        //如果空是竖的，只要基准5位是同色，就至少是后手眼。
+        std::vector<Piece> obAns;
+        getObliqueNeighbor(board, filed, ans, obAns);
+        if (obAns.size() != 2) {
+            return true;
+        }
+        for (auto x : obAns) {
+            if (x.color == color) {
+                return true;
+            }
+        }
+        //2个斜都是异色
+        return false;
+    }
+
+    bool judgeTwoSpaceInCenterIsEye(std::shared_ptr<Filed> filed, int color) {
+        //二空再中腹
+        std::vector<Piece> ans;
+        //如果是在中腹，基准的6个必须是黑色，斜边如果有>=3个就是假的，如果是2个就是眼
+        getAllNeighbor(board, filed, ans);
+        for (auto r : ans) {
+            if (r.color != color) {
+                return false;
+            }
+        }
+
+        std::vector<Piece> obAns;
+        getObliqueNeighbor(board, filed, ans, obAns);
+        int cnt = 0;
+        for (auto x : obAns) {
+            if (x.color == !color) {
+                cnt++;
+            }
+        }
+        if (cnt >= 3) {
+            return false;
+        }
+        return true;
+    }
+
+    bool judgeThreeSpaceInCornerIsEye(std::shared_ptr<Filed> filed, int color) {
+        //角上正位对就一定不一定是眼
+        //如果是平的一定是眼，三个点在一条边上
+        //如果不是平的，不能有2个斜都是异色
+        std::vector<Piece> neighbor;
+        getAllNeighbor(board, filed, neighbor);
+        size_t i = 0;
+        for (i = 0; i < neighbor.size(); i++) {
+            if (neighbor[i].color != color) {
+                break;
+            }
+        }
+        if (i >= 3) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+
     // 检查一个区域是否是眼 8个位置都要判断，
     // TODO: 还需要判断是否周围被这个颜色包围，也可能是大眼，需要更细致的判断
     bool isEye(int x, int y, int color) {
-        if (color != 2) {
+        if (board[x][y].color != 2) {
             return false;
         }
         int rx[8] {1,-1,0,0,  1,1,-1,-1};
         int ry[8] {0,0,1,-1,  1,-1,1,-1};
         // 检查一个眼的条件：四周必须是空白或敌方棋子，且没有其他棋子存在
         // 一个有效的眼必须完全被一个颜色围住
-        int spaceAce = getAceOfPoint(board, x, y, color);
+        int spaceAce = getAceOfPoint(board, x, y, board[x][y].color);
         if (spaceAce == 1) {
             int qutorNum = 0;
             int allqutorNum = 0;
@@ -665,23 +749,32 @@ protected:
             return false;
         }
 
-        auto* filed = floodFill7(board, x, y);
+        auto filed = floodFill7(board, x, y);
         if (spaceAce == 2) {
             int type = -1;
             for (auto x : filed->pieceFiled) {
                 //只要有1个是在角上就是在角上
                 if (inCorner(x.first, x.second)) {
                     type = 1;
+                    break;
                 }
             }
-            if (type == 1 && zhengColor >= 3) {
+            //2空在角上，且周围基准3位都是同色，至少是后手眼，算作眼
+            if (type == 1) {
                 std::vector<Piece> neighbor;
-                getAllNeighbor(filed, neighbor);
-                //2空在角上，且周围基准3位都是同色，至少是后手眼，算作眼
-                return true;
-            }
-            else {
-                return false;
+                getAllNeighbor(board, filed, neighbor);
+                size_t i = 0;
+                for (i = 0; i < neighbor.size(); i++) {
+                    if (neighbor[i].color != color) {
+                        break;
+                    }
+                }
+                if (i >= 3) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
             }
 
             //在边上，如果空是平躺的，基准4位必须是同色，且两个侧角不能都是异色的情况返回true
@@ -689,29 +782,31 @@ protected:
             for (auto x : filed->pieceFiled) {
                 if (inEdge(x.first, x.second)) {
                     type = 2;
-                    getNeighborInfo(x, y, color, zhengColor, zhengOther, xieColor, xieColor);
+                    break;
                 }
             }
-            if (type == 2 && zhengColor >= 4) {
-                //2空在角上，且周围基准3位都是同色，至少是后手眼，算作眼
-                return true;
+            if (type == 2) {
+                return judgeTwoSpaceInEdgeIsEye(filed, color);
             }
-            else {
-                return false;
-            }
+
+            //在中腹
             type = 3;
-            //如果是在中腹，基准的6个必须是黑色，斜边如果有>=3个就是假的，如果是2个就是眼
-            if (type == 3) {
-                if (zhengColor == 6 && xieColor > 1) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
-            }
+            return judgeTwoSpaceInCenterIsEye(filed, color);
         }
         else if (spaceAce == 3) {
-            //角上正位对就一定至少是后手眼
+            int type = -1;
+            for (auto x : filed->pieceFiled) {
+                //只要有1个是在角上就是在角上
+                if (inCorner(x.first, x.second)) {
+                    type = 1;
+                    break;
+                }
+            }
+            if (type == 1) {
+                return judgeThreeSpaceInCornerIsEye(filed, color);
+            }
+
+
             //如果是横折三角，那么不能是三个斜都是异色
             //如果是竖三角，那么一定是眼
             //边上如果是平躺的正位对，不能两斜是异色
@@ -721,6 +816,14 @@ protected:
         }
 
         if (spaceAce >= 4) {
+            std::vector<Piece> ans;
+            //如果是在中腹，基准的6个必须是黑色，斜边如果有>=3个就是假的，如果是2个就是眼
+            getAllNeighbor(board, filed, ans);
+            for (auto r : ans) {
+                if (r.color != color) {
+                    return false;
+                }
+            }
             //且周围都是同色
             return true;
         }
@@ -2099,6 +2202,9 @@ public:
             for (int j = 0; j < 19; j++) {
                 if (indexMap[i][j] == nullptr) {
                     std::shared_ptr<Filed> fd = floodFill7(boarder, i,j);
+                    for (auto p : fd->pieceFiled) {
+                        indexMap[p.first][p.second] = fd;
+                    }
                     if (boarder[i][j].color == 0) {
                         blackFiled.push_back(fd);
                     } else if (boarder[i][j].color == 1) {
@@ -2482,7 +2588,7 @@ public:
         return isBordered;
     }
 
-    void getAllNeighbor(std::vector<std::vector<Piece>> &boarder, std::shared_ptr<Filed> filed, std::vector<Piece> ans) {
+    void getAllNeighbor(std::vector<std::vector<Piece>> &boarder, std::shared_ptr<Filed> filed, std::vector<Piece>& ans) {
         for (auto space : filed->pieceFiled) {
             for (int i = 0; i < 4; i++) {
                 int nx = space.first + dx[i];
@@ -2490,7 +2596,27 @@ public:
                 if (isValid(nx, ny)) {
                     if (boarder[nx][ny].color != 2) {
                         //set
-                        ans.push_back(boarder[nx][ny]);
+                        if (std::find(ans.begin(), ans.end(), boarder[nx][ny]) == ans.end()) {
+                            ans.push_back(boarder[nx][ny]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void getObliqueNeighbor(std::vector<std::vector<Piece>> &boarder, std::shared_ptr<Filed> filed, std::vector<Piece>& ans, std::vector<Piece>& obAns) {
+        for (auto space : filed->pieceFiled) {
+            for (int i = 0; i < 4; i++) {
+                int nx = space.first + ox[i];
+                int ny = space.second + oy[i];
+                if (isValid(nx, ny)) {
+                    if (boarder[nx][ny].color != 2) {
+                        //set
+                        if (std::find(ans.begin(), ans.end(), boarder[nx][ny]) == ans.end()
+                                && std::find(obAns.begin(), obAns.end(), boarder[nx][ny]) == obAns.end()) {
+                            obAns.push_back(boarder[nx][ny]);
+                        }
                     }
                 }
             }
@@ -2870,6 +2996,9 @@ public:
                                visited[nx][ny] = true;
                            }
                            std::shared_ptr<Filed> filed = floodFill7(board, newX, newY);
+                           for (auto p : filed->pieceFiled) {
+                               indexMap[p.first][p.second] = filed;
+                           }
                         }
                     }
                 }
@@ -2951,9 +3080,6 @@ public:
             }
         }
         filed->pieceFiled = liberties;
-        for (auto p : liberties) {
-            indexMap[p.first][p.second] = filed;
-        }
         return filed;
     }
 
@@ -4726,7 +4852,8 @@ public:
 
     2025年2月11日
     TODOList:
-    1.完善删除节点逻辑（感觉应该把主分支后续也删掉，因为少1颗子，整个棋局都发生了变化。）（解决，若以后觉得不合理可以回退v0.0.1版本)
+    1.完善删除节点逻辑
+   （感觉应该把主分支后续也删掉，因为少1颗子，整个棋局都发生了变化）（解决，若以后觉得不合理可以回退v0.0.1版本)
 
     2.下一步功能添加虚子显示，按空格切换下一个定式（解决
         按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式）

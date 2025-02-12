@@ -5,6 +5,10 @@
 int dx[4] {0,  0,  -1,  1};
 int dy[4] {-1, 1,  0,   0};
 
+//斜
+int ox[4] {1,1,-1,-1};
+int oy[4] {1,-1,1,-1};
+
 void showPoint(int row, int col, int color) {
     if (color == -1) {
         QString str = QString('A' + col + 1) + QString::number(19 - row) + "  noColor";
