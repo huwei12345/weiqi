@@ -11,6 +11,7 @@ debug/mainwindow.o
 debug/piece.o
 debug/screencapture.o
 debug/screenshot.o
+debug/settingpage.o
 debug/sgfparser.o
 debug/timecontrol.o
 debug/qrc_src.o
@@ -22,3 +23,4 @@ debug/moc_helppage.o
 debug/moc_mainwindow.o
 debug/moc_screencapture.o
 debug/moc_screenshot.o
+debug/moc_settingpage.o

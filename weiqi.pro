@@ -29,6 +29,7 @@ SOURCES += \
     piece.cpp \
     screencapture.cpp \
     screenshot.cpp \
+    settingpage.cpp \
     sgfparser.cpp \
     timecontrol.cpp
 
@@ -45,13 +46,15 @@ HEADERS += \
     piece.h \
     screencapture.h \
     screenshot.h \
+    settingpage.h \
     sgfparser.h \
     timecontrol.h
 
 FORMS += \
     aboutdialog.ui \
     helppage.ui \
-    mainwindow.ui
+    mainwindow.ui \
+    settingpage.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

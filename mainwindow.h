@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "imagerecognition.h"
+#include "settingpage.h"
 
 #include <QMainWindow>
 #include <boardwidget.h>
@@ -81,8 +82,6 @@ private slots:
 
     void on_toolButton_9_clicked();
 
-    void on_autoPlay_clicked();
-
     void on_actiontuichu_triggered();
     void on_actionguanyu_triggered();
 
@@ -109,12 +108,6 @@ private slots:
 
     void on_actiontry_triggered(bool checked);
 
-    void on_actionshezhi_2_triggered();
-
-    void on_actionshezhi_triggered();
-
-    void on_actiontheme_triggered();
-
     void on_actionxuandian_triggered(bool checked);
 
     void on_toolButton_22_clicked();
@@ -131,11 +124,17 @@ private slots:
 
     void on_toolButton_20_clicked();
 
+    void on_autoPlay_clicked(bool checked);
+
+    void on_setting_triggered();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;
     ImageRecognition* recTool;
     QPixmap blackPiece; // 黑棋图片
     QPixmap whitePiece; // 白棋图片
+    QTimer* mRunAutoTimer;
+    SettingPage* mSoftSetting;
 };
 #endif // MAINWINDOW_H

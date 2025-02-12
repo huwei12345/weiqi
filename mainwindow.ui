@@ -505,11 +505,14 @@
          <property name="maximumSize">
           <size>
            <width>30</width>
-           <height>16777215</height>
+           <height>25</height>
           </size>
          </property>
          <property name="text">
           <string>▶</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -564,7 +567,7 @@
     </property>
     <addaction name="actionduqu"/>
     <addaction name="actioncunchu"/>
-    <addaction name="actionshezhi"/>
+    <addaction name="setting"/>
     <addaction name="actionyonghu"/>
     <addaction name="separator"/>
     <addaction name="actiontuichu"/>
@@ -595,9 +598,8 @@
     <property name="title">
      <string>选项</string>
     </property>
-    <addaction name="actiontheme"/>
     <addaction name="actionsearchStep"/>
-    <addaction name="actionshezhi_2"/>
+    <addaction name="setting"/>
    </widget>
    <widget class="QMenu" name="menu_5">
     <property name="title">
@@ -637,11 +639,6 @@
   <action name="actiontuichu">
    <property name="text">
     <string>退出</string>
-   </property>
-  </action>
-  <action name="actionshezhi">
-   <property name="text">
-    <string>设置</string>
    </property>
   </action>
   <action name="actionyonghu">
@@ -685,11 +682,6 @@
     <string>设置搜索步数</string>
    </property>
   </action>
-  <action name="actiontheme">
-   <property name="text">
-    <string>主题</string>
-   </property>
-  </action>
   <action name="actionjudgeWin">
    <property name="text">
     <string>判定胜负</string>
@@ -710,7 +702,7 @@
     <string>定式下一步</string>
    </property>
   </action>
-  <action name="actionshezhi_2">
+  <action name="setting">
    <property name="text">
     <string>设置</string>
    </property>

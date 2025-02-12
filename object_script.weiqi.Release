@@ -11,6 +11,7 @@ release/mainwindow.o
 release/piece.o
 release/screencapture.o
 release/screenshot.o
+release/settingpage.o
 release/sgfparser.o
 release/timecontrol.o
 release/qrc_src.o
@@ -22,3 +23,4 @@ release/moc_helppage.o
 release/moc_mainwindow.o
 release/moc_screencapture.o
 release/moc_screenshot.o
+release/moc_settingpage.o

@@ -606,40 +606,126 @@ protected:
         return x >= 0 && x < BOARDWIDTH && y >= 0 && y < BOARDWIDTH;
     }
 
+
+    bool inCorner(int x, int y) {
+        if ((x == 0 || x == 18) && (y == 0 || y == 18)) {
+            return true;
+        }
+        return false;
+    }
+
+    bool inEdge() {
+        if (x == 0 || y == 0 || x == 18 || y == 18) {
+            return true;
+        }
+        return false;
+    }
+
     // 检查一个区域是否是眼 8个位置都要判断，
     // TODO: 还需要判断是否周围被这个颜色包围，也可能是大眼，需要更细致的判断
     bool isEye(int x, int y, int color) {
+        if (color != 2) {
+            return false;
+        }
         int rx[8] {1,-1,0,0,  1,1,-1,-1};
         int ry[8] {0,0,1,-1,  1,-1,1,-1};
         // 检查一个眼的条件：四周必须是空白或敌方棋子，且没有其他棋子存在
         // 一个有效的眼必须完全被一个颜色围住
-        int qutorNum = 0;
-        int allqutorNum = 0;
-        //上下左右
-        int orthogonalityNum = 0;
-        for (int i = 0; i < 8; i++) {
-            int nx = x + rx[i];
-            int ny = y + ry[i];
-            if (isValid(nx, ny)) {
-                allqutorNum++;
-                if (board[nx][ny].color == 2 || board[nx][ny].color == color) {
-                    qutorNum++;
-                    if (i < 4 && board[nx][ny].color == color) {
-                        orthogonalityNum++;
+        int spaceAce = getAceOfPoint(board, x, y, color);
+        if (spaceAce == 1) {
+            int qutorNum = 0;
+            int allqutorNum = 0;
+            //上下左右
+            int orthogonalityNum = 0;
+            for (int i = 0; i < 8; i++) {
+                int nx = x + rx[i];
+                int ny = y + ry[i];
+                if (isValid(nx, ny)) {
+                    allqutorNum++;
+                    if (board[nx][ny].color == 2 || board[nx][ny].color == color) {
+                        qutorNum++;
+                        if (i < 4 && board[nx][ny].color == color) {
+                            orthogonalityNum++;
+                        }
                     }
                 }
             }
+            if (allqutorNum == 3) {
+                //角
+                return qutorNum >= 3;
+            }
+            else if (allqutorNum == 5) {
+                //边
+                return qutorNum >= 5;
+            }
+            else if (allqutorNum == 8) {
+                //中间
+                return orthogonalityNum == 4 && qutorNum >= 7;
+            }
+            return false;
         }
-        if (allqutorNum == 3) {
-            return qutorNum >= 3;
+
+        auto* filed = floodFill7(board, x, y);
+        if (spaceAce == 2) {
+            int type = -1;
+            for (auto x : filed->pieceFiled) {
+                //只要有1个是在角上就是在角上
+                if (inCorner(x.first, x.second)) {
+                    type = 1;
+                }
+            }
+            if (type == 1 && zhengColor >= 3) {
+                std::vector<Piece> neighbor;
+                getAllNeighbor(filed, neighbor);
+                //2空在角上，且周围基准3位都是同色，至少是后手眼，算作眼
+                return true;
+            }
+            else {
+                return false;
+            }
+
+            //在边上，如果空是平躺的，基准4位必须是同色，且两个侧角不能都是异色的情况返回true
+            //如果空是竖的，只要基准5位是同色，就至少是后手眼。
+            for (auto x : filed->pieceFiled) {
+                if (inEdge(x.first, x.second)) {
+                    type = 2;
+                    getNeighborInfo(x, y, color, zhengColor, zhengOther, xieColor, xieColor);
+                }
+            }
+            if (type == 2 && zhengColor >= 4) {
+                //2空在角上，且周围基准3位都是同色，至少是后手眼，算作眼
+                return true;
+            }
+            else {
+                return false;
+            }
+            type = 3;
+            //如果是在中腹，基准的6个必须是黑色，斜边如果有>=3个就是假的，如果是2个就是眼
+            if (type == 3) {
+                if (zhengColor == 6 && xieColor > 1) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
-        else if (allqutorNum == 5) {
-            return qutorNum >= 5;
+        else if (spaceAce == 3) {
+            //角上正位对就一定至少是后手眼
+            //如果是横折三角，那么不能是三个斜都是异色
+            //如果是竖三角，那么一定是眼
+            //边上如果是平躺的正位对，不能两斜是异色
+
+            //如果是中腹，如果是横空，那斜4个不能都是白
+            //如果是横折三角，4个斜不能都是白，横转那个角的斜不算
         }
-        else if (allqutorNum == 8) {
-            return orthogonalityNum == 4 && qutorNum >= 7;
+
+        if (spaceAce >= 4) {
+            //且周围都是同色
+            return true;
         }
-        return true;
+        //return true;
+        return false;
     }
 
     bool isEye(std::vector<std::vector<Piece>> & boarder, int x, int y, int color) {
@@ -673,7 +759,7 @@ protected:
         else if (allqutorNum == 8) {
             return orthogonalityNum == 4 && qutorNum >= 7;
         }
-        return true;
+        return false;
     }
 
     int isEyes(std::set<std::pair<int, int>> &liberties) {
@@ -1447,6 +1533,7 @@ protected:
         }
         else {
             qDebug() << "block  row " << row << " col "<<  col;
+            qDebug() << showPiece(row, col, board[row][col].color) << getAceOfPoint(board, row, col, board[row][col].color);
         }
     }
 
@@ -2395,7 +2482,20 @@ public:
         return isBordered;
     }
 
-
+    void getAllNeighbor(std::vector<std::vector<Piece>> &boarder, std::shared_ptr<Filed> filed, std::vector<Piece> ans) {
+        for (auto space : filed->pieceFiled) {
+            for (int i = 0; i < 4; i++) {
+                int nx = space.first + dx[i];
+                int ny = space.second + dy[i];
+                if (isValid(nx, ny)) {
+                    if (boarder[nx][ny].color != 2) {
+                        //set
+                        ans.push_back(boarder[nx][ny]);
+                    }
+                }
+            }
+        }
+    }
     bool ishukou(int row, int col, int color) {
         if (board[row][col].color != 2) {
             return false;
@@ -4638,7 +4738,7 @@ public:
 
     6.内存泄漏处理 SGFTreeNode和Filed已无内存泄漏，基本完成，（解决） 界面内存可能还有
     7.界面优化
-    8.功能补充
+    8.功能补充      状态、移动、设置、用户、定式选点
 
     9.分割功能，重构代码。下棋态、分析态、习题态。
 
@@ -4651,6 +4751,7 @@ public:
     14.三劫循环、四劫循环，不进行处理了。
 
     y.删除节点可以撤销吗
+
 */
 
 #endif

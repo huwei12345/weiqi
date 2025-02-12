@@ -39,7 +39,6 @@ public:
     QAction *actionduqu;
     QAction *actioncunchu;
     QAction *actiontuichu;
-    QAction *actionshezhi;
     QAction *actionyonghu;
     QAction *actionundo;
     QAction *actionredo;
@@ -47,12 +46,11 @@ public:
     QAction *actiondelete;
     QAction *actiontry;
     QAction *actionsearchStep;
-    QAction *actiontheme;
     QAction *actionjudgeWin;
     QAction *actionjudgeSituation;
     QAction *actionAIAnalysis;
     QAction *actionnextStep;
-    QAction *actionshezhi_2;
+    QAction *setting;
     QAction *actionAIjudge;
     QAction *actionxuandian;
     QWidget *centralwidget;
@@ -102,6 +100,7 @@ public:
     QToolButton *toolButton_21;
     QToolButton *toolButton_22;
     QSpacerItem *horizontalSpacer_9;
+    QLabel *label_2;
     QToolButton *BAlwaysBtn;
     QToolButton *WAlwaysBtn;
     QToolButton *toolButton_25;
@@ -142,8 +141,6 @@ public:
         actioncunchu->setObjectName(QString::fromUtf8("actioncunchu"));
         actiontuichu = new QAction(MainWindow);
         actiontuichu->setObjectName(QString::fromUtf8("actiontuichu"));
-        actionshezhi = new QAction(MainWindow);
-        actionshezhi->setObjectName(QString::fromUtf8("actionshezhi"));
         actionyonghu = new QAction(MainWindow);
         actionyonghu->setObjectName(QString::fromUtf8("actionyonghu"));
         actionundo = new QAction(MainWindow);
@@ -159,8 +156,6 @@ public:
         actiontry->setCheckable(true);
         actionsearchStep = new QAction(MainWindow);
         actionsearchStep->setObjectName(QString::fromUtf8("actionsearchStep"));
-        actiontheme = new QAction(MainWindow);
-        actiontheme->setObjectName(QString::fromUtf8("actiontheme"));
         actionjudgeWin = new QAction(MainWindow);
         actionjudgeWin->setObjectName(QString::fromUtf8("actionjudgeWin"));
         actionjudgeSituation = new QAction(MainWindow);
@@ -169,8 +164,8 @@ public:
         actionAIAnalysis->setObjectName(QString::fromUtf8("actionAIAnalysis"));
         actionnextStep = new QAction(MainWindow);
         actionnextStep->setObjectName(QString::fromUtf8("actionnextStep"));
-        actionshezhi_2 = new QAction(MainWindow);
-        actionshezhi_2->setObjectName(QString::fromUtf8("actionshezhi_2"));
+        setting = new QAction(MainWindow);
+        setting->setObjectName(QString::fromUtf8("setting"));
         actionAIjudge = new QAction(MainWindow);
         actionAIjudge->setObjectName(QString::fromUtf8("actionAIjudge"));
         actionxuandian = new QAction(MainWindow);
@@ -393,6 +388,11 @@ public:
 
         horizontalLayout_3->addItem(horizontalSpacer_9);
 
+        label_2 = new QLabel(testWidget);
+        label_2->setObjectName(QString::fromUtf8("label_2"));
+
+        horizontalLayout_3->addWidget(label_2);
+
         BAlwaysBtn = new QToolButton(testWidget);
         BAlwaysBtn->setObjectName(QString::fromUtf8("BAlwaysBtn"));
 
@@ -448,7 +448,8 @@ public:
 
         autoPlay = new QPushButton(watchWidget);
         autoPlay->setObjectName(QString::fromUtf8("autoPlay"));
-        autoPlay->setMaximumSize(QSize(30, 16777215));
+        autoPlay->setMaximumSize(QSize(30, 25));
+        autoPlay->setCheckable(true);
 
         horizontalLayout_2->addWidget(autoPlay);
 
@@ -506,7 +507,7 @@ public:
         menubar->addAction(menu_5->menuAction());
         menu->addAction(actionduqu);
         menu->addAction(actioncunchu);
-        menu->addAction(actionshezhi);
+        menu->addAction(setting);
         menu->addAction(actionyonghu);
         menu->addSeparator();
         menu->addAction(actiontuichu);
@@ -522,9 +523,8 @@ public:
         menu_3->addSeparator();
         menu_3->addAction(actionnextStep);
         menu_3->addAction(actionxuandian);
-        menu_4->addAction(actiontheme);
         menu_4->addAction(actionsearchStep);
-        menu_4->addAction(actionshezhi_2);
+        menu_4->addAction(setting);
         menu_5->addAction(action);
         menu_5->addSeparator();
         menu_5->addAction(actionguanyu);
@@ -542,7 +542,6 @@ public:
         actionduqu->setText(QCoreApplication::translate("MainWindow", "\350\257\273\345\217\226", nullptr));
         actioncunchu->setText(QCoreApplication::translate("MainWindow", "\345\255\230\345\202\250", nullptr));
         actiontuichu->setText(QCoreApplication::translate("MainWindow", "\351\200\200\345\207\272", nullptr));
-        actionshezhi->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256", nullptr));
         actionyonghu->setText(QCoreApplication::translate("MainWindow", "\347\224\250\346\210\267", nullptr));
         actionundo->setText(QCoreApplication::translate("MainWindow", "\346\222\244\351\224\200", nullptr));
         actionredo->setText(QCoreApplication::translate("MainWindow", "\351\207\215\345\201\232", nullptr));
@@ -553,12 +552,11 @@ public:
 #endif // QT_CONFIG(shortcut)
         actiontry->setText(QCoreApplication::translate("MainWindow", "\350\257\225\344\270\213", nullptr));
         actionsearchStep->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256\346\220\234\347\264\242\346\255\245\346\225\260", nullptr));
-        actiontheme->setText(QCoreApplication::translate("MainWindow", "\344\270\273\351\242\230", nullptr));
         actionjudgeWin->setText(QCoreApplication::translate("MainWindow", "\345\210\244\345\256\232\350\203\234\350\264\237", nullptr));
         actionjudgeSituation->setText(QCoreApplication::translate("MainWindow", "\345\275\242\345\212\277\345\210\244\346\226\255", nullptr));
         actionAIAnalysis->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\345\210\206\346\236\220", nullptr));
         actionnextStep->setText(QCoreApplication::translate("MainWindow", "\345\256\232\345\274\217\344\270\213\344\270\200\346\255\245", nullptr));
-        actionshezhi_2->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256", nullptr));
+        setting->setText(QCoreApplication::translate("MainWindow", "\350\256\276\347\275\256", nullptr));
         actionAIjudge->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\350\243\201\345\210\244", nullptr));
         actionxuandian->setText(QCoreApplication::translate("MainWindow", "\345\256\232\345\274\217\351\200\211\347\202\271", nullptr));
         QTreeWidgetItem *___qtreewidgetitem = pieceTree->headerItem();
@@ -590,6 +588,7 @@ public:
         toolButton_20->setText(QCoreApplication::translate("MainWindow", "\346\211\213\346\225\260", nullptr));
         toolButton_21->setText(QCoreApplication::translate("MainWindow", "\347\247\273\345\212\250", nullptr));
         toolButton_22->setText(QCoreApplication::translate("MainWindow", "\345\210\240\351\231\244", nullptr));
+        label_2->setText(QCoreApplication::translate("MainWindow", "\347\212\266\346\200\201", nullptr));
         BAlwaysBtn->setText(QCoreApplication::translate("MainWindow", "\346\221\206\351\273\221", nullptr));
         WAlwaysBtn->setText(QCoreApplication::translate("MainWindow", "\346\221\206\347\231\275", nullptr));
         toolButton_25->setText(QCoreApplication::translate("MainWindow", "\344\272\244\346\233\277", nullptr));

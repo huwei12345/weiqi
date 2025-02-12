@@ -7,6 +7,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -17,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(this, &MainWindow::keyEventCaptured,
                          goWidget, &GoBoardWidget::onKeyPressEvent);
     //goWidget->show();
+    mSoftSetting = new SettingPage;
     QLayout* layout = ui->panWidget->layout();
     layout->addWidget(goWidget);
     goWidget->setUITree(ui->pieceTree);
@@ -36,6 +38,11 @@ MainWindow::MainWindow(QWidget *parent)
     whitePiece = QPixmap(":/images/white.png"); // 使用资源文件
     whitePiece = whitePiece.scaled(QSize(15,15), Qt::KeepAspectRatio, Qt::SmoothTransformation);
     ui->pieceLabel->setPixmap(blackPiece);
+    mRunAutoTimer = new QTimer(this);
+    connect(mRunAutoTimer, &QTimer::timeout, this, [=]() {
+        MainWindow::on_rightOne_clicked();
+        mRunAutoTimer->start();
+    } );
 }
 
 MainWindow::~MainWindow()
@@ -342,17 +349,6 @@ void MainWindow::on_toolButton_19_clicked()
     goWidget->passOnePiece();
 }
 
-//自动播放
-void MainWindow::on_autoPlay_clicked()
-{
-    int currentValue = ui->horizontalSlider->value() + 1;
-    if (currentValue >= 0 && currentValue <= goWidget->allNumber) {
-        qDebug() << "from " << ui->horizontalSlider->value() << "jumpto " << currentValue;
-        ui->horizontalSlider->setValue(currentValue);
-    }
-    //TODO: 定式调用以上代码
-}
-
 void MainWindow::Quit() {
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "退出", "你确定要退出吗？",
@@ -500,25 +496,6 @@ void MainWindow::on_actiontry_triggered(bool checked)
     goWidget->openTryMode(checked);
 }
 
-
-//TODO: 设置与主题尝试用QML制作试试
-void MainWindow::on_actionshezhi_2_triggered()
-{
-
-}
-
-
-void MainWindow::on_actionshezhi_triggered()
-{
-
-}
-
-
-void MainWindow::on_actiontheme_triggered()
-{
-
-}
-
 void MainWindow::on_actionxuandian_triggered(bool checked)
 {
     if (checked) {
@@ -598,6 +575,12 @@ void MainWindow::on_RetractPiece_clicked()
 void MainWindow::on_giveUpBtn_clicked()
 {
     auto player = goWidget->getCurrentPlayer();
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "认输", "你同意认输吗？",
+                                  QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::No) {
+        return;
+    }
     qDebug() << (player == BLACK ? "BLACK " : "WHITE ") << "Give Up";
     qDebug() << (player == BLACK ? "WHITE " : "BLACK ") << "Win!!!";
 }
@@ -606,5 +589,24 @@ void MainWindow::on_giveUpBtn_clicked()
 void MainWindow::on_toolButton_20_clicked()
 {
     goWidget->ChangeShouShuState();
+}
+
+
+void MainWindow::on_autoPlay_clicked(bool checked)
+{
+    if (checked) {
+        mRunAutoTimer->start(1000);
+        ui->autoPlay->setText("■");
+    }
+    else {
+        ui->autoPlay->setText("▶");
+        mRunAutoTimer->stop();
+    }
+}
+
+//setting
+void MainWindow::on_setting_triggered()
+{
+    mSoftSetting->show();
 }
 
