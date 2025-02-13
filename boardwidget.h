@@ -638,6 +638,9 @@ protected:
         int allqutorNum = 0;
         //上下左右
         int orthogonalityNum = 0;
+        // 检查一个区域是否是眼 8个位置都要判断，
+        // 检查一个眼的条件：四周必须是空白或敌方棋子，且没有其他棋子存在
+        // 一个有效的眼必须完全被一个颜色围住
         for (int i = 0; i < 8; i++) {
             int nx = x + rx[i];
             int ny = y + ry[i];
@@ -1103,172 +1106,98 @@ protected:
         return true;
     }
 
-    // 检查一个区域是否是眼 8个位置都要判断，
-    // TODO: 还需要判断是否周围被这个颜色包围，也可能是大眼，需要更细致的判断
-    //目前也只能粗略判断1-4空的眼，5空以上被单色围住默认是眼。
-    //没有考虑空中可能有异色子的情况，没有考虑气和打吃、倒扑可能存在的情况，正确方式还是在一个小区域里进行暴力博弈。
     bool isEye(int x, int y, int color) {
-        if (board[x][y].color != 2) {
+        return isEye(board, x, y, color);
+    }
+
+    // TODO:目前也只能粗略判断1-4空的眼，5空以上被单色围住默认是眼。如果不是，判断每一个空是不是眼
+    //没有考虑空中可能有异色子的情况，没有考虑气和打吃、倒扑可能存在的情况，正确方式还是在一个小区域里进行暴力博弈。
+    bool isEye(std::vector<std::vector<Piece>> & boarder, int x, int y, int color) {
+        if (boarder[x][y].color != 2) {
             return false;
         }
         // 检查一个眼的条件：四周必须是空白或敌方棋子，且没有其他棋子存在
         // 一个有效的眼必须完全被一个颜色围住
-        int spaceAce = getAceOfPoint(board, x, y, board[x][y].color);
+        int spaceAce = getAceOfPoint(boarder, x, y, boarder[x][y].color);
         if (spaceAce == 1) {
-            return judgeOneSpaceIsEye(board, x, y, color);
+            return judgeOneSpaceIsEye(boarder, x, y, color);
         }
-        auto filed = floodFill7(board, x, y);
+        auto filed = floodFill7(boarder, x, y);
         if (spaceAce == 2) {
             for (auto x : filed->pieceFiled) {
                 //只要有1个是在角上就是在角上
                 if (inCorner(x.first, x.second)) {
-                    return judgeTwoSpaceInCornerIsEye(board, filed, color);
+                    return judgeTwoSpaceInCornerIsEye(boarder, filed, color);
                 }
             }
             for (auto x : filed->pieceFiled) {
                 if (inEdge(x.first, x.second)) {
-                    return judgeTwoSpaceInEdgeIsEye(board, filed, color);
+                    return judgeTwoSpaceInEdgeIsEye(boarder, filed, color);
                 }
             }
             //在中腹
-            return judgeTwoSpaceInCenterIsEye(board, filed, color);
+            return judgeTwoSpaceInCenterIsEye(boarder, filed, color);
         }
         else if (spaceAce == 3) {
             for (auto x : filed->pieceFiled) {
                 if (inCorner(x.first, x.second)) {
-                    return judgeThreeSpaceInCornerIsEye(board, filed, color);
+                    return judgeThreeSpaceInCornerIsEye(boarder, filed, color);
                 }
             }
             for (auto x : filed->pieceFiled) {
                 if (inEdge(x.first, x.second)) {
-                    return judgeThreeSpaceInEdgeIsEye(board, filed, color);
+                    return judgeThreeSpaceInEdgeIsEye(boarder, filed, color);
                 }
             }
-            return judgeThreeSpaceInCenterIsEye(board, filed, color);
+            return judgeThreeSpaceInCenterIsEye(boarder, filed, color);
         }
         else if (spaceAce == 4) {
             //spaceAce == 4也可能不是眼
             for (auto x : filed->pieceFiled) {
                 if (inCorner(x.first, x.second)) {
-                    return judgeFourSpaceInCornerIsEye(board, filed, color);
+                    return judgeFourSpaceInCornerIsEye(boarder, filed, color);
                 }
             }
             for (auto x : filed->pieceFiled) {
                 if (inEdge(x.first, x.second)) {
-                    return judgeFourSpaceInEdgeIsEye(board, filed, color);
+                    return judgeFourSpaceInEdgeIsEye(boarder, filed, color);
                 }
             }
-            return judgeFourSpaceInCenterIsEye(board, filed, color);
+            return judgeFourSpaceInCenterIsEye(boarder, filed, color);
         }
         else if (spaceAce >= 5) {
-            return judgeFiveOrMoreSpaceInCenterIsEye(board, filed, color);
-        }
-        return false;
-    }
-
-    //不仅判断是否是眼，那些可以先手做眼的情况也算作眼，因为这个函数是给终局判定使用的，如果某方不服终局判定，大可以继续落子将这个眼破掉，再进行判断
-    bool isEye(std::vector<std::vector<Piece>> & boarder, int x, int y, int color) {
-        int rx[8] {1,-1,0,0,  1,1,-1,-1};
-        int ry[8] {0,0,1,-1,  1,-1,1,-1};
-        // 检查一个眼的条件：四周必须是空白或敌方棋子，且没有其他棋子存在
-        // 一个有效的眼必须完全被一个颜色围住
-        int qutorNum = 0;
-        int allqutorNum = 0;
-        //上下左右
-        int orthogonalityNum = 0;
-        for (int i = 0; i < 8; i++) {
-            int nx = x + rx[i];
-            int ny = y + ry[i];
-            if (isValid(nx, ny)) {
-                allqutorNum++;
-                if (boarder[nx][ny].color == 2 || boarder[nx][ny].color == color) {
-                    qutorNum++;
-                    if (i < 4 && boarder[nx][ny].color == color) {
-                        orthogonalityNum++;
+            bool ret = judgeFiveOrMoreSpaceInCenterIsEye(boarder, filed, color);
+            if (ret) {
+                return ret;
+            }
+            else {
+                int cur = 0;
+                int other = 0;
+                for (auto p : filed->pieceFiled) {
+                    if (judgeOneSpaceIsEye(boarder, p.first, p.second, color)) {
+                        cur++;
                     }
+                    if (judgeOneSpaceIsEye(boarder, p.first, p.second, !color)) {
+                        other++;
+                    }
+                }
+                if (cur > 0 && other == 0) {
+                    return true;
                 }
             }
         }
-        if (allqutorNum == 3) {
-            return qutorNum >= 3;
-        }
-        else if (allqutorNum == 5) {
-            return qutorNum >= 5;
-        }
-        else if (allqutorNum == 8) {
-            return orthogonalityNum == 4 && qutorNum >= 7;
-        }
         return false;
     }
 
-//    bool isEye(std::vector<std::vector<Piece>> & boarder, int x, int y, int color) {
-//        if (boarder[x][y].color != 2) {
-//            return false;
-//        }
-//        // 检查一个眼的条件：四周必须是空白或敌方棋子，且没有其他棋子存在
-//        // 一个有效的眼必须完全被一个颜色围住
-//        int spaceAce = getAceOfPoint(boarder, x, y, boarder[x][y].color);
-//        if (spaceAce == 1) {
-//            return judgeOneSpaceIsEye(boarder, x, y, color);
-//        }
-//        auto filed = floodFill7(boarder, x, y);
-//        if (spaceAce == 2) {
-//            for (auto x : filed->pieceFiled) {
-//                //只要有1个是在角上就是在角上
-//                if (inCorner(x.first, x.second)) {
-//                    return judgeTwoSpaceInCornerIsEye(boarder, filed, color);
-//                }
-//            }
-//            for (auto x : filed->pieceFiled) {
-//                if (inEdge(x.first, x.second)) {
-//                    return judgeTwoSpaceInEdgeIsEye(boarder, filed, color);
-//                }
-//            }
-//            //在中腹
-//            return judgeTwoSpaceInCenterIsEye(boarder, filed, color);
-//        }
-//        else if (spaceAce == 3) {
-//            for (auto x : filed->pieceFiled) {
-//                if (inCorner(x.first, x.second)) {
-//                    return judgeThreeSpaceInCornerIsEye(boarder, filed, color);
-//                }
-//            }
-//            for (auto x : filed->pieceFiled) {
-//                if (inEdge(x.first, x.second)) {
-//                    return judgeThreeSpaceInEdgeIsEye(boarder, filed, color);
-//                }
-//            }
-//            return judgeThreeSpaceInCenterIsEye(boarder, filed, color);
-//        }
-//        else if (spaceAce == 4) {
-//            //spaceAce == 4也可能不是眼
-//            for (auto x : filed->pieceFiled) {
-//                if (inCorner(x.first, x.second)) {
-//                    return judgeFourSpaceInCornerIsEye(boarder, filed, color);
-//                }
-//            }
-//            for (auto x : filed->pieceFiled) {
-//                if (inEdge(x.first, x.second)) {
-//                    return judgeFourSpaceInEdgeIsEye(boarder, filed, color);
-//                }
-//            }
-//            return judgeFourSpaceInCenterIsEye(boarder, filed, color);
-//        }
-//        else if (spaceAce >= 5) {
-//            return judgeFiveOrMoreSpaceInCenterIsEye(boarder, filed, color);
-//        }
-//        return false;
-//    }
-
-
     int isEyes(std::set<std::pair<int, int>> &liberties) {
+        //以前的做法
         int bEye = 0;
         int wEye = 0;
         for (auto p : liberties) {
-            if (isEye(p.first, p.second, 0)) {
+            if (judgeOneSpaceIsEye(board, p.first, p.second, 0)) {
                 bEye++;
             }
-            if (isEye(p.first, p.second, 1)) {
+            if (judgeOneSpaceIsEye(board, p.first, p.second, 1)) {
                 wEye++;
             }
             qDebug() << "isEyes " << p.first << p.second;
@@ -1287,50 +1216,11 @@ protected:
     }
 
     int isEyes(std::vector<std::vector<Piece>> & boarder, std::shared_ptr<Filed> spaceFiled) {
-        int bEye = 0;
-        int wEye = 0;
         auto &liberties = spaceFiled->pieceFiled;
-
-        if (liberties.size() == 2) {
-
-        }
-        //TODO:判断2和3的情况，应该判断的
-        //如果这片区域大小大于4，并且只被一种颜色围住，怎么都有一个眼
-        //是否需要单独判断2和3的情况
-        if (liberties.size() >= 2) {
-            if (spaceFiled->roundFiled.size() == 1) {
-                int color = spaceFiled->roundFiled[0]->color;
-                //只有一种颜色，说明被围住了
-                if (color == 0) {
-                    return liberties.size();
-                }
-                else if (color == 1) {
-                    return 0 - (int)liberties.size();
-                }
-                else {
-                    qDebug() << "ERRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR";
-                }
-            }
-        }
-
-        //判断每个点是否是眼，并不完全合理，即时是一大片空，每个点也不一定是眼的形状（指4面围住这个点，4角占三个）
-        for (auto p : liberties) {
-            if (isEye(boarder, p.first, p.second, 0)) {
-                bEye++;
-            }
-            if (isEye(boarder, p.first, p.second, 1)) {
-                wEye++;
-            }
-            qDebug() << "isEyes " << p.first << p.second;
-        }
-        if (bEye != 0 && wEye != 0) {
-            qDebug() << "bCnt " << bEye << " wCnt " << wEye;
-            return 0;//都不是
-        }
-        else if (bEye > 0) {
+        if (isEye(boarder, liberties.begin()->first, liberties.begin()->second, 0)) {
             return liberties.size();
         }
-        else if (wEye > 0) {
+        if (isEye(boarder, liberties.begin()->first, liberties.begin()->second, 1)) {
             return 0 - (int)liberties.size();
         }
         return 0;
@@ -1343,10 +1233,7 @@ protected:
     //不能活棋 1.无眼 2.具备一眼，但不能一手棋再做一眼
     bool isAlive(std::set<std::pair<int, int>> &liberties) {
         //游戏终局除了双活的情况。一个空要么是黑的眼，要么是白的眼，如果无法判定，说明这个空没下完，无法点目。
-        auto r = liberties.begin();
-        int color = board[r->first][r->second].color;
         std::set<std::pair<int, int>> visited;
-        int eyeCount = 0;
         for (auto p : liberties) {
             int row = p.first;
             int col = p.second;
@@ -2838,6 +2725,7 @@ public:
 
     //result存储哪些棋块赢了，哪块棋输了
     bool isShuanghuoOrDead(std::vector<std::vector<Piece>> &boarder, std::shared_ptr<Filed> filed, std::vector<std::shared_ptr<Filed>>& winResult, std::vector<std::shared_ptr<Filed>>& loseResult, std::vector<std::shared_ptr<Filed>>& balanceResult) {
+        Q_UNUSED(balanceResult)
         //有眼杀瞎
         if (filed->eyeSize == 0) {
             bool flag = true;
@@ -2947,6 +2835,9 @@ public:
 
     bool getBelongFiled(const std::set<std::pair<int, int>> &filedLiberties, std::vector<Filed> filedList, int& index) {
         //如果这些气和某些区域相邻，那么判断这个气是否某个区域的眼。
+        Q_UNUSED(filedLiberties)
+        Q_UNUSED(filedList)
+        Q_UNUSED(index)
         return true;
     }
 
@@ -3998,10 +3889,12 @@ public:
         auto node = data.node.lock();
         deleteSGFNode(node);
         repaint();
+        return true;
     }
 
     //只操作treeWidget
     bool deleteSGFTreeItemGUI(QTreeWidgetItem* item, std::shared_ptr<SGFTreeNode> node) {
+        Q_UNUSED(node)
         if (item == nullptr) {
             return false;
         }
@@ -4363,6 +4256,7 @@ public:
 
     //按historyNode到root这一段，在定式书中搜索，另一种需要，与图像搜索应让用户进行选择
     void remember3(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        Q_UNUSED(boarder)
         if (DingShiBook == nullptr) {
             qDebug() << "no DingShiBook";
             return;
@@ -4435,6 +4329,7 @@ public:
 
     //按说不用按historyNode序列也可以获取选点
     void remember4(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+        Q_UNUSED(boarder)
         if (DingShiBook == nullptr) {
             qDebug() << "no DingShiBook";
             return;
@@ -4651,7 +4546,7 @@ public:
     }
 
     void showInVirtualPiece(std::vector<std::vector<Piece>> &res, int index) {
-        if (index < 0 || index >= res.size()) {
+        if (index < 0 || index >= (int)res.size()) {
             return;
         }
         auto pieceSeq = res[index];
@@ -5269,28 +5164,32 @@ public:
     2025年2月11日
     TODOList:
     1.完善删除节点逻辑（解决）
-   （感觉应该把主分支后续也删掉，因为少1颗子，整个棋局都发生了变化）（解决，若以后觉得不合理可以回退v0.0.1版本)
+   （把主分支后续也删掉了，因为少1颗子，整个棋局都将变化，若以后觉得不合理可以回退v0.0.1版本)
+    x.删除节点可以撤销吗，应该支持撤销功能
 
     2.下一步功能添加虚子显示，按空格切换下一个定式（解决
         按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式）
-    3.支持按步数顺序查找定式，这样就不必排列组合当前已有子，（解决）
+
+    3.支持按步数顺序查找定式，这样就不必排列组合当前已有子（解决）
     进一步或许支持现框选子？因为棋局很大，其他角可能下过了（须实现）
-    x.只显示1手，像AI那样？(选点待实现）
+    y.只显示1手，像AI那样？(选点待实现）
 
     4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（难 待优化）
-    5.isEye优化（解决，针对2、3、4空眼位进行了特别判定，但是没有考虑其中气的问题、打吃、双打、倒扑都可能有影响
-        最好在小区域进行暴力博弈推演）
-    其实判断眼，还是应该单提出来，进行暴力博弈，判断能非做出真眼。
+
+    5.isEye优化（解决，针对2、3、4空眼位进行了特别判定，但是没有考虑其中气的问题、打吃、双打、倒扑都可能有影响)
+        (最好在小区域进行暴力博弈推演, 单提出来，进行暴力博弈，判断能否做出真眼）
 
     6.内存泄漏处理 SGFTreeNode和Filed已无内存泄漏，基本完成，（解决） 界面内存可能还有
 
     7.界面优化
 
-    8.功能补充      状态、移动、设置、用户、定式选点
+    8.功能补充  状态、移动、设置、用户、定式选点
 
     9.分割功能，重构代码。下棋态、分析态、习题态。
 
-    10.连续黑子、白子。摆棋模式。(解决 目前是试下模式支持摆黑摆白,摆棋模式也该支持，将子作为一个树上的节点添加并且存储SGF）
+    10.连续黑子、白子。摆棋模式。(解决 目前是试下模式支持摆黑摆白,
+        摆棋模式也该支持，将子作为一个树上的节点添加并且存储SGF，
+        摆棋模式支持删除棋盘上的子，落子不提子）
 
     11.接入AI，形势判断、智能裁判，智能分析，AI对弈。
 
@@ -5298,9 +5197,6 @@ public:
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做
 
     14.三劫循环、四劫循环，不进行处理了。
-
-    y.删除节点可以撤销吗，应该支持撤销功能
-
 
 */
 
