@@ -23,6 +23,7 @@
 #include "piece.h"
 #include "sgfparser.h"
 #include "timecontrol.h"
+#include <QThread>
 #include <algorithm>
 
 extern int dx[4];
@@ -36,23 +37,6 @@ public:
     int index;
 };
 Q_DECLARE_METATYPE(TreeData)
-
-
-void showPoint(int row, int col, int color = -1);
-
-QString showPiece(int row, int col, int color = -1);
-QString showPiece(const Piece& piece);
-QString colToChar(int col);
-
-
-
-enum GameState {
-    NOGAME = 0,
-    DISCUSS = 1,
-    PLAY = 2,
-    OVER = 3,
-    DoubleQuotation = 4,//复盘
-};
 
 //重构
 class GoGameLogic : public QWidget {
@@ -175,6 +159,8 @@ public:
 
         mPutPieceType = BWChange;
         mShouShuState = SHOWSHOUSHU;
+        mMode = PlayMode;
+        mForbidPut = false;
     }
 
 
@@ -245,6 +231,10 @@ public:
 
     void setBWChange() {
         mPutPieceType = BWChange;
+    }
+
+    void forbidPut(bool r) {
+        mForbidPut = r;
     }
 protected:
     void paintEvent(QPaintEvent *event) override {
@@ -1868,33 +1858,26 @@ protected:
         repaint();
     }
 
-    void onLeftClick(QMouseEvent *event) {
-        if (mTryMode == true) {
-            onLeftClickTry(event);
-            return;
-        }
-        int margin = 30;
-        int gridSize = (width() - 2 * margin) / 19;
-        int row = std::round((float)(event->y() - margin) / (float)gridSize);
-        int col = std::round((float)(event->x() - margin) / (float)gridSize);
+    bool putPiece(Piece piece) {
+        int row = piece.row;
+        int col = piece.col;
+        int color = piece.color;
         if (!isValid(row, col)) {
-            return;
+            return false;
         }
-        // 输出点击的棋盘坐标
-        // 检查该位置是否已经有棋子
-        int color = currentPlayer == BLACK ? BLACK : WHITE;
         qDebug() << showPiece(row, col, color);
         //检查分支上已经有这个子了，就不用再放了，移动一下状态就行了。
         if (historyNode != nullptr) {
             for (auto n : historyNode->branches) {
                 if (n->move.row == row && n->move.col == col && n->move.color == color) {
                     jumptoPiece(n);
-                    return;
+                    return false;
                 }
             }
         }
+        // 检查该位置是否已经有棋子
         if (isOccupied(row, col)) {
-            return; // 如果该位置已被占据，则不放置棋子
+            return false; // 如果该位置已被占据，则不放置棋子
         }
         // 交替放置棋子
         if (checkAllowPut(row, col, color, board)) {
@@ -1918,9 +1901,30 @@ protected:
             setMoveNum(node, isOtherBranch);
             showTreeItem(historyNode);
             swapCurrentPlayer();
+            return true;
         }
+        return false;
+    }
+
+    bool onLeftClick(QMouseEvent *event) {
+        if (mTryMode == true) {
+            onLeftClickTry(event);
+            return false;
+        }
+        if (mForbidPut == true) {
+            qDebug() << "wait Opponent";
+            return false;
+        }
+        int margin = 30;
+        int gridSize = (width() - 2 * margin) / 19;
+        Piece piece;
+        piece.row = std::round((float)(event->y() - margin) / (float)gridSize);
+        piece.col = std::round((float)(event->x() - margin) / (float)gridSize);
+        piece.color = currentPlayer == BLACK ? BLACK : WHITE;
+        bool ret = putPiece(piece);
         // 触发重绘
         repaint();
+        return ret;
     }
 
     void onRightClick(QMouseEvent *event) {
@@ -1946,8 +1950,24 @@ protected:
         if (event->button() == Qt::RightButton) {
             onRightClick(event);
         } else if (event->button() == Qt::LeftButton) {
+            if (mMode == AIMode) {
+                bool ret = onLeftClick(event);
+                if (ret) {
+                    if (historyNode == nullptr) {
+                        return;
+                    }
+                    qDebug() << "human play : " << showPiece(historyNode->move);
+                    waitAIPutPiece();
+                }
+                //swapCurrentPlayer();
+            }
             onLeftClick(event);
         }
+    }
+
+    void waitAIPutPiece() {
+        waitAIFlag = true;
+        emit getAIPiece(historyNode->move, getCurrentPlayer());
     }
 
 
@@ -1968,6 +1988,14 @@ protected:
     }
 
 public:
+    void putAIPiece(Piece* piece) {
+        if (piece) {
+            putPiece(*piece);
+            delete piece;
+            repaint();
+        }
+    }
+
     void jumptoPiece(std::shared_ptr<SGFTreeNode> node) {
         if (historyNode != nullptr) {
             qDebug() << "before jump " << historyNode->moveNum;
@@ -4737,6 +4765,16 @@ public:
         return ret1 && ret2;
     }
 
+    void openAIMode(bool open) {
+        mMode = open ? AIMode : PlayMode;
+        if (mMode == AIMode) {
+            qDebug() << "AIMode open";
+        }
+        else {
+            qDebug() << "new Mode" <<  mMode;
+        }
+    }
+
     void openTryMode(bool open) {
         mTryMode = open;
         if (mTryMode == false) {
@@ -4876,6 +4914,8 @@ public:
     }
 
     void completeBoard(std::vector<std::vector<Piece>> &board, std::vector<std::vector<Piece>> &newBoard) {
+        Q_UNUSED(board)
+        Q_UNUSED(newBoard)
         //考虑每一片棋的辐射范围
         //形式判断采用补全棋盘的方式，如果是厚势，那么斜45°补全。
         //如果是拆二拆三，采用向下补全。
@@ -4997,7 +5037,6 @@ private:
     std::vector<std::pair<int, int>> whiteLiberties;
     std::vector<std::pair<int, int>> eatenNowList;
     float tiemu;//贴目
-    std::shared_ptr<SGFTreeNode> root;
     SGFParser sgfParser;
 
     QTreeWidget* pieceTree;
@@ -5008,7 +5047,9 @@ private:
 
 signals:
     void playerChange(int currentPlayer);
+    void getAIPiece(Piece piece, int color);
 public:
+    std::shared_ptr<SGFTreeNode> root;
     std::vector<std::vector<Piece>> board;// x y
     std::map<std::string, std::string> setupInfo;//读取棋局获得的信息
     int allNumber;//总手数
@@ -5046,6 +5087,9 @@ public:
     int mVirtualRow;
     int mVirtualCol;
     int mVirtualColor;
+    BoardModeType mMode;
+    bool waitAIFlag;
+    bool mForbidPut;
 };
 
 /*log:
@@ -5198,6 +5242,7 @@ public:
 
     14.三劫循环、四劫循环，不进行处理了。
 
+    目前已接入AI,但应该使用多线程，AI思考时，应该让界面线程正常运行，AI线程进行思考
 */
 
 #endif

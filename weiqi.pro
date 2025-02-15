@@ -24,6 +24,7 @@ SOURCES += \
     gamesettings.cpp \
     helppage.cpp \
     imagerecognition.cpp \
+    kata.cpp \
     main.cpp \
     mainwindow.cpp \
     piece.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     gamesettings.h \
     helppage.h \
     imagerecognition.h \
+    kata.h \
     mainwindow.h \
     piece.h \
     screencapture.h \

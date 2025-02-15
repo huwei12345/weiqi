@@ -247,6 +247,23 @@
         </widget>
        </item>
        <item>
+        <widget class="QToolButton" name="AIBtn">
+         <property name="text">
+          <string>AI</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QToolButton" name="AIPlayBtn">
+         <property name="text">
+          <string>AIplay</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_7">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>

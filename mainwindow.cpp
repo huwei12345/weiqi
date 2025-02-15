@@ -1,5 +1,6 @@
 ﻿#include "aboutdialog.h"
 #include "helppage.h"
+#include "kata.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -7,6 +8,7 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -43,6 +45,13 @@ MainWindow::MainWindow(QWidget *parent)
         MainWindow::on_rightOne_clicked();
         mRunAutoTimer->start();
     } );
+    mKata = new Kata(&goWidget->board);
+    mKataThread = new QThread(this);
+    mKataThread->start();
+    connect(goWidget, &GoBoardWidget::getAIPiece, this, &MainWindow::getAIPiece);
+    mKata->moveToThread(mKataThread);
+    QMetaObject::invokeMethod(mKata, "startKata", Qt::QueuedConnection);
+    connect(mKata, &Kata::getAIPieceSuccess, this, &MainWindow::getAIPieceSuccess);
 }
 
 MainWindow::~MainWindow()
@@ -608,5 +617,40 @@ void MainWindow::on_autoPlay_clicked(bool checked)
 void MainWindow::on_setting_triggered()
 {
     mSoftSetting->show();
+}
+
+
+void MainWindow::on_AIBtn_clicked()
+{
+    mKata->test();
+}
+
+
+void MainWindow::on_toolButton_11_clicked()
+{
+    if (goWidget->root != nullptr && goWidget->root->branches.size() != 0) {
+        mKata->reInitKata(goWidget->root->branches[0]);
+    }
+}
+
+bool MainWindow::getAIPiece(Piece piece, int color)
+{
+    //阻塞获取
+    goWidget->forbidPut(true);
+    bool ret = QMetaObject::invokeMethod(mKata, "getAIPiece", Qt::QueuedConnection, Q_ARG(Piece, piece), Q_ARG(int, color));
+    return ret;
+    //Piece *newPiece = mKata->getAIPiece(piece, color);
+}
+
+void MainWindow::getAIPieceSuccess(Piece* piece) {
+    goWidget->waitAIFlag = false;
+    goWidget->forbidPut(false);
+    goWidget->putAIPiece(piece);
+}
+
+
+void MainWindow::on_AIPlayBtn_clicked(bool checked)
+{
+    goWidget->openAIMode(checked);
 }
 

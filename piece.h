@@ -3,11 +3,17 @@
 #include <vector>
 #include <string>
 #include <map>
-
+#include <QString>
+#include <QObject>
 extern const int BOARDWIDTH;
 extern const int HEIGHT;
 extern const int WIDTH;
 extern const int BOARD_SIZE;
+extern int dx[4];
+extern int dy[4];
+extern int ox[4];
+extern int oy[4];
+
 enum PieceColor {BLACK = 0, WHITE = 1, SPACE = 2};
 enum Direction {TOP = 0, BOTTOM, LEFT, RIGHT, TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT};
 enum BoardModeType {
@@ -19,6 +25,14 @@ enum BoardModeType {
     DingShiMode = 5,
     ExerciseMode = 6,
     AIMode = 7
+};
+
+enum GameState {
+    NOGAME = 0,
+    DISCUSS = 1,
+    PLAY = 2,
+    OVER = 3,
+    DoubleQuotation = 4,//复盘
 };
 
 enum PutPieceType {
@@ -42,6 +56,14 @@ public:
     int col;
     int moveNumber;  // 手数
     bool operator==(Piece rhs);
-};
 
+    void load(QString str);
+};
+Q_DECLARE_METATYPE(Piece);
+
+void showPoint(int row, int col, int color = -1);
+QString showPiece(int row, int col, int color = -1);
+QString showPiece(const Piece& piece);
+QString colToChar(int col);
+int charToCol(char col);
 #endif // PIECE_H

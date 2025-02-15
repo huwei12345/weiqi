@@ -80,6 +80,8 @@ public:
     QToolButton *judgeBtn;
     QToolButton *toolButton_10;
     QToolButton *toolButton_11;
+    QToolButton *AIBtn;
+    QToolButton *AIPlayBtn;
     QSpacerItem *horizontalSpacer_7;
     QToolButton *addDSBtn;
     QWidget *widget;
@@ -297,6 +299,17 @@ public:
         toolButton_11->setObjectName(QString::fromUtf8("toolButton_11"));
 
         horizontalLayout->addWidget(toolButton_11);
+
+        AIBtn = new QToolButton(processWidget);
+        AIBtn->setObjectName(QString::fromUtf8("AIBtn"));
+
+        horizontalLayout->addWidget(AIBtn);
+
+        AIPlayBtn = new QToolButton(processWidget);
+        AIPlayBtn->setObjectName(QString::fromUtf8("AIPlayBtn"));
+        AIPlayBtn->setCheckable(true);
+
+        horizontalLayout->addWidget(AIPlayBtn);
 
         horizontalSpacer_7 = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
@@ -577,6 +590,8 @@ public:
         judgeBtn->setText(QCoreApplication::translate("MainWindow", "\345\275\242\345\274\217\345\210\244\346\226\255", nullptr));
         toolButton_10->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\350\243\201\345\210\244", nullptr));
         toolButton_11->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\345\210\206\346\236\220", nullptr));
+        AIBtn->setText(QCoreApplication::translate("MainWindow", "AI", nullptr));
+        AIPlayBtn->setText(QCoreApplication::translate("MainWindow", "AIplay", nullptr));
         addDSBtn->setText(QCoreApplication::translate("MainWindow", "\345\205\245\345\272\223", nullptr));
         label_3->setText(QCoreApplication::translate("MainWindow", "\346\257\224\350\265\233", nullptr));
         RetractPiece->setText(QCoreApplication::translate("MainWindow", "\346\202\224\346\243\213", nullptr));
