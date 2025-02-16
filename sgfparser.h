@@ -41,6 +41,8 @@ public:
         qDebug() << "delete Node";
     }
 };
+Q_DECLARE_METATYPE(SGFTreeNode);
+
 class SGFParser {
 public:
     SGFParser() {

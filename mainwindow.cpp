@@ -1,5 +1,6 @@
 ﻿#include "aboutdialog.h"
 #include "helppage.h"
+#include "judgecalcdialog.h"
 #include "kata.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -52,6 +53,8 @@ MainWindow::MainWindow(QWidget *parent)
     mKata->moveToThread(mKataThread);
     QMetaObject::invokeMethod(mKata, "startKata", Qt::QueuedConnection);
     connect(mKata, &Kata::getAIPieceSuccess, this, &MainWindow::getAIPieceSuccess);
+    connect(mKata, &Kata::calculateScoreSuccess, this, &MainWindow::calculateScoreSuccess);
+    connect(mKata, &Kata::calculateEndResultSuccess, this, &MainWindow::calculateEndResultSuccess);
 }
 
 MainWindow::~MainWindow()
@@ -132,18 +135,7 @@ void MainWindow::on_clearBtn_clicked()
 }
 
 
-void MainWindow::on_judgeBtn_clicked(bool checked)
-{
-    qDebug() << (checked ? "open Judge" : "close Judge");
-    //auto p = goWidget->calculateScore2(checked);
-    if (checked) {
-        goWidget->r();
-    }
-    else {
-        goWidget->v();
-    }
-    //qDebug() << "black " << p.first << " white " << p.second;
-}
+
 
 // reset 仅清空形势判断残余
 void MainWindow::on_toolButton_clicked()
@@ -648,9 +640,57 @@ void MainWindow::getAIPieceSuccess(Piece* piece) {
     goWidget->putAIPiece(piece);
 }
 
+void MainWindow::calculateScoreSuccess()
+{
+    goWidget->showJudgeCalc();
+    JudgeCalcDialog* dialog = new JudgeCalcDialog(goWidget->mJudgeInfo, this);
+    dialog->exec();
+    goWidget->clearJudgeCalc();
+}
+
+void MainWindow::calculateEndResultSuccess()
+{
+    goWidget->showEndResult();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    // 假设你有一个自定义线程 myThread
+    if (mKataThread->isRunning()) {
+        // 请求线程退出
+        mKataThread->quit();
+        // 等待线程退出
+        mKataThread->wait();
+    }
+    // 然后执行关闭操作
+    event->accept();
+}
+
 
 void MainWindow::on_AIPlayBtn_clicked(bool checked)
 {
     goWidget->openAIMode(checked);
+}
+
+//形式判断
+void MainWindow::on_judgeBtn_clicked(bool checked)
+{
+//    qDebug() << (checked ? "open Judge" : "close Judge");
+//    //auto p = goWidget->calculateScore2(checked);
+//    if (checked) {
+//        goWidget->r();
+//    }
+//    else {
+//        goWidget->v();
+//    }
+    if (checked) {
+        QMetaObject::invokeMethod(mKata, "calculateScore", Qt::QueuedConnection, Q_ARG(std::shared_ptr<SGFTreeNode>, goWidget->getCurrentNode()), Q_ARG(JudgeInfo*, goWidget->mJudgeInfo));
+    }
+}
+
+//智能裁判
+void MainWindow::on_AIJudge_clicked()
+{
+    QMetaObject::invokeMethod(mKata, "calculateEndScore", Qt::QueuedConnection, Q_ARG(std::shared_ptr<SGFTreeNode>, goWidget->getCurrentNode()), Q_ARG(JudgeInfo*, goWidget->mJudgeInfo));
 }
 

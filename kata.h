@@ -23,9 +23,12 @@ public:
     bool isValid(Piece piece);
 
     Q_SLOT void getAIPiece(Piece nowPiece, int color);
+    Q_SLOT void calculateScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info);
+    Q_SLOT void calculateEndScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info);
 signals:
     void getAIPieceSuccess(Piece* piece);
-
+    void calculateScoreSuccess();
+    void calculateEndResultSuccess();
 private:
     std::shared_ptr<SGFTreeNode> root;
     QProcess* kataGoProcess;

@@ -24,6 +24,7 @@ SOURCES += \
     gamesettings.cpp \
     helppage.cpp \
     imagerecognition.cpp \
+    judgecalcdialog.cpp \
     kata.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -43,6 +44,7 @@ HEADERS += \
     gamesettings.h \
     helppage.h \
     imagerecognition.h \
+    judgecalcdialog.h \
     kata.h \
     mainwindow.h \
     piece.h \
@@ -55,6 +57,7 @@ HEADERS += \
 FORMS += \
     aboutdialog.ui \
     helppage.ui \
+    judgecalcdialog.ui \
     mainwindow.ui \
     settingpage.ui
 

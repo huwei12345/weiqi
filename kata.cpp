@@ -116,7 +116,7 @@ void Kata::getAIPiece(Piece nowPiece, int color) {
     QByteArray arr;
     arr.append(str);
     kataGoProcess->write(arr);
-    kataGoProcess->waitForFinished(100);
+    kataGoProcess->waitForFinished(200);
     QString cmd;
     if (color == 0)
         cmd = "genmove black\n";
@@ -147,7 +147,7 @@ void Kata::getAIPiece(Piece nowPiece, int color) {
 }
 
 bool Kata::isValid(Piece piece) {
-    if (piece.row >= 0 && piece.col <= 18 && piece.col >= 0 && piece.col <= 17 && piece.color <= 3) {
+    if (piece.row >= 0 && piece.col <= 18 && piece.col >= 0 && piece.col <= 18 && piece.color <= 2 && piece.color >= 0) {
         return true;
     }
     return false;
@@ -179,6 +179,115 @@ void Kata::reInitKata(std::shared_ptr<SGFTreeNode> head)
         }
     }
 }
+
+void Kata::calculateScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info)
+{
+    info->reset();
+    //根据棋局规则，选择katago规则
+    kataGoProcess->write("kgs-rules chinese\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("komi 7.5\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("clear_board\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("boardsize 19\n");
+    kataGoProcess->waitForFinished(10);
+    std::vector<Piece> pieceList;
+    auto p = node;
+    while (p != nullptr && p->move.color != -1) {
+        if (isValid(p->move)) {
+            pieceList.push_back(p->move);
+            p = p->parent.lock();
+        }
+        else {
+            qDebug() << "Fatal Error" << showPiece(p->move);
+        }
+    }
+    std::reverse(pieceList.begin(), pieceList.end());
+    for (auto piece : pieceList) {
+        QString str;
+        str = QString("play ") + (piece.color == 0 ? "B " : "W ") + showPiece(piece.row, piece.col) + "\n";
+        //qDebug() << str;
+        kataGoProcess->write(str.toLatin1());
+        kataGoProcess->waitForFinished(10);
+    }
+    kataGoProcess->waitForFinished(100);
+    mKatagoOutput.clear();
+    kataGoProcess->write("kata-raw-nn 0\n");
+    int cnt = 0;
+    while (mKatagoOutput.size() == 0 && cnt != 100) {
+        kataGoProcess->waitForFinished(100);
+        cnt++;
+    }
+    qDebug() << "katago: " << mKatagoOutput;
+    if (mKatagoOutput.size() != 0) {
+        if (mKatagoOutput.startsWith("= symmetry 0") == false) {
+            qDebug() << "Fatal Error";
+            return;
+        }
+        bool ret = info->parse(mKatagoOutput);
+        if (ret) {
+            emit calculateScoreSuccess();
+        }
+    }
+}
+
+void Kata::calculateEndScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info)
+{
+    //judgeBlackWin
+    info->reset();
+    //根据棋局规则，选择katago规则
+    kataGoProcess->write("kgs-rules chinese\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("komi 7.5\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("clear_board\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("boardsize 19\n");
+    kataGoProcess->waitForFinished(10);
+    std::vector<Piece> pieceList;
+    auto p = node;
+    while (p != nullptr && p->move.color != -1) {
+        if (isValid(p->move)) {
+            pieceList.push_back(p->move);
+            p = p->parent.lock();
+        }
+        else {
+            qDebug() << "Fatal Error1" << showPiece(p->move);
+        }
+    }
+    std::reverse(pieceList.begin(), pieceList.end());
+    for (auto piece : pieceList) {
+        QString str;
+        str = QString("play ") + (piece.color == 0 ? "B " : "W ") + showPiece(piece.row, piece.col) + "\n";
+        //qDebug() << str;
+        kataGoProcess->write(str.toLatin1());
+        kataGoProcess->waitForFinished(10);
+    }
+    kataGoProcess->waitForFinished(100);
+    mKatagoOutput.clear();
+    kataGoProcess->write("final_score\n");
+    int cnt = 0;
+    while (mKatagoOutput.size() == 0 && cnt != 100) {
+        kataGoProcess->waitForFinished(100);
+        cnt++;
+    }
+    qDebug() << "katago: " << mKatagoOutput;
+    if (mKatagoOutput.size() != 0) {
+        bool ret = info->parseEnd(mKatagoOutput);
+        if (ret) {
+            emit calculateEndResultSuccess();
+        }
+    }
+}
+
+
+
+
+//suicide: (true | false)- 多子自杀是否合法。
+//ko: ("SIMPLE" | "POSITIONAL" | "SITUATIONAL")- 用于防止循环的规则。
+//whiteHandicapBonus\":\"0
+//whiteHandicapBonus ("0" | "N-1" | "N")- 在让分盘游戏中，无论白方获得 0、N-1 还是 N 奖励分，其中 N 是黑方让分石的数量。
 
 
 int Kata::test() {

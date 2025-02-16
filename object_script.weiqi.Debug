@@ -6,6 +6,7 @@ debug/gameresearch.o
 debug/gamesettings.o
 debug/helppage.o
 debug/imagerecognition.o
+debug/judgecalcdialog.o
 debug/kata.o
 debug/main.o
 debug/mainwindow.o
@@ -21,6 +22,7 @@ debug/moc_boardwidget.o
 debug/moc_dingshishow.o
 debug/moc_dingshishowwidget.o
 debug/moc_helppage.o
+debug/moc_judgecalcdialog.o
 debug/moc_kata.o
 debug/moc_mainwindow.o
 debug/moc_screencapture.o

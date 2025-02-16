@@ -29,8 +29,14 @@ public:
     void Quit();
     bool getAIPiece(Piece piece, int color);
     void getAIPieceSuccess(Piece *piece);
+    void calculateScoreSuccess();
+    void calculateEndResultSuccess();
 signals:
     void keyEventCaptured(QKeyEvent *event);
+
+protected:
+    // 假设在主线程中控制子线程
+    void closeEvent(QCloseEvent *event) override;
 
 public slots:
     void playerChange(int currentPlayer);
@@ -136,6 +142,8 @@ private slots:
     void on_toolButton_11_clicked();
 
     void on_AIPlayBtn_clicked(bool checked);
+
+    void on_AIJudge_clicked();
 
 private:
     Ui::MainWindow *ui;

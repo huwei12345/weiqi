@@ -123,6 +123,8 @@ public:
         // whitePiece = QPixmap("/path/to/white.png");
 
         board.assign(BOARDWIDTH, std::vector<Piece>(BOARDWIDTH));
+        judgeCalcBoard.assign(BOARDWIDTH, std::vector<int>(BOARDWIDTH, 0));
+        hasJudgeCalc = false;
         zeroBoard = board;
         mVirtualBoard = board;
         //此处最好不要发信号
@@ -136,7 +138,7 @@ public:
         root = std::make_shared<SGFTreeNode>();
         root->boardHistory = zeroBoard;
         root->parent.reset();
-
+        root->move.color = -1;
         DingShiBook = nullptr;
         mStepN = 20;
         mTryMode = false;
@@ -161,6 +163,8 @@ public:
         mShouShuState = SHOWSHOUSHU;
         mMode = PlayMode;
         mForbidPut = false;
+        mJudgeInfo = new JudgeInfo;
+        mJudgeInfo->reset();
     }
 
 
@@ -411,6 +415,21 @@ protected:
         }
         //更新虚子手数
         updateVirtualMoveLabel(painter, gridSize, mVirtualBoard);
+
+        if (hasJudgeCalc) {
+            for (int i = 0; i < 19; i++) {
+                for (int j = 0; j < 19; j++) {
+                    if (judgeCalcBoard[i][j] == 0) {
+                        painter.setBrush(QBrush(Qt::yellow));
+                        painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                    }
+                    else if (judgeCalcBoard[i][j] == 1) {
+                        painter.setBrush(QBrush(Qt::gray));
+                        painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                    }
+                }
+            }
+        }
     }
 
 
@@ -3688,7 +3707,42 @@ public:
         return {blackScore, whiteScore};
     }
 
+    void showEndResult() {
+        auto result = mJudgeInfo->judgeWhiteWin;
+        if (result > 0.0) {
+            qDebug() << "White Win : " << result << " TERRITORY";
+        }
+        else {
+            qDebug() << "Black Win : " << -result << " TERRITORY";
+        }
+    }
 
+    void showJudgeCalc() {
+        auto result = mJudgeInfo->whiteOwnership;
+        hasJudgeCalc = true;
+        for (int i = 0; i < 19; i++) {
+            for (int j = 0; j < 19; j++) {
+                if (result[i][j] > 0.9) {
+                    judgeCalcBoard[i][j] = 1;
+                    mJudgeInfo->whiteground++;
+                }
+                else if (result[i][j] < -0.9) {
+                    judgeCalcBoard[i][j] = 0;
+                    mJudgeInfo->blackground++;
+                }
+                else {
+                    judgeCalcBoard[i][j] = 2;
+                }
+            }
+        }
+        repaint();
+    }
+
+    void clearJudgeCalc() {
+        judgeCalcBoard.assign(BOARDWIDTH, std::vector<int>(BOARDWIDTH, 0));
+        hasJudgeCalc = false;
+        mJudgeInfo->reset();
+    }
 public:
     //读取棋谱
 
@@ -3829,6 +3883,7 @@ public:
         root = std::make_shared<SGFTreeNode>();
         root->boardHistory = zeroBoard;
         root->parent.reset();
+        root->move.color = -1;
     }
 
     void clearBranch(std::shared_ptr<SGFTreeNode>& node) {
@@ -3845,6 +3900,7 @@ public:
             clear();
         }
         root = sgfParser.parse(filename, setupInfo);
+        root->move.color = -1;
         showSGF(root, nullptr, 0, 0);
         repaint();
         parsesetupInfo(setupInfo, mSetting);
@@ -4826,7 +4882,12 @@ public:
     }
 
     void identifyRegions() {
-        bool visited[19][19] = {false};
+        bool visited[19][19];
+        for (auto& r : visited) {
+            for (auto&b : r) {
+                b = false;
+            }
+        }
         regions.clear();
         for (int i = 0; i < BOARD_SIZE; ++i) {
             for (int j = 0; j < BOARD_SIZE; ++j) {
@@ -4985,6 +5046,9 @@ public:
         repaint();
     }
 
+    std::shared_ptr<SGFTreeNode> getCurrentNode() {
+        return historyNode;
+    }
 private:
 
 
@@ -5090,6 +5154,10 @@ public:
     BoardModeType mMode;
     bool waitAIFlag;
     bool mForbidPut;
+
+    JudgeInfo *mJudgeInfo;
+    std::vector<std::vector<int>> judgeCalcBoard;
+    bool hasJudgeCalc;
 };
 
 /*log:
@@ -5235,14 +5303,14 @@ public:
         摆棋模式也该支持，将子作为一个树上的节点添加并且存储SGF，
         摆棋模式支持删除棋盘上的子，落子不提子）
 
-    11.接入AI，形势判断、智能裁判，智能分析，AI对弈。
+    11.接入AI，形势判断(解决)、智能裁判，智能分析，AI对弈（解决）。需要调整准度和速度，考虑将棋盘预先载入katago
+    目前已接入AI,但应该使用多线程，AI思考时，应该让界面线程正常运行，AI线程进行思考（解决）
+    智能分析 选点
 
     12.双活、单关判定？人为标注？
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做
-
     14.三劫循环、四劫循环，不进行处理了。
 
-    目前已接入AI,但应该使用多线程，AI思考时，应该让界面线程正常运行，AI线程进行思考
 */
 
 #endif

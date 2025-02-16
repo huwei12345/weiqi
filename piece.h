@@ -61,6 +61,29 @@ public:
 };
 Q_DECLARE_METATYPE(Piece);
 
+class JudgeInfo {
+public:
+    std::vector<std::vector<double>> whiteOwnership;
+    float whiteWin;
+    float whiteLoss;
+    float noResult;
+    float whiteLead;//白领先目数
+    float whiteScoreSelfplay;//领先参考
+    float whiteScoreSelfplaySq;//no
+    float shorttermWinlossError;//whiteWin-whiteLoss
+    std::vector<std::vector<float>> policy; //下一次可能的落子点(boardXSize * boardYSize浮动，包括可能的非法移动NAN) -下一步移动的策略分布
+    int whiteground;
+    int blackground;
+    float judgeWhiteWin;//智能裁判结果
+    void reset();
+    //...
+    bool parse(const QString &content);
+    bool parseEnd(const QString &content);
+    void print();
+};
+Q_DECLARE_METATYPE(JudgeInfo);
+Q_DECLARE_METATYPE(JudgeInfo*);
+
 void showPoint(int row, int col, int color = -1);
 QString showPiece(int row, int col, int color = -1);
 QString showPiece(const Piece& piece);

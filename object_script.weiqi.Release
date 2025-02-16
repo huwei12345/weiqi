@@ -6,6 +6,7 @@ release/gameresearch.o
 release/gamesettings.o
 release/helppage.o
 release/imagerecognition.o
+release/judgecalcdialog.o
 release/kata.o
 release/main.o
 release/mainwindow.o
@@ -21,6 +22,7 @@ release/moc_boardwidget.o
 release/moc_dingshishow.o
 release/moc_dingshishowwidget.o
 release/moc_helppage.o
+release/moc_judgecalcdialog.o
 release/moc_kata.o
 release/moc_mainwindow.o
 release/moc_screencapture.o

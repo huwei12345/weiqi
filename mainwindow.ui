@@ -233,7 +233,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="toolButton_10">
+        <widget class="QToolButton" name="AIJudge">
          <property name="text">
           <string>智能裁判</string>
          </property>
