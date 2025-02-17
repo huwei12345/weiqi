@@ -2375,6 +2375,13 @@ public:
                int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
                std::vector<std::vector<Piece>> ans;
                remember3(board, row, col, currentPlayer, mStepN, ans);
+           } else if (event->key() == Qt::Key_N && event->modifiers() == Qt::ControlModifier) {
+               if (mVirtualOpen) {
+                   clearXuanDian();
+               }
+               else {
+                   showXuanDian();
+               }
            }
         }
 
@@ -4412,20 +4419,15 @@ public:
     }
 
     //按说不用按historyNode序列也可以获取选点
-    void remember4(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
+    void remember4(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& res) {
         Q_UNUSED(boarder)
         if (DingShiBook == nullptr) {
             qDebug() << "no DingShiBook";
             return;
         }
-        if (isOccupied(row, col)) {
-            qDebug() << "not black";
-            return; // 如果该位置已被占据，则不放置棋子
-        }
         std::vector<std::vector<Piece>> seqList;
         std::vector<Piece> seq;
         auto pNode = historyNode;
-        pNode = pNode->parent.lock();
         while (pNode != root && pNode != nullptr) {
             seq.push_back(pNode->move);
             pNode = pNode->parent.lock();
@@ -4442,27 +4444,11 @@ public:
         if (seqList.size() == 0) {
             return;
         }
-        {
-            //调整row col
-            auto pieceSeq = seqList[0];
-            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
-            std::cout << std::endl;
-            if (rotate == BOTTOMRIGHT) {
-                col = 18 - col;
-            }
-            else if (rotate == TOPLEFT) {
-                row = 18 - row;
-            }
-            else if (rotate == TOPRIGHT) {
-                row = 18 - row;
-                col = 18 - col;
-            }
-        }
         for (size_t i = 0; i < seqList.size(); i++) {
             auto pieceSeq = seqList[i];
             AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
             //这种方式还有利于将错误棋局导向正确棋局
-            getNextStep(pieceSeq, DingShiBook, row, col, color, stepN, res);
+            getNextOneLevelStep(pieceSeq, DingShiBook, res);
         }
         {
             //冗余代码，可以重构
@@ -4474,7 +4460,7 @@ public:
                 auto pieceSeq = seqList[i];
                 AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
                 //这种方式还有利于将错误棋局导向正确棋局
-                getNextStep(pieceSeq, DingShiBook, row, col, !color, stepN, colorRes);
+                getNextOneLevelStep(pieceSeq, DingShiBook, res);
             }
             adjustColor(colorRes);
             for (auto x : colorRes) {
@@ -4484,27 +4470,24 @@ public:
         adjustResultOrigin(res, rotate);//逆操作将结果调回原位
     }
 
+    //目前是按historyNode做的，也可以按截图内容做
     void showXuanDian() {
         if (historyNode == root || historyNode == nullptr) {
             return;
         }
-        int row = historyNode->move.row;
-        int col = historyNode->move.col;
-        remember4(board, row, col, currentPlayer, 1, mVirtualAns);
+        remember4(board, mVirtualAns);
         if (mVirtualAns.size() != 0) {
             mVirtualOpen = true;
             mVirtualMax = mVirtualAns.size();
             mVirtualIndex = (mVirtualIndex + 1) % mVirtualMax;
             showXuanDianPiece(mVirtualAns);
             repaint();
-            mVirtualRow = row;
-            mVirtualCol = col;
-            mVirtualColor = currentPlayer;
         }
     }
 
     void clearXuanDian() {
         closeVirtualStep();
+        repaint();
     }
 
     void setSearchStep(int step) {
@@ -4570,6 +4553,45 @@ public:
         std::vector<Piece> vec;
         dfs(cur, stepN, res, vec);
         qDebug() << "stepN = " << stepN << " dfs result: " << res.size();
+    }
+
+
+    void getNextOneLevelStep(std::vector<Piece> & pieceSeq, std::shared_ptr<SGFTreeNode>& book, std::vector<std::vector<Piece>>& res) {
+        //先对前边的几手棋找到起始搜索节点cur
+        size_t i = 0;
+        std::shared_ptr<SGFTreeNode> cur = book;
+        size_t cnt = 0;
+        while (i < pieceSeq.size()) {
+            cnt = 0;
+            if (cur->branches.size() == 0) {
+                return;
+            }
+            for (auto branch : cur->branches) {
+                if (branch->move.row == pieceSeq[i].row
+                        && branch->move.col == pieceSeq[i].col
+                        && branch->move.color == pieceSeq[i].color) {
+                    break;
+                }
+                cnt++;
+            }
+            if (cnt != cur->branches.size()) {
+                //有
+                cur = cur->branches[cnt];
+                i++;
+            }
+            else {
+                break;
+            }
+        }
+        if (i != pieceSeq.size()) {
+            return;
+        }
+        for (auto branch : cur->branches) {
+            std::vector<Piece> tmp;
+            tmp.push_back(branch->move);
+            res.push_back(tmp);
+        }
+        qDebug() << "has " << res.size() << "dingshi nextPiece";
     }
 
     void dfs(std::shared_ptr<SGFTreeNode> node, int stepN, std::vector<std::vector<Piece>> &res, std::vector<Piece> vec) {
@@ -5279,12 +5301,12 @@ public:
    （把主分支后续也删掉了，因为少1颗子，整个棋局都将变化，若以后觉得不合理可以回退v0.0.1版本)
     x.删除节点可以撤销吗，应该支持撤销功能
 
-    2.下一步功能添加虚子显示，按空格切换下一个定式（解决
-        按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式）
+    2.下一步功能添加虚子显示，按空格切换下一个定式（解决)
+        按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式
 
     3.支持按步数顺序查找定式，这样就不必排列组合当前已有子（解决）
     进一步或许支持现框选子？因为棋局很大，其他角可能下过了（须实现）
-    y.只显示1手，像AI那样？(选点待实现）
+    y.只显示1手，像AI那样？(解决） 目前是按historyNode做的，也可以按截图内容做（优化）
 
     4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（难 待优化）
 
@@ -5305,7 +5327,7 @@ public:
 
     11.接入AI，形势判断(解决)、智能裁判，智能分析，AI对弈（解决）。需要调整准度和速度，考虑将棋盘预先载入katago
     目前已接入AI,但应该使用多线程，AI思考时，应该让界面线程正常运行，AI线程进行思考（解决）
-    智能分析 选点
+    智能分析 选点 全局分析 AI设置
 
     12.双活、单关判定？人为标注？
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做

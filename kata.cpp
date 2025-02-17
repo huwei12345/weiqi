@@ -70,11 +70,13 @@ void Kata::parseShowboard(const QString &showboardOutput, std::vector<std::vecto
 int Kata::startKata() {
     kataGoProcess = new QProcess(this);
     // 设置 KataGo 可执行文件的路径
-    QString kataGoPath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\katago.exe";  // 替换为你的katago可执行文件的路径
+    // D:\download\katago-v1.15.0-eigen-windows-x64
+    // kata1-b6c96-s938496-d1208807.txt.gz
+    QString kataGoPath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\katago.exe";  // 替换为你的katago可执行文件的路径
 
     // 配置模型和配置文件路径
-    QString modelFilePath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\kata1-b10c128-s41138688-d27396855.txt.gz"; // 替换为你的模型文件路径
-    QString configFilePath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\default_gtp.cfg";  // 替换为你的配置文件路径
+    QString modelFilePath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\kata1-b10c128-s41138688-d27396855.txt.gz"; // 替换为你的模型文件路径
+    QString configFilePath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\default_gtp.cfg";  // 替换为你的配置文件路径
 
     // 传递启动参数
     QStringList arguments;

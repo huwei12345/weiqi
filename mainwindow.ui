@@ -610,6 +610,7 @@
     <addaction name="separator"/>
     <addaction name="actionnextStep"/>
     <addaction name="actionxuandian"/>
+    <addaction name="actionfindDS"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
@@ -735,6 +736,11 @@
    </property>
    <property name="text">
     <string>定式选点</string>
+   </property>
+  </action>
+  <action name="actionfindDS">
+   <property name="text">
+    <string>框选查定式</string>
    </property>
   </action>
  </widget>

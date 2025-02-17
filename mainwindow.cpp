@@ -694,3 +694,11 @@ void MainWindow::on_AIJudge_clicked()
     QMetaObject::invokeMethod(mKata, "calculateEndScore", Qt::QueuedConnection, Q_ARG(std::shared_ptr<SGFTreeNode>, goWidget->getCurrentNode()), Q_ARG(JudgeInfo*, goWidget->mJudgeInfo));
 }
 
+
+void MainWindow::on_actionfindDS_triggered()
+{
+    QInputDialog* dialog = new QInputDialog(this);
+    dialog->setModal(false);
+    dialog->getText(this, "choose Piece", "选择定式子顺序");
+}
+

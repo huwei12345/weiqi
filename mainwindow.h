@@ -145,6 +145,8 @@ private slots:
 
     void on_AIJudge_clicked();
 
+    void on_actionfindDS_triggered();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;
