@@ -1,0 +1,6 @@
+*.o
+/gtp_logs/
+/debug/
+/release/
+Makefile*
+object_script*

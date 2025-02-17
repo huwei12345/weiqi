@@ -57,7 +57,11 @@ public:
     int moveNumber;  // 手数
     bool operator==(Piece rhs);
 
-    void load(QString str);
+    void load(const QString& str);
+
+public:
+    // 假设 Piece 类有一些属性，并重载了输出操作符
+    friend std::ostream& operator<<(std::ostream& os, const Piece& p);
 };
 Q_DECLARE_METATYPE(Piece);
 
@@ -84,6 +88,28 @@ public:
 Q_DECLARE_METATYPE(JudgeInfo);
 Q_DECLARE_METATYPE(JudgeInfo*);
 
+class InfoMove {
+public:
+    Piece move;
+    int visits;
+    int edgeVisits;
+    int utility;
+    int winrate;
+    int scoreMean;
+    int order;
+    std::vector<Piece> pv;
+};
+
+class AnalyzeInfo {
+public:
+    std::vector<InfoMove> infoMoveList;
+    bool parse(const QString& content);
+
+    // 打印 InfoMove 的内容
+    void print() const;
+};
+Q_DECLARE_METATYPE(AnalyzeInfo);
+Q_DECLARE_METATYPE(AnalyzeInfo*);
 void showPoint(int row, int col, int color = -1);
 QString showPiece(int row, int col, int color = -1);
 QString showPiece(const Piece& piece);

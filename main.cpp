@@ -10,6 +10,8 @@ int main(int argc, char *argv[])
     qRegisterMetaType<Piece>("Piece");
     qRegisterMetaType<JudgeInfo>("JudgeInfo");
     qRegisterMetaType<JudgeInfo*>("JudgeInfo*");
+    qRegisterMetaType<AnalyzeInfo>("AnalyzeInfo");
+    qRegisterMetaType<AnalyzeInfo*>("AnalyzeInfo*");
     qRegisterMetaType<std::vector<std::vector<Piece>>>("std::vector<std::vector<Piece>>");
     qRegisterMetaType<SGFTreeNode>("SGFTreeNode");
     qRegisterMetaType<std::shared_ptr<SGFTreeNode>>("std::shared_ptr<SGFTreeNode>");

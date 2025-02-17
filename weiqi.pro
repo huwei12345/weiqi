@@ -16,6 +16,7 @@ CONFIG += c++11
 #LIBS += -lopencv_world4100
 
 SOURCES += \
+    MyProtocolStream.cpp \
     aboutdialog.cpp \
     boardwidget.cpp \
     dingshishow.cpp \
@@ -36,6 +37,7 @@ SOURCES += \
     timecontrol.cpp
 
 HEADERS += \
+    MyProtocolStream.h \
     aboutdialog.h \
     boardwidget.h \
     dingshishow.h \

@@ -25,6 +25,7 @@ public:
     Q_SLOT void getAIPiece(Piece nowPiece, int color);
     Q_SLOT void calculateScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info);
     Q_SLOT void calculateEndScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info);
+    Q_SLOT void startKataAnalyze(std::shared_ptr<SGFTreeNode> node, AnalyzeInfo *info);
 signals:
     void getAIPieceSuccess(Piece* piece);
     void calculateScoreSuccess();

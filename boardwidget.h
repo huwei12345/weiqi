@@ -165,6 +165,7 @@ public:
         mForbidPut = false;
         mJudgeInfo = new JudgeInfo;
         mJudgeInfo->reset();
+        mAnalyzeInfo = new AnalyzeInfo;
     }
 
 
@@ -5178,6 +5179,7 @@ public:
     bool mForbidPut;
 
     JudgeInfo *mJudgeInfo;
+    AnalyzeInfo* mAnalyzeInfo;
     std::vector<std::vector<int>> judgeCalcBoard;
     bool hasJudgeCalc;
 };

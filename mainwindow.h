@@ -147,6 +147,8 @@ private slots:
 
     void on_actionfindDS_triggered();
 
+    void on_toolButton_11_clicked(bool checked);
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;

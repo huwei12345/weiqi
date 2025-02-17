@@ -283,6 +283,57 @@ void Kata::calculateEndScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info)
     }
 }
 
+void Kata::startKataAnalyze(std::shared_ptr<SGFTreeNode> node, AnalyzeInfo *info)
+{
+    //judgeBlackWin
+    //根据棋局规则，选择katago规则
+    kataGoProcess->write("kgs-rules chinese\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("komi 7.5\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("clear_board\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("boardsize 19\n");
+    kataGoProcess->waitForFinished(10);
+    std::vector<Piece> pieceList;
+    auto p = node;
+    while (p != nullptr && p->move.color != -1) {
+        if (isValid(p->move)) {
+            pieceList.push_back(p->move);
+            p = p->parent.lock();
+        }
+        else {
+            qDebug() << "Fatal Error1" << showPiece(p->move);
+        }
+    }
+    std::reverse(pieceList.begin(), pieceList.end());
+    for (auto piece : pieceList) {
+        QString str;
+        str = QString("play ") + (piece.color == 0 ? "B " : "W ") + showPiece(piece.row, piece.col) + "\n";
+        //qDebug() << str;
+        kataGoProcess->write(str.toLatin1());
+        kataGoProcess->waitForFinished(10);
+    }
+    kataGoProcess->waitForFinished(200);
+    mKatagoOutput.clear();
+    kataGoProcess->write("kata-analyze 10\n");
+    kataGoProcess->waitForFinished(200);
+    int cnt = 0;
+    while (mKatagoOutput.size() == 0 && cnt != 100) {
+        kataGoProcess->waitForFinished(100);
+        cnt++;
+    }
+    qDebug() << "katago: " << mKatagoOutput;
+    QString tmp = mKatagoOutput;
+    kataGoProcess->write("\r\n");
+    if (tmp.size() != 0) {
+        bool ret = info->parse(tmp);
+        if (ret) {
+            emit calculateEndResultSuccess();
+        }
+    }
+}
+
 
 
 

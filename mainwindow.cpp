@@ -702,3 +702,11 @@ void MainWindow::on_actionfindDS_triggered()
     dialog->getText(this, "choose Piece", "选择定式子顺序");
 }
 
+
+void MainWindow::on_toolButton_11_clicked(bool checked)
+{
+    if (checked) {
+        QMetaObject::invokeMethod(mKata, "startKataAnalyze", Qt::QueuedConnection, Q_ARG(std::shared_ptr<SGFTreeNode>, goWidget->getCurrentNode()), Q_ARG(AnalyzeInfo*, goWidget->mAnalyzeInfo));
+    }
+}
+

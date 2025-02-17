@@ -300,6 +300,7 @@ public:
 
         toolButton_11 = new QToolButton(processWidget);
         toolButton_11->setObjectName(QString::fromUtf8("toolButton_11"));
+        toolButton_11->setCheckable(true);
 
         horizontalLayout->addWidget(toolButton_11);
 

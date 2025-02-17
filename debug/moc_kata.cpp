@@ -22,8 +22,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_Kata_t {
-    QByteArrayData data[18];
-    char stringdata0[210];
+    QByteArrayData data[20];
+    char stringdata0[240];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -49,14 +49,17 @@ QT_MOC_LITERAL(13, 142, 28), // "std::shared_ptr<SGFTreeNode>"
 QT_MOC_LITERAL(14, 171, 4), // "node"
 QT_MOC_LITERAL(15, 176, 10), // "JudgeInfo*"
 QT_MOC_LITERAL(16, 187, 4), // "info"
-QT_MOC_LITERAL(17, 192, 17) // "calculateEndScore"
+QT_MOC_LITERAL(17, 192, 17), // "calculateEndScore"
+QT_MOC_LITERAL(18, 210, 16), // "startKataAnalyze"
+QT_MOC_LITERAL(19, 227, 12) // "AnalyzeInfo*"
 
     },
     "Kata\0getAIPieceSuccess\0\0Piece*\0piece\0"
     "calculateScoreSuccess\0calculateEndResultSuccess\0"
     "startKata\0getAIPiece\0Piece\0nowPiece\0"
     "color\0calculateScore\0std::shared_ptr<SGFTreeNode>\0"
-    "node\0JudgeInfo*\0info\0calculateEndScore"
+    "node\0JudgeInfo*\0info\0calculateEndScore\0"
+    "startKataAnalyze\0AnalyzeInfo*"
 };
 #undef QT_MOC_LITERAL
 
@@ -66,7 +69,7 @@ static const uint qt_meta_data_Kata[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-       7,   14, // methods
+       8,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -74,15 +77,16 @@ static const uint qt_meta_data_Kata[] = {
        3,       // signalCount
 
  // signals: name, argc, parameters, tag, flags
-       1,    1,   49,    2, 0x06 /* Public */,
-       5,    0,   52,    2, 0x06 /* Public */,
-       6,    0,   53,    2, 0x06 /* Public */,
+       1,    1,   54,    2, 0x06 /* Public */,
+       5,    0,   57,    2, 0x06 /* Public */,
+       6,    0,   58,    2, 0x06 /* Public */,
 
  // slots: name, argc, parameters, tag, flags
-       7,    0,   54,    2, 0x0a /* Public */,
-       8,    2,   55,    2, 0x0a /* Public */,
-      12,    2,   60,    2, 0x0a /* Public */,
-      17,    2,   65,    2, 0x0a /* Public */,
+       7,    0,   59,    2, 0x0a /* Public */,
+       8,    2,   60,    2, 0x0a /* Public */,
+      12,    2,   65,    2, 0x0a /* Public */,
+      17,    2,   70,    2, 0x0a /* Public */,
+      18,    2,   75,    2, 0x0a /* Public */,
 
  // signals: parameters
     QMetaType::Void, 0x80000000 | 3,    4,
@@ -94,6 +98,7 @@ static const uint qt_meta_data_Kata[] = {
     QMetaType::Void, 0x80000000 | 9, QMetaType::Int,   10,   11,
     QMetaType::Void, 0x80000000 | 13, 0x80000000 | 15,   14,   16,
     QMetaType::Void, 0x80000000 | 13, 0x80000000 | 15,   14,   16,
+    QMetaType::Void, 0x80000000 | 13, 0x80000000 | 19,   14,   16,
 
        0        // eod
 };
@@ -112,6 +117,7 @@ void Kata::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void *
         case 4: _t->getAIPiece((*reinterpret_cast< Piece(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2]))); break;
         case 5: _t->calculateScore((*reinterpret_cast< std::shared_ptr<SGFTreeNode>(*)>(_a[1])),(*reinterpret_cast< JudgeInfo*(*)>(_a[2]))); break;
         case 6: _t->calculateEndScore((*reinterpret_cast< std::shared_ptr<SGFTreeNode>(*)>(_a[1])),(*reinterpret_cast< JudgeInfo*(*)>(_a[2]))); break;
+        case 7: _t->startKataAnalyze((*reinterpret_cast< std::shared_ptr<SGFTreeNode>(*)>(_a[1])),(*reinterpret_cast< AnalyzeInfo*(*)>(_a[2]))); break;
         default: ;
         }
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
@@ -136,6 +142,13 @@ void Kata::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void *
             default: *reinterpret_cast<int*>(_a[0]) = -1; break;
             case 1:
                 *reinterpret_cast<int*>(_a[0]) = qRegisterMetaType< JudgeInfo* >(); break;
+            }
+            break;
+        case 7:
+            switch (*reinterpret_cast<int*>(_a[1])) {
+            default: *reinterpret_cast<int*>(_a[0]) = -1; break;
+            case 1:
+                *reinterpret_cast<int*>(_a[0]) = qRegisterMetaType< AnalyzeInfo* >(); break;
             }
             break;
         }
@@ -194,13 +207,13 @@ int Kata::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 8;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 8;
     }
     return _id;
 }
