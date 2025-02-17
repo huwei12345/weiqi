@@ -55,6 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mKata, &Kata::getAIPieceSuccess, this, &MainWindow::getAIPieceSuccess);
     connect(mKata, &Kata::calculateScoreSuccess, this, &MainWindow::calculateScoreSuccess);
     connect(mKata, &Kata::calculateEndResultSuccess, this, &MainWindow::calculateEndResultSuccess);
+    connect(mKata, &Kata::analyzeResultUpdate, this, &MainWindow::analyzeResultUpdate);
 }
 
 MainWindow::~MainWindow()
@@ -620,9 +621,9 @@ void MainWindow::on_AIBtn_clicked()
 
 void MainWindow::on_toolButton_11_clicked()
 {
-    if (goWidget->root != nullptr && goWidget->root->branches.size() != 0) {
-        mKata->reInitKata(goWidget->root->branches[0]);
-    }
+//    if (goWidget->root != nullptr && goWidget->root->branches.size() != 0) {
+//        mKata->reInitKata(goWidget->root->branches[0]);
+//    }
 }
 
 bool MainWindow::getAIPiece(Piece piece, int color)
@@ -651,6 +652,11 @@ void MainWindow::calculateScoreSuccess()
 void MainWindow::calculateEndResultSuccess()
 {
     goWidget->showEndResult();
+}
+
+void MainWindow::analyzeResultUpdate()
+{
+    goWidget->showAnalyzeResult();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

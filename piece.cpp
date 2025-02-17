@@ -227,8 +227,8 @@ public:
     QString getNextSubStr() {
         pos = str.indexOf(" ", pos);
         tmp.clear();
-        if (pos == 0) {
-            return "";
+        if (pos == -1 || pos == 0) {
+            return tmp;
         }
         int end = str.indexOf(" ", pos + 1);
         if (end != -1) {
@@ -250,6 +250,7 @@ private:
 bool AnalyzeInfo::parse(const QString &content)
 {
     QString str = content;
+    qDebug() << "str " << str;
     if (infoMoveList.size() != 0) {
         infoMoveList.clear();
     }
@@ -265,8 +266,8 @@ bool AnalyzeInfo::parse(const QString &content)
 info move C16 visits 1 edgeVisits 1 utility 0.0575616 winrate 0.523927 scoreMean 1.23603 scoreStdev 27.7788 scoreLead 1.23603 scoreSelfplay 0.69225 prior 0.124701 lcb -0.726073 utilityLcb -3.44244 weight 1 order 0 pv C16 info move D17 visits 1 edgeVisits 1 utility 0.0575616 winrate 0.523927 scoreMean 1.23603 scoreStdev 27.7788 scoreLead 1.23603 scoreSelfplay 0.69225 prior 0.124701 lcb -0.726073 utilityLcb -3.44244 weight 1 isSymmetryOf C16 order 1 pv D17 info move D3 visits 1 edgeVisits 1 utility 0.0557992 winrate 0.52271 scoreMean 1.72998 scoreStdev 27.6679 scoreLead 1.72998 scoreSelfplay 0.781309 prior 0.141445 lcb -0.72729 utilityLcb -3.4442 weight 1 order 2 pv D3 info move R16 visits 1 edgeVisits 1 utility 0.0557992 winrate 0.52271 scoreMean 1.72998 scoreStdev 27.6679 scoreLead 1.72998 scoreSelfplay 0.781309 prior 0.141445 lcb -0.72729 utilityLcb -3.4442 weight 1 isSymmetryOf D3 order 3 pv R16 info move C4 visits 1 edgeVisits 1 utility 0.0460743 winrate 0.518572 scoreMean 1.67975 scoreStdev 27.6738 scoreLead 1.67975 scoreSelfplay 0.581424 prior 0.133207 lcb -0.731428 utilityLcb -3.45393 weight 1 order 4 pv C4 info move Q17 visits 1 edgeVisits 1 utility 0.0460743 winrate 0.518572 scoreMean 1.67975 scoreStdev 27.6738 scoreLead 1.67975 scoreSelfplay 0.581424 prior 0.133207 lcb -0.731428 utilityLcb -3.45393 weight 1 isSymmetryOf C4 order 5 pv Q17 info move D16 visits 1 edgeVisits 1 utility 0.0534237 winrate 0.522092 scoreMean 1.07716 scoreStdev 27.8136 scoreLead 1.07716 scoreSelfplay 0.628422 prior 0.0609161 lcb -0.727908 utilityLcb -3.44658 weight 1 order 6 pv D16\r\n
 */
         tmp = stream.getNextSubStr();
-        if (tmp == "") {
-            return true;
+        if (tmp.size() == 0) {
+            break;
         }
         if (tmp == "move") {
             tmp = stream.getNextSubStr();
@@ -297,36 +298,42 @@ info move C16 visits 1 edgeVisits 1 utility 0.0575616 winrate 0.523927 scoreMean
             im.order = tmp.toInt();
         }
         else if (tmp == "pv") {
-            while (tmp != "info") {
-                tmp = stream.getNextSubStr();
+            tmp = stream.getNextSubStr();
+            while (tmp != "info" && tmp.size() != 0) {
                 Piece piece;
                 piece.load(tmp);
                 im.pv.push_back(piece);
+                tmp = stream.getNextSubStr();
             }
             infoMoveList.push_back(im);
         }
     }
+    print();
     return true;
 }
 
 void AnalyzeInfo::print() const
 {
-   std::cout << "Move: " << move << "\n";
-   std::cout << "Visits: " << visits << "\n";
-   std::cout << "Edge Visits: " << edgeVisits << "\n";
-   std::cout << "Utility: " << utility << "\n";
-   std::cout << "Winrate: " << winrate << "\n";
-   std::cout << "Score Mean: " << scoreMean << "\n";
-   std::cout << "Order: " << order << "\n";
-   std::cout << "PV: ";
-   for (const auto& p : pv) {
-       std::cout << p << " ";  // 打印 pv 中的每个 Piece
-   }
-   std::cout << "\n";
+    for (auto &r : infoMoveList) {
+        std::cout << "Move: " << r.move << "  ";
+        std::cout << "Visits: " << r.visits << "  ";
+        std::cout << "Edge Visits: " << r.edgeVisits << "  ";
+        std::cout << "Utility: " << r.utility << "  ";
+        std::cout << "Winrate: " << r.winrate << "  ";
+        std::cout << "Score Mean: " << r.scoreMean << "  ";
+        std::cout << "Order: " << r.order << "  ";
+        std::cout << "PV: ";
+        for (const auto& p : r.pv) {
+            std::cout << p << " ";  // 打印 pv 中的每个 Piece
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "\n";
+    fflush(stdout);
 }
 
-friend std::ostream& operator<<(std::ostream& os, const Piece& p) {
+std::ostream& operator<<(std::ostream& os, const Piece& p) {
     // 假设 Piece 类有一个成员 `name` 用来表示棋子的名称
-    os << "Piece: " << p.row << p.col; // 修改为实际成员
+    os << showPiece(p.row, p.col).toStdString(); // 修改为实际成员
     return os;
 }

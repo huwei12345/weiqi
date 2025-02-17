@@ -93,9 +93,9 @@ public:
     Piece move;
     int visits;
     int edgeVisits;
-    int utility;
-    int winrate;
-    int scoreMean;
+    float utility;
+    float winrate;
+    float scoreMean;
     int order;
     std::vector<Piece> pv;
 };

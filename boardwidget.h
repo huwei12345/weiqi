@@ -1,5 +1,6 @@
 ﻿#ifndef BOARD_WIDGET_H
 #define BOARD_WIDGET_H
+
 #include <QWidget>
 #include <QPainter>
 #include <QPen>
@@ -313,32 +314,6 @@ protected:
             }
         }
 
-        if (!mTryMode) {
-            // 绘制鼠标悬浮位置的小方框
-            if (hoverRow != -1 && hoverCol != -1 && isValid(hoverRow, hoverCol)) {
-                if (currentPlayer == BLACK) {
-                    painter.setBrush(QBrush(Qt::black));
-                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
-                }
-                else {
-                    painter.setBrush(QBrush(Qt::white));
-                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
-                }
-            }
-        }
-        else {
-            if (hoverRow != -1 && hoverCol != -1 && isValid(hoverRow, hoverCol)) {
-                if (mTryColor == 0) {
-                    painter.setBrush(QBrush(Qt::black));
-                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
-                }
-                else {
-                    painter.setBrush(QBrush(Qt::white));
-                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
-                }
-            }
-        }
-
 //        for (auto p : blackLiberties) {
 //            painter.setBrush(QBrush(Qt::black));
 //            painter.drawRect(margin + p.second * gridSize - 5, margin + p.first * gridSize - 5, 10, 10);
@@ -428,6 +403,75 @@ protected:
                         painter.setBrush(QBrush(Qt::gray));
                         painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
                     }
+                }
+            }
+        }
+        QPen penold = painter.pen();
+        int row = 0;
+        int col = 0;
+        // 设置绿色透明度50的填充颜色
+        QBrush oldbrush = painter.brush();
+        QColor greenC(0, 255, 0, 128);  // 绿色，透明度50 (128/255 ≈ 50%)
+        QBrush brush(greenC);
+        painter.setBrush(brush);
+        for (auto r : mCurrentAnalyze.infoMoveList) {
+            int i = r.move.row;
+            int j = r.move.col;
+            painter.drawEllipse(margin + j * gridSize - whitePiece.width() / 2,
+                           margin + i * gridSize - whitePiece.width() / 2, whitePiece.width(), whitePiece.width());//mVirGreenPiece
+
+            QFont font = painter.font();
+            //font.setFamily("Arial");           // 设置字体为 Arial
+            font.setPointSize(9);             // 设置字体大小
+            font.setBold(true);                // 设置加粗
+            //font.setWeight(QFont::DemiBold);   // 设置半粗体
+            painter.setFont(font);
+            // 设置文本颜色
+            QPen pen;
+            pen.setColor(Qt::black);            // 设置文本颜色为蓝色
+            if (i == 0) {
+                pen.setColor(Qt::red);
+            }
+            painter.setPen(pen);
+            row = margin + i * gridSize + 5;
+            col = margin + j * gridSize - 13;
+            QString text = QString::number(r.winrate, 'g', 3);
+            painter.drawText(col, row, text);
+
+            text = QString::number(r.visits);
+            row = row + 14;
+            painter.drawText(col, row, text);
+
+            text = QString::number(r.scoreMean, 'g', 3);
+            row = row + 14;
+            painter.drawText(col, row, text);
+        }
+        painter.setPen(penold);
+        painter.setBrush(oldbrush);
+
+
+        if (!mTryMode) {
+            // 绘制鼠标悬浮位置的小方框
+            if (hoverRow != -1 && hoverCol != -1 && isValid(hoverRow, hoverCol)) {
+                if (currentPlayer == BLACK) {
+                    painter.setBrush(QBrush(Qt::black));
+                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
+                }
+                else {
+                    painter.setBrush(QBrush(Qt::white));
+                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
+                }
+            }
+        }
+        else {
+            if (hoverRow != -1 && hoverCol != -1 && isValid(hoverRow, hoverCol)) {
+                if (mTryColor == 0) {
+                    painter.setBrush(QBrush(Qt::black));
+                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
+                }
+                else {
+                    painter.setBrush(QBrush(Qt::white));
+                    painter.drawRect(margin + hoverCol * gridSize - 5, margin + hoverRow * gridSize - 5, 10, 10);
                 }
             }
         }
@@ -3725,6 +3769,12 @@ public:
         }
     }
 
+    void showAnalyzeResult() {
+        qDebug() << "showAnalyzeResult";
+        mCurrentAnalyze = *mAnalyzeInfo;
+        repaint();
+    }
+
     void showJudgeCalc() {
         auto result = mJudgeInfo->whiteOwnership;
         hasJudgeCalc = true;
@@ -5180,6 +5230,7 @@ public:
 
     JudgeInfo *mJudgeInfo;
     AnalyzeInfo* mAnalyzeInfo;
+    AnalyzeInfo mCurrentAnalyze;
     std::vector<std::vector<int>> judgeCalcBoard;
     bool hasJudgeCalc;
 };

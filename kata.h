@@ -30,10 +30,12 @@ signals:
     void getAIPieceSuccess(Piece* piece);
     void calculateScoreSuccess();
     void calculateEndResultSuccess();
+    void analyzeResultUpdate();
 private:
     std::shared_ptr<SGFTreeNode> root;
     QProcess* kataGoProcess;
     QString mKatagoOutput;
+    QString mAnalyzeOutput;
 };
 
 #endif // KATA_H

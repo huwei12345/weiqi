@@ -31,6 +31,7 @@ public:
     void getAIPieceSuccess(Piece *piece);
     void calculateScoreSuccess();
     void calculateEndResultSuccess();
+    void analyzeResultUpdate();
 signals:
     void keyEventCaptured(QKeyEvent *event);
 
