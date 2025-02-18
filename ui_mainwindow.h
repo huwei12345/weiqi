@@ -12,6 +12,7 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
@@ -26,7 +27,6 @@
 #include <QtWidgets/QTextEdit>
 #include <QtWidgets/QToolButton>
 #include <QtWidgets/QTreeWidget>
-#include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -55,7 +55,7 @@ public:
     QAction *actionxuandian;
     QAction *actionfindDS;
     QWidget *centralwidget;
-    QVBoxLayout *verticalLayout;
+    QGridLayout *gridLayout;
     QTextEdit *textEdit;
     QWidget *gameWidget;
     QHBoxLayout *horizontalLayout_4;
@@ -63,6 +63,15 @@ public:
     QHBoxLayout *horizontalLayout_5;
     QWidget *widget_2;
     QHBoxLayout *horizontalLayout_6;
+    QWidget *analyzePanel;
+    QGridLayout *gridLayout_2;
+    QLabel *label_5;
+    QLabel *terrLabel;
+    QLabel *label_9;
+    QLabel *winLabel;
+    QLabel *label_7;
+    QLabel *calcLabel;
+    QSpacerItem *verticalSpacer;
     QTreeWidget *pieceTree;
     QSpacerItem *horizontalSpacer;
     QWidget *processWidget;
@@ -178,8 +187,8 @@ public:
         actionfindDS->setObjectName(QString::fromUtf8("actionfindDS"));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
-        verticalLayout = new QVBoxLayout(centralwidget);
-        verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
+        gridLayout = new QGridLayout(centralwidget);
+        gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
         textEdit = new QTextEdit(centralwidget);
         textEdit->setObjectName(QString::fromUtf8("textEdit"));
         QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -190,7 +199,7 @@ public:
         textEdit->setMaximumSize(QSize(16777215, 30));
         textEdit->setReadOnly(true);
 
-        verticalLayout->addWidget(textEdit);
+        gridLayout->addWidget(textEdit, 0, 0, 1, 1);
 
         gameWidget = new QWidget(centralwidget);
         gameWidget->setObjectName(QString::fromUtf8("gameWidget"));
@@ -212,6 +221,47 @@ public:
         horizontalLayout_6->setSpacing(0);
         horizontalLayout_6->setObjectName(QString::fromUtf8("horizontalLayout_6"));
         horizontalLayout_6->setContentsMargins(0, 0, 0, 0);
+        analyzePanel = new QWidget(widget_2);
+        analyzePanel->setObjectName(QString::fromUtf8("analyzePanel"));
+        gridLayout_2 = new QGridLayout(analyzePanel);
+        gridLayout_2->setObjectName(QString::fromUtf8("gridLayout_2"));
+        label_5 = new QLabel(analyzePanel);
+        label_5->setObjectName(QString::fromUtf8("label_5"));
+
+        gridLayout_2->addWidget(label_5, 0, 0, 1, 1);
+
+        terrLabel = new QLabel(analyzePanel);
+        terrLabel->setObjectName(QString::fromUtf8("terrLabel"));
+
+        gridLayout_2->addWidget(terrLabel, 1, 1, 1, 1);
+
+        label_9 = new QLabel(analyzePanel);
+        label_9->setObjectName(QString::fromUtf8("label_9"));
+
+        gridLayout_2->addWidget(label_9, 2, 0, 1, 1);
+
+        winLabel = new QLabel(analyzePanel);
+        winLabel->setObjectName(QString::fromUtf8("winLabel"));
+
+        gridLayout_2->addWidget(winLabel, 0, 1, 1, 1);
+
+        label_7 = new QLabel(analyzePanel);
+        label_7->setObjectName(QString::fromUtf8("label_7"));
+
+        gridLayout_2->addWidget(label_7, 1, 0, 1, 1);
+
+        calcLabel = new QLabel(analyzePanel);
+        calcLabel->setObjectName(QString::fromUtf8("calcLabel"));
+
+        gridLayout_2->addWidget(calcLabel, 2, 1, 1, 1);
+
+        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        gridLayout_2->addItem(verticalSpacer, 3, 1, 1, 1);
+
+
+        horizontalLayout_6->addWidget(analyzePanel);
+
         pieceTree = new QTreeWidget(widget_2);
         pieceTree->setObjectName(QString::fromUtf8("pieceTree"));
 
@@ -225,7 +275,7 @@ public:
         horizontalLayout_4->addWidget(widget_2);
 
 
-        verticalLayout->addWidget(gameWidget);
+        gridLayout->addWidget(gameWidget, 1, 0, 1, 1);
 
         processWidget = new QWidget(centralwidget);
         processWidget->setObjectName(QString::fromUtf8("processWidget"));
@@ -325,7 +375,7 @@ public:
         horizontalLayout->addWidget(addDSBtn);
 
 
-        verticalLayout->addWidget(processWidget);
+        gridLayout->addWidget(processWidget, 2, 0, 1, 1);
 
         widget = new QWidget(centralwidget);
         widget->setObjectName(QString::fromUtf8("widget"));
@@ -370,7 +420,7 @@ public:
         horizontalLayout_7->addItem(horizontalSpacer_5);
 
 
-        verticalLayout->addWidget(widget);
+        gridLayout->addWidget(widget, 3, 0, 1, 1);
 
         testWidget = new QWidget(centralwidget);
         testWidget->setObjectName(QString::fromUtf8("testWidget"));
@@ -430,7 +480,7 @@ public:
         horizontalLayout_3->addItem(horizontalSpacer_2);
 
 
-        verticalLayout->addWidget(testWidget);
+        gridLayout->addWidget(testWidget, 4, 0, 1, 1);
 
         watchWidget = new QWidget(centralwidget);
         watchWidget->setObjectName(QString::fromUtf8("watchWidget"));
@@ -496,7 +546,7 @@ public:
         horizontalLayout_2->addWidget(pushButton);
 
 
-        verticalLayout->addWidget(watchWidget);
+        gridLayout->addWidget(watchWidget, 5, 0, 1, 1);
 
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
@@ -578,6 +628,12 @@ public:
         actionAIjudge->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\350\243\201\345\210\244", nullptr));
         actionxuandian->setText(QCoreApplication::translate("MainWindow", "\345\256\232\345\274\217\351\200\211\347\202\271", nullptr));
         actionfindDS->setText(QCoreApplication::translate("MainWindow", "\346\241\206\351\200\211\346\237\245\345\256\232\345\274\217", nullptr));
+        label_5->setText(QCoreApplication::translate("MainWindow", "\350\203\234\347\216\207", nullptr));
+        terrLabel->setText(QCoreApplication::translate("MainWindow", "0", nullptr));
+        label_9->setText(QCoreApplication::translate("MainWindow", "\350\256\241\347\256\227\351\207\217", nullptr));
+        winLabel->setText(QCoreApplication::translate("MainWindow", "0", nullptr));
+        label_7->setText(QCoreApplication::translate("MainWindow", "\347\233\256\346\225\260\345\267\256", nullptr));
+        calcLabel->setText(QCoreApplication::translate("MainWindow", "0", nullptr));
         QTreeWidgetItem *___qtreewidgetitem = pieceTree->headerItem();
         ___qtreewidgetitem->setText(1, QCoreApplication::translate("MainWindow", "moveNum", nullptr));
         ___qtreewidgetitem->setText(0, QCoreApplication::translate("MainWindow", "point", nullptr));

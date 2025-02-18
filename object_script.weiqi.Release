@@ -16,6 +16,7 @@ release/screencapture.o
 release/screenshot.o
 release/settingpage.o
 release/sgfparser.o
+release/threadsafequeue.o
 release/timecontrol.o
 release/qrc_src.o
 release/moc_aboutdialog.o

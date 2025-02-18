@@ -91,13 +91,14 @@ Q_DECLARE_METATYPE(JudgeInfo*);
 class InfoMove {
 public:
     Piece move;
-    int visits;
+    int visits;//累计计算量
     int edgeVisits;
     float utility;
-    float winrate;
-    float scoreMean;
+    float winrate;//黑方视角
+    float scoreMean;//黑方视角
     int order;
     std::vector<Piece> pv;
+    void reset();
 };
 
 class AnalyzeInfo {

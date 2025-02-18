@@ -14,8 +14,8 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
      <widget class="QTextEdit" name="textEdit">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -34,7 +34,7 @@
       </property>
      </widget>
     </item>
-    <item>
+    <item row="1" column="0">
      <widget class="QWidget" name="gameWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <property name="topMargin">
@@ -83,6 +83,67 @@
            <number>0</number>
           </property>
           <item>
+           <widget class="QWidget" name="analyzePanel" native="true">
+            <layout class="QGridLayout" name="gridLayout_2">
+             <item row="0" column="0">
+              <widget class="QLabel" name="label_5">
+               <property name="text">
+                <string>胜率</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="terrLabel">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>计算量</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="winLabel">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="label_7">
+               <property name="text">
+                <string>目数差</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="calcLabel">
+               <property name="text">
+                <string>0</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
            <widget class="QTreeWidget" name="pieceTree">
             <column>
              <property name="text">
@@ -115,7 +176,7 @@
       </layout>
      </widget>
     </item>
-    <item>
+    <item row="2" column="0">
      <widget class="QWidget" name="processWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <property name="topMargin">
@@ -289,7 +350,7 @@
       </layout>
      </widget>
     </item>
-    <item>
+    <item row="3" column="0">
      <widget class="QWidget" name="widget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
@@ -363,7 +424,7 @@
       </layout>
      </widget>
     </item>
-    <item>
+    <item row="4" column="0">
      <widget class="QWidget" name="testWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <property name="topMargin">
@@ -473,7 +534,7 @@
       </layout>
      </widget>
     </item>
-    <item>
+    <item row="5" column="0">
      <widget class="QWidget" name="watchWidget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <property name="leftMargin">

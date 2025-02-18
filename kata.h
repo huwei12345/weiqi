@@ -6,14 +6,13 @@
 #include <QProcess>
 #include <QString>
 #include "sgfparser.h"
-
-
+#include "threadsafequeue.h"
 class Kata : public QObject
 {
     Q_OBJECT
 public:
     Kata();
-    Kata(std::vector<std::vector<Piece>> *board) : mBoard(board) {}
+    Kata(std::vector<std::vector<Piece>> *board);
     int test();
     void parseShowboard(const QString &showboardOutput, std::vector<std::vector<Piece>> &board);
     std::vector<std::vector<Piece>> *mBoard;
@@ -25,7 +24,9 @@ public:
     Q_SLOT void getAIPiece(Piece nowPiece, int color);
     Q_SLOT void calculateScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info);
     Q_SLOT void calculateEndScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info);
-    Q_SLOT void startKataAnalyze(std::shared_ptr<SGFTreeNode> node, AnalyzeInfo *info);
+    Q_SLOT void startKataAnalyze(std::shared_ptr<SGFTreeNode> node, ThreadSafeQueue<QString> *queue);
+    Q_SLOT void stopKataAnalyze();
+    Q_SLOT void playOnePiece(Piece piece);
 signals:
     void getAIPieceSuccess(Piece* piece);
     void calculateScoreSuccess();
@@ -36,6 +37,8 @@ private:
     QProcess* kataGoProcess;
     QString mKatagoOutput;
     QString mAnalyzeOutput;
+    ThreadSafeQueue<QString>* mAnalyzeQueue;
+    bool mAnalyzeRunning;
 };
 
 #endif // KATA_H

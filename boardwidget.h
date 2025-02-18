@@ -166,7 +166,6 @@ public:
         mForbidPut = false;
         mJudgeInfo = new JudgeInfo;
         mJudgeInfo->reset();
-        mAnalyzeInfo = new AnalyzeInfo;
     }
 
 
@@ -288,7 +287,7 @@ protected:
                 painter.drawText(x, y, QString::number(19 - i));
         }
 
-
+        paintAIAnalyze(painter, gridSize);
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
                 if (board[i][j].color == 1) {
@@ -406,49 +405,6 @@ protected:
                 }
             }
         }
-        QPen penold = painter.pen();
-        int row = 0;
-        int col = 0;
-        // 设置绿色透明度50的填充颜色
-        QBrush oldbrush = painter.brush();
-        QColor greenC(0, 255, 0, 128);  // 绿色，透明度50 (128/255 ≈ 50%)
-        QBrush brush(greenC);
-        painter.setBrush(brush);
-        for (auto r : mCurrentAnalyze.infoMoveList) {
-            int i = r.move.row;
-            int j = r.move.col;
-            painter.drawEllipse(margin + j * gridSize - whitePiece.width() / 2,
-                           margin + i * gridSize - whitePiece.width() / 2, whitePiece.width(), whitePiece.width());//mVirGreenPiece
-
-            QFont font = painter.font();
-            //font.setFamily("Arial");           // 设置字体为 Arial
-            font.setPointSize(9);             // 设置字体大小
-            font.setBold(true);                // 设置加粗
-            //font.setWeight(QFont::DemiBold);   // 设置半粗体
-            painter.setFont(font);
-            // 设置文本颜色
-            QPen pen;
-            pen.setColor(Qt::black);            // 设置文本颜色为蓝色
-            if (i == 0) {
-                pen.setColor(Qt::red);
-            }
-            painter.setPen(pen);
-            row = margin + i * gridSize + 5;
-            col = margin + j * gridSize - 13;
-            QString text = QString::number(r.winrate, 'g', 3);
-            painter.drawText(col, row, text);
-
-            text = QString::number(r.visits);
-            row = row + 14;
-            painter.drawText(col, row, text);
-
-            text = QString::number(r.scoreMean, 'g', 3);
-            row = row + 14;
-            painter.drawText(col, row, text);
-        }
-        painter.setPen(penold);
-        painter.setBrush(oldbrush);
-
 
         if (!mTryMode) {
             // 绘制鼠标悬浮位置的小方框
@@ -477,6 +433,119 @@ protected:
         }
     }
 
+
+    void paintAIAnalyze(QPainter& painter, int gridSize) {
+        QPen penold = painter.pen();
+        int row = 0;
+        int col = 0;
+        int margin = 30; // 留出30像素的边距
+        // 设置绿色透明度50的填充颜色
+        QBrush oldbrush = painter.brush();
+        for (auto r : mCurrentAnalyze.infoMoveList) {
+            if (r.order == 0) {
+                QColor greenC(12, 223, 241, 128);  // 蓝色，透明度50 (128/255 ≈ 50%)
+                QBrush brush(greenC);
+                painter.setBrush(brush);
+            }
+            else {
+                QColor greenC(0, 255, 0, 128);  // 绿色，透明度50 (128/255 ≈ 50%)
+                QBrush brush(greenC);
+                painter.setBrush(brush);
+            }
+            int i = r.move.row;
+            int j = r.move.col;
+            painter.drawEllipse(margin + j * gridSize - whitePiece.width() / 2,
+                           margin + i * gridSize - whitePiece.width() / 2, whitePiece.width(), whitePiece.width());//mVirGreenPiece
+
+            QFont font = painter.font();
+            //font.setFamily("Arial");           // 设置字体为 Arial
+            font.setPointSize(8);             // 设置字体大小
+            font.setBold(true);                // 设置加粗
+            //font.setWeight(QFont::DemiBold);   // 设置半粗体
+            painter.setFont(font);
+            // 设置文本颜色
+            QPen pen;
+            pen.setColor(Qt::black);            // 设置文本颜色为蓝色
+            if (i == 0) {
+                pen.setColor(Qt::red);
+            }
+            painter.setPen(pen);
+            row = margin + i * gridSize - 4;
+            col = margin + j * gridSize - 13;
+            QString text = QString::number(r.winrate * 100, 'f', 1);
+            painter.drawText(col, row, text);
+
+            text = QString::number(r.visits);
+            row = row + 11;
+            painter.drawText(col, row, text);
+
+            text = QString::number(r.scoreMean, 'f', 1);
+            row = row + 11;
+            painter.drawText(col, row, text);
+        }
+        for (auto r : mCurrentAnalyze.infoMoveList) {
+            if (hoverRow != -1 && hoverCol != -1 && isValid(hoverRow, hoverCol)) {
+                if (r.move.col == hoverCol && r.move.row == hoverRow) {
+                    int color = currentPlayer;
+                    int cnt = 1;
+                    for (auto p : r.pv) {
+                        if (color == 1) {
+                            painter.drawPixmap(margin + p.col * gridSize - whitePiece.width() / 2,
+                                           margin + p.row * gridSize - whitePiece.height() / 2,
+                                           mVirWhitePiece);
+                        }
+                        else if (color == 0) {
+                            painter.drawPixmap(margin + p.col * gridSize - blackPiece.width() / 2,
+                                               margin + p.row * gridSize - blackPiece.height() / 2,
+                                               mVirBlackPiece);
+                        }
+                        int row = margin + p.row * gridSize + 5;
+                        int col = 0;
+                        QString text = QString::number(cnt);
+                        if (cnt < 10) {
+                            col = margin + p.col * gridSize - 5;
+                        }
+                        else if (cnt >= 10 && cnt < 100) {
+                            col = margin + p.col * gridSize - 10;
+                        }
+                        else if (cnt >= 100) {
+                            col = margin + p.col * gridSize - 15;
+                        }
+                        QFont font = painter.font();
+                        //font.setFamily("Arial");           // 设置字体为 Arial
+                        font.setPointSize(10);             // 设置字体大小
+                        font.setBold(true);                // 设置加粗
+                        //font.setWeight(QFont::DemiBold);   // 设置半粗体
+                        painter.setFont(font);
+                        // 设置文本颜色
+                        QPen pen;
+                        if (color == 0) {
+                            pen.setColor(Qt::white);            // 设置文本颜色为蓝色
+                            //painter.setBrush(QBrush(Qt::white));
+                        }
+                        else {
+                           pen.setColor(Qt::black);            // 设置文本颜色为蓝色
+                           //painter.setBrush(QBrush(Qt::red));
+                        }
+                        painter.setPen(pen);
+                        painter.drawText(col, row, text);
+
+                        color = !color;
+                        cnt++;
+                    }
+                }
+            }
+        }
+        painter.setPen(penold);
+        painter.setBrush(oldbrush);
+    }
+
+    bool containCricle(int centerX, int centerY, int radus, int hoverX, int hoverY) {
+        if (pow(centerX - hoverX, 2) + pow(centerY - hoverY, 2) <= pow(radus, 2)) {
+            return true;
+        }
+        return false;
+    }
 
     void updateVirtualMoveLabel(QPainter& painter, int gridSize, std::vector<std::vector<Piece>>& virtualBoard) {
         QPen penold = painter.pen();
@@ -1987,6 +2056,9 @@ protected:
         piece.color = currentPlayer == BLACK ? BLACK : WHITE;
         bool ret = putPiece(piece);
         // 触发重绘
+        if (ret) {
+            emit putOnePiece(piece);
+        }
         repaint();
         return ret;
     }
@@ -3769,12 +3841,16 @@ public:
         }
     }
 
-    void showAnalyzeResult() {
+    void showAnalyzeResult(const AnalyzeInfo& info) {
         qDebug() << "showAnalyzeResult";
-        mCurrentAnalyze = *mAnalyzeInfo;
+        mCurrentAnalyze = info;
         repaint();
     }
 
+    void stopAnalyze() {
+        mCurrentAnalyze.infoMoveList.clear();
+        repaint();
+    }
     void showJudgeCalc() {
         auto result = mJudgeInfo->whiteOwnership;
         hasJudgeCalc = true;
@@ -5185,6 +5261,7 @@ private:
 signals:
     void playerChange(int currentPlayer);
     void getAIPiece(Piece piece, int color);
+    void putOnePiece(Piece piece);
 public:
     std::shared_ptr<SGFTreeNode> root;
     std::vector<std::vector<Piece>> board;// x y
@@ -5229,7 +5306,6 @@ public:
     bool mForbidPut;
 
     JudgeInfo *mJudgeInfo;
-    AnalyzeInfo* mAnalyzeInfo;
     AnalyzeInfo mCurrentAnalyze;
     std::vector<std::vector<int>> judgeCalcBoard;
     bool hasJudgeCalc;
@@ -5380,7 +5456,10 @@ public:
 
     11.接入AI，形势判断(解决)、智能裁判，智能分析，AI对弈（解决）。需要调整准度和速度，考虑将棋盘预先载入katago
     目前已接入AI,但应该使用多线程，AI思考时，应该让界面线程正常运行，AI线程进行思考（解决）
-    智能分析 选点 全局分析 AI设置
+    智能分析选点（完成，待完善 较慢）
+    全局分析，目数，胜率，计算量。
+    鹰眼分析，吻合度，妙手、恶手等
+    AI设置
 
     12.双活、单关判定？人为标注？
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做

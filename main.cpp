@@ -15,6 +15,8 @@ int main(int argc, char *argv[])
     qRegisterMetaType<std::vector<std::vector<Piece>>>("std::vector<std::vector<Piece>>");
     qRegisterMetaType<SGFTreeNode>("SGFTreeNode");
     qRegisterMetaType<std::shared_ptr<SGFTreeNode>>("std::shared_ptr<SGFTreeNode>");
+    qRegisterMetaType<ThreadSafeQueue<QString>*>("ThreadSafeQueue<QString>*");
+
     MainWindow w;
     w.show();
     //ScreenCapture capture;

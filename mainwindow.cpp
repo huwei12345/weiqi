@@ -51,11 +51,16 @@ MainWindow::MainWindow(QWidget *parent)
     mKataThread->start();
     connect(goWidget, &GoBoardWidget::getAIPiece, this, &MainWindow::getAIPiece);
     mKata->moveToThread(mKataThread);
+    mAnalyzeQueue = new ThreadSafeQueue<QString>;
     QMetaObject::invokeMethod(mKata, "startKata", Qt::QueuedConnection);
     connect(mKata, &Kata::getAIPieceSuccess, this, &MainWindow::getAIPieceSuccess);
     connect(mKata, &Kata::calculateScoreSuccess, this, &MainWindow::calculateScoreSuccess);
     connect(mKata, &Kata::calculateEndResultSuccess, this, &MainWindow::calculateEndResultSuccess);
     connect(mKata, &Kata::analyzeResultUpdate, this, &MainWindow::analyzeResultUpdate);
+
+    connect(goWidget, &GoBoardWidget::putOnePiece, this, &MainWindow::putOnePiece);
+    mAnalyzeRunning = false;
+    ui->analyzePanel->hide();
 }
 
 MainWindow::~MainWindow()
@@ -656,7 +661,27 @@ void MainWindow::calculateEndResultSuccess()
 
 void MainWindow::analyzeResultUpdate()
 {
-    goWidget->showAnalyzeResult();
+    QString str;
+    bool ret = mAnalyzeQueue->dequeue(str);
+    if (ret) {
+        AnalyzeInfo info;
+        ret = info.parse(str);
+        if (ret) {
+            goWidget->showAnalyzeResult(info);
+            this->showCurSitutation(info);
+        }
+    }
+}
+
+void MainWindow::showCurSitutation(const AnalyzeInfo& info) {
+    if (info.infoMoveList.size() < 1) {
+        return;
+    }
+    InfoMove m = info.infoMoveList[0];
+    ui->winLabel->setText(QString::number(m.winrate * 100, 'f', 1));
+    ui->terrLabel->setText(QString::number(m.scoreMean, 'f', 1));
+    ui->calcLabel->setText(QString::number(m.visits));
+    ui->analyzePanel->show();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -712,7 +737,19 @@ void MainWindow::on_actionfindDS_triggered()
 void MainWindow::on_toolButton_11_clicked(bool checked)
 {
     if (checked) {
-        QMetaObject::invokeMethod(mKata, "startKataAnalyze", Qt::QueuedConnection, Q_ARG(std::shared_ptr<SGFTreeNode>, goWidget->getCurrentNode()), Q_ARG(AnalyzeInfo*, goWidget->mAnalyzeInfo));
+        QMetaObject::invokeMethod(mKata, "startKataAnalyze", Qt::QueuedConnection, Q_ARG(std::shared_ptr<SGFTreeNode>, goWidget->getCurrentNode()), Q_ARG(ThreadSafeQueue<QString>*, mAnalyzeQueue));
+        mAnalyzeRunning = true;
+    }
+    else {
+        QMetaObject::invokeMethod(mKata, "stopKataAnalyze", Qt::QueuedConnection);
+        mAnalyzeRunning = false;
+        goWidget->stopAnalyze();
+    }
+}
+
+void MainWindow::putOnePiece(Piece piece) {
+    if (mAnalyzeRunning) {
+        QMetaObject::invokeMethod(mKata, "playOnePiece", Qt::QueuedConnection, Q_ARG(Piece, piece));
     }
 }
 

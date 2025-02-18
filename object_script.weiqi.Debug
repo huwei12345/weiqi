@@ -16,6 +16,7 @@ debug/screencapture.o
 debug/screenshot.o
 debug/settingpage.o
 debug/sgfparser.o
+debug/threadsafequeue.o
 debug/timecontrol.o
 debug/qrc_src.o
 debug/moc_aboutdialog.o

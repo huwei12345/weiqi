@@ -34,6 +34,7 @@ SOURCES += \
     screenshot.cpp \
     settingpage.cpp \
     sgfparser.cpp \
+    threadsafequeue.cpp \
     timecontrol.cpp
 
 HEADERS += \
@@ -54,6 +55,7 @@ HEADERS += \
     screenshot.h \
     settingpage.h \
     sgfparser.h \
+    threadsafequeue.h \
     timecontrol.h
 
 FORMS += \

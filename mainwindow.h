@@ -3,6 +3,7 @@
 
 #include "imagerecognition.h"
 #include "settingpage.h"
+#include "threadsafequeue.h"
 
 #include <QMainWindow>
 #include <boardwidget.h>
@@ -32,6 +33,8 @@ public:
     void calculateScoreSuccess();
     void calculateEndResultSuccess();
     void analyzeResultUpdate();
+    void putOnePiece(Piece piece);
+    void showCurSitutation(const AnalyzeInfo &info);
 signals:
     void keyEventCaptured(QKeyEvent *event);
 
@@ -160,5 +163,7 @@ private:
     SettingPage* mSoftSetting;
     Kata* mKata;
     QThread *mKataThread;
+    ThreadSafeQueue<QString>* mAnalyzeQueue;
+    bool mAnalyzeRunning;
 };
 #endif // MAINWINDOW_H

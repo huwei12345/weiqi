@@ -2,10 +2,18 @@
 #include <QProcess>
 #include <QDebug>
 #include "piece.h"
+#include "threadsafequeue.h"
 #include <iostream>
 Kata::Kata()
 {
+    mAnalyzeQueue = nullptr;
+    mAnalyzeRunning = false;
+}
 
+Kata::Kata(std::vector<std::vector<Piece> > *board) : mBoard(board)
+{
+    mAnalyzeQueue = nullptr;
+    mAnalyzeRunning = false;
 }
 
 // 解析 showboard 输出并生成 19x19 的二维棋盘数组
@@ -72,11 +80,11 @@ int Kata::startKata() {
     // 设置 KataGo 可执行文件的路径
     // D:\download\katago-v1.15.0-eigen-windows-x64
     // kata1-b6c96-s938496-d1208807.txt.gz
-    QString kataGoPath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\katago.exe";  // 替换为你的katago可执行文件的路径
+    QString kataGoPath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\katago.exe";  // 替换为你的katago可执行文件的路径
 
     // 配置模型和配置文件路径
-    QString modelFilePath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\kata1-b10c128-s41138688-d27396855.txt.gz"; // 替换为你的模型文件路径
-    QString configFilePath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\default_gtp.cfg";  // 替换为你的配置文件路径
+    QString modelFilePath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\kata1-b15c192-s1672170752-d466197061.txt.gz"; // 替换为你的模型文件路径
+    QString configFilePath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\default_gtp.cfg";  // 替换为你的配置文件路径
 
     // 传递启动参数
     QStringList arguments;
@@ -100,7 +108,12 @@ int Kata::startKata() {
         const QString str(output);
         mKatagoOutput = str;
         if (str.startsWith("info move")) {
-            mAnalyzeOutput = str;
+            //mAnalyzeOutput = str;
+            if (mAnalyzeQueue != nullptr && mAnalyzeQueue->size() < 1000) {
+                mAnalyzeQueue->enqueue(str);
+                emit analyzeResultUpdate();
+            }
+            return;
         }
         parseShowboard(str, *mBoard);
     });
@@ -110,6 +123,28 @@ int Kata::startKata() {
         qDebug() << "KataGo Error Output: " << errorOutput;
     });
     return true;
+}
+
+
+void Kata::playOnePiece(Piece piece) {
+    QString str("play ");
+    str += piece.color == 0 ? "B " : "W ";
+    str += showPiece(piece.row, piece.col);
+    str += "\r\n";
+    qDebug() << str;
+    QByteArray arr;
+    arr.append(str);
+    kataGoProcess->write(arr);
+    kataGoProcess->waitForFinished(200);
+
+    if (mAnalyzeRunning && mAnalyzeQueue != nullptr) {
+        kataGoProcess->waitForFinished(200);
+        while (!mAnalyzeQueue->isEmpty()) {
+            mAnalyzeQueue->dequeue(mAnalyzeOutput);
+        }
+        mAnalyzeOutput.clear();
+        kataGoProcess->write("kata-analyze 100\n");
+    }
 }
 
 void Kata::getAIPiece(Piece nowPiece, int color) {
@@ -286,17 +321,17 @@ void Kata::calculateEndScore(std::shared_ptr<SGFTreeNode> node, JudgeInfo *info)
     }
 }
 
-void Kata::startKataAnalyze(std::shared_ptr<SGFTreeNode> node, AnalyzeInfo *info)
+void Kata::startKataAnalyze(std::shared_ptr<SGFTreeNode> node, ThreadSafeQueue<QString> *queue)
 {
     //judgeBlackWin
     //根据棋局规则，选择katago规则
-    kataGoProcess->write("kgs-rules chinese\n");
-    kataGoProcess->waitForFinished(10);
-    kataGoProcess->write("komi 7.5\n");
-    kataGoProcess->waitForFinished(10);
+//    kataGoProcess->write("komi 7.5\n");
+//    kataGoProcess->waitForFinished(10);
     kataGoProcess->write("clear_board\n");
     kataGoProcess->waitForFinished(10);
     kataGoProcess->write("boardsize 19\n");
+    kataGoProcess->waitForFinished(10);
+    kataGoProcess->write("kata-set-rules chinese\n");
     kataGoProcess->waitForFinished(10);
     std::vector<Piece> pieceList;
     auto p = node;
@@ -317,22 +352,33 @@ void Kata::startKataAnalyze(std::shared_ptr<SGFTreeNode> node, AnalyzeInfo *info
         kataGoProcess->write(str.toLatin1());
         kataGoProcess->waitForFinished(10);
     }
+    mAnalyzeQueue = queue;
+    mAnalyzeRunning = true;
+
+
+    kataGoProcess->waitForFinished(200);
+    mAnalyzeQueue->clear();
+    mAnalyzeOutput.clear();
+    kataGoProcess->write("kata-analyze 100\n");
+//    qDebug() << "katago2: " << mAnalyzeOutput;
+//    QString tmp = mAnalyzeOutput;
+//    kataGoProcess->write("\r\n");
+//    if (tmp.size() != 0) {
+//        bool ret = info->parse(tmp);
+//        if (ret) {
+//            emit analyzeResultUpdate();
+//        }
+    //    }
+}
+
+void Kata::stopKataAnalyze()
+{
+    kataGoProcess->write("\n");
+    mAnalyzeRunning = false;
     kataGoProcess->waitForFinished(300);
     mAnalyzeOutput.clear();
-    kataGoProcess->write("kata-analyze 10\n");
-    int cnt = 0;
-    while (mAnalyzeOutput.size() == 0 && cnt != 100) {
-        kataGoProcess->waitForFinished(30);
-        cnt++;
-    }
-    qDebug() << "katago2: " << mAnalyzeOutput;
-    QString tmp = mAnalyzeOutput;
-    kataGoProcess->write("\r\n");
-    if (tmp.size() != 0) {
-        bool ret = info->parse(tmp);
-        if (ret) {
-            emit analyzeResultUpdate();
-        }
+    if (mAnalyzeQueue != nullptr) {
+        mAnalyzeQueue->clear();
     }
 }
 
