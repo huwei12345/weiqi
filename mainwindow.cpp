@@ -61,6 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(goWidget, &GoBoardWidget::putOnePiece, this, &MainWindow::putOnePiece);
     mAnalyzeRunning = false;
     ui->analyzePanel->hide();
+    ui->rateBar->setWinRate(50, 50);
 }
 
 MainWindow::~MainWindow()
@@ -681,6 +682,12 @@ void MainWindow::showCurSitutation(const AnalyzeInfo& info) {
     ui->winLabel->setText(QString::number(m.winrate * 100, 'f', 1));
     ui->terrLabel->setText(QString::number(m.scoreMean, 'f', 1));
     ui->calcLabel->setText(QString::number(m.visits));
+    if (goWidget->getCurrentPlayer() == 0) {
+        ui->rateBar->setWinRate(m.winrate * 100.0, 100.0 - m.winrate * 100.0);
+    }
+    else {
+        ui->rateBar->setWinRate(100.0 - m.winrate * 100.0, m.winrate * 100.0);
+    }
     ui->analyzePanel->show();
 }
 
@@ -744,6 +751,8 @@ void MainWindow::on_toolButton_11_clicked(bool checked)
         QMetaObject::invokeMethod(mKata, "stopKataAnalyze", Qt::QueuedConnection);
         mAnalyzeRunning = false;
         goWidget->stopAnalyze();
+        ui->rateBar->setWinRate(50, 50);
+        ui->analyzePanel->hide();
     }
 }
 

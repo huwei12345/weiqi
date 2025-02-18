@@ -35,7 +35,8 @@ SOURCES += \
     settingpage.cpp \
     sgfparser.cpp \
     threadsafequeue.cpp \
-    timecontrol.cpp
+    timecontrol.cpp \
+    winratebar.cpp
 
 HEADERS += \
     MyProtocolStream.h \
@@ -56,7 +57,8 @@ HEADERS += \
     settingpage.h \
     sgfparser.h \
     threadsafequeue.h \
-    timecontrol.h
+    timecontrol.h \
+    winratebar.h
 
 FORMS += \
     aboutdialog.ui \

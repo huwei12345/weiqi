@@ -18,6 +18,7 @@ release/settingpage.o
 release/sgfparser.o
 release/threadsafequeue.o
 release/timecontrol.o
+release/winratebar.o
 release/qrc_src.o
 release/moc_aboutdialog.o
 release/moc_boardwidget.o
@@ -30,3 +31,4 @@ release/moc_mainwindow.o
 release/moc_screencapture.o
 release/moc_screenshot.o
 release/moc_settingpage.o
+release/moc_winratebar.o
