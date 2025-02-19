@@ -1,6 +1,7 @@
 ﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "choosestepdialog.h"
 #include "imagerecognition.h"
 #include "settingpage.h"
 #include "threadsafequeue.h"
@@ -35,6 +36,8 @@ public:
     void analyzeResultUpdate();
     void putOnePiece(Piece piece);
     void showCurSitutation(const AnalyzeInfo &info);
+    void onChooseDialogClosed();
+    std::vector<Piece> deserial(const QString &str);
 signals:
     void keyEventCaptured(QKeyEvent *event);
 
@@ -44,7 +47,7 @@ protected:
 
 public slots:
     void playerChange(int currentPlayer);
-
+    void dingshiListshow(QString str);
 private slots:
 
     void on_LoadBtn_clicked();
@@ -165,5 +168,6 @@ private:
     QThread *mKataThread;
     ThreadSafeQueue<QString>* mAnalyzeQueue;
     bool mAnalyzeRunning;
+    ChooseStepDialog* mChooseDialog;
 };
 #endif // MAINWINDOW_H

@@ -728,11 +728,17 @@ protected:
         }
         painter.setPen(penold);
     }
+
+public:
     // 判断位置是否合法
     bool isValid(int x, int y) {
         return x >= 0 && x < BOARDWIDTH && y >= 0 && y < BOARDWIDTH;
     }
 
+    bool isValid(Piece piece) {
+        return piece.row >= 0 && piece.row < BOARDWIDTH && piece.col >= 0 && piece.col < BOARDWIDTH;
+    }
+protected:
     bool inCorner(int x, int y) {
         if ((x == 0 || x == 18) && (y == 0 || y == 18)) {
             return true;
@@ -2054,6 +2060,13 @@ protected:
         piece.row = std::round((float)(event->y() - margin) / (float)gridSize);
         piece.col = std::round((float)(event->x() - margin) / (float)gridSize);
         piece.color = currentPlayer == BLACK ? BLACK : WHITE;
+        if (mMode == ChooseMode) {
+            if (isValid(piece.row, piece.col) && isOccupied(board, piece.row, piece.col)) {
+                piece = board[piece.row][piece.col];
+                emit ChoosePieceNow(piece);
+            }
+            return false;
+        }
         bool ret = putPiece(piece);
         // 触发重绘
         if (ret) {
@@ -4546,49 +4559,34 @@ public:
     }
 
     //按说不用按historyNode序列也可以获取选点
-    void remember4(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& res) {
-        Q_UNUSED(boarder)
+    void remember4(std::vector<Piece> seqList, std::vector<std::vector<Piece>>& res) {
         if (DingShiBook == nullptr) {
             qDebug() << "no DingShiBook";
             return;
         }
-        std::vector<std::vector<Piece>> seqList;
-        std::vector<Piece> seq;
-        auto pNode = historyNode;
-        while (pNode != root && pNode != nullptr) {
-            seq.push_back(pNode->move);
-            pNode = pNode->parent.lock();
-        }
-        std::reverse(seq.begin(), seq.end());
-        std::cout << "seq: ";
-        for (auto x : seq) {
+        std::cout << "seqList: ";
+        for (auto x : seqList) {
             std::cout << showPiece(x).toStdString() + " ";
         }
         std::cout << std::endl;
         std::cout << std::endl;
-        seqList.push_back(seq);
         int rotate = 0;
-        if (seqList.size() == 0) {
-            return;
-        }
-        for (size_t i = 0; i < seqList.size(); i++) {
-            auto pieceSeq = seqList[i];
-            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
-            //这种方式还有利于将错误棋局导向正确棋局
-            getNextOneLevelStep(pieceSeq, DingShiBook, res);
-        }
+
+        auto pieceSeq = seqList;
+        AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+        //这种方式还有利于将错误棋局导向正确棋局
+        getNextOneLevelStep(pieceSeq, DingShiBook, res);
         {
             //冗余代码，可以重构
             //反转颜色再搜一遍
             adjustColor(seqList);
             //row col已经调整过了
             std::vector<std::vector<Piece>> colorRes;
-            for (size_t i = 0; i < seqList.size(); i++) {
-                auto pieceSeq = seqList[i];
-                AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
-                //这种方式还有利于将错误棋局导向正确棋局
-                getNextOneLevelStep(pieceSeq, DingShiBook, res);
-            }
+
+            auto pieceSeq = seqList;
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            //这种方式还有利于将错误棋局导向正确棋局，比如某人是除了定式外的一招，但按图走，可能还原定式
+            getNextOneLevelStep(pieceSeq, DingShiBook, colorRes);
             adjustColor(colorRes);
             for (auto x : colorRes) {
                 res.push_back(x);
@@ -4602,7 +4600,15 @@ public:
         if (historyNode == root || historyNode == nullptr) {
             return;
         }
-        remember4(board, mVirtualAns);
+        std::vector<Piece> seqList;
+        auto pNode = historyNode;
+        while (pNode != root && pNode != nullptr) {
+            seqList.push_back(pNode->move);
+            pNode = pNode->parent.lock();
+        }
+        std::reverse(seqList.begin(), seqList.end());
+
+        remember4(seqList, mVirtualAns);
         if (mVirtualAns.size() != 0) {
             mVirtualOpen = true;
             mVirtualMax = mVirtualAns.size();
@@ -4813,6 +4819,12 @@ private:
         }
     }
 
+    void adjustColor(std::vector<Piece>& seqList) {
+        for (int j = 0; j < (int)seqList.size(); j++) {
+            seqList[j].color = !seqList[j].color;
+        }
+    }
+
     //rotate 4 无旋转 5 TOPRIGHT 6 BOTTOMLEFT 7 BOTTOMRIGHT。不是真的旋转，只是记录一下是哪一种逆操作
     void AdjustPosToLeftDown(std::vector<Piece>& seq, int& rotate) {
         Direction direction = BOTTOMLEFT;//
@@ -5011,6 +5023,14 @@ public:
     }
 
 
+    void startChooseMode() {
+        moldMode = mMode;
+        mMode = ChooseMode;
+    }
+
+    void closeChooseMode() {
+        mMode = moldMode;
+    }
     struct Region {
         int ownerColor;
         int liberties;
@@ -5262,6 +5282,7 @@ signals:
     void playerChange(int currentPlayer);
     void getAIPiece(Piece piece, int color);
     void putOnePiece(Piece piece);
+    void ChoosePieceNow(Piece piece);
 public:
     std::shared_ptr<SGFTreeNode> root;
     std::vector<std::vector<Piece>> board;// x y
@@ -5302,6 +5323,7 @@ public:
     int mVirtualCol;
     int mVirtualColor;
     BoardModeType mMode;
+    BoardModeType moldMode;
     bool waitAIFlag;
     bool mForbidPut;
 
@@ -5434,7 +5456,7 @@ public:
         按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式
 
     3.支持按步数顺序查找定式，这样就不必排列组合当前已有子（解决）
-    进一步或许支持现框选子？因为棋局很大，其他角可能下过了（须实现）
+    进一步或许支持现框选子？因为棋局很大，其他角可能下过了（解决）
     y.只显示1手，像AI那样？(解决） 目前是按historyNode做的，也可以按截图内容做（优化）
 
     4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（难 待优化）
@@ -5465,6 +5487,7 @@ public:
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做
     14.三劫循环、四劫循环，不进行处理了。
 
+    走势图
 */
 
 #endif

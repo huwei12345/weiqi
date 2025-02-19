@@ -37,6 +37,29 @@ void Piece::load(const QString& str)
     row = 19 - m.toInt();
 }
 
+void Piece::loadcolor(const QString& str)
+{
+    color = str[0].toLatin1() == 'b' ? 0 : 1;
+    col = charToCol(str[1].toLatin1());
+    QString m;
+    if (str.size() > 3 && str[3].isDigit()) {
+        m = str.mid(2, 3);
+    }
+    else {
+        m = str.mid(2, 2);
+    }
+    row = 19 - m.toInt();
+}
+
+QString Piece::toString()
+{
+    return showPiece(row, col);
+}
+
+QString Piece::toStringcolor() {
+    return showPiece(*this);
+}
+
 void showPoint(int row, int col, int color) {
     if (color == -1) {
         QString str = QString('A' + col + 1) + QString::number(19 - row) + "  noColor";

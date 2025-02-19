@@ -1,6 +1,7 @@
 release/MyProtocolStream.o
 release/aboutdialog.o
 release/boardwidget.o
+release/choosestepdialog.o
 release/dingshishow.o
 release/dingshishowwidget.o
 release/gameresearch.o
@@ -22,6 +23,7 @@ release/winratebar.o
 release/qrc_src.o
 release/moc_aboutdialog.o
 release/moc_boardwidget.o
+release/moc_choosestepdialog.o
 release/moc_dingshishow.o
 release/moc_dingshishowwidget.o
 release/moc_helppage.o

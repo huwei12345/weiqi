@@ -19,6 +19,7 @@ SOURCES += \
     MyProtocolStream.cpp \
     aboutdialog.cpp \
     boardwidget.cpp \
+    choosestepdialog.cpp \
     dingshishow.cpp \
     dingshishowwidget.cpp \
     gameresearch.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
     MyProtocolStream.h \
     aboutdialog.h \
     boardwidget.h \
+    choosestepdialog.h \
     dingshishow.h \
     dingshishowwidget.h \
     gameresearch.h \
@@ -62,6 +64,7 @@ HEADERS += \
 
 FORMS += \
     aboutdialog.ui \
+    choosestepdialog.ui \
     helppage.ui \
     judgecalcdialog.ui \
     mainwindow.ui \

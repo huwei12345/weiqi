@@ -24,7 +24,8 @@ enum BoardModeType {
     SearchMode = 4,
     DingShiMode = 5,
     ExerciseMode = 6,
-    AIMode = 7
+    AIMode = 7,
+    ChooseMode = 8
 };
 
 enum GameState {
@@ -58,10 +59,12 @@ public:
     bool operator==(Piece rhs);
 
     void load(const QString& str);
-
+    QString toString();
 public:
     // 假设 Piece 类有一些属性，并重载了输出操作符
     friend std::ostream& operator<<(std::ostream& os, const Piece& p);
+    QString toStringcolor();
+    void loadcolor(const QString &str);
 };
 Q_DECLARE_METATYPE(Piece);
 

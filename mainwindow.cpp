@@ -1,4 +1,5 @@
 ﻿#include "aboutdialog.h"
+#include "choosestepdialog.h"
 #include "helppage.h"
 #include "judgecalcdialog.h"
 #include "kata.h"
@@ -62,6 +63,11 @@ MainWindow::MainWindow(QWidget *parent)
     mAnalyzeRunning = false;
     ui->analyzePanel->hide();
     ui->rateBar->setWinRate(50, 50);
+    mChooseDialog = new ChooseStepDialog(this);
+    mChooseDialog->setWindowModality(Qt::NonModal);
+    connect(goWidget, &GoBoardWidget::ChoosePieceNow, mChooseDialog, &ChooseStepDialog::ChoosePieceNow);
+    connect(mChooseDialog, &ChooseStepDialog::closed, this, &MainWindow::onChooseDialogClosed);
+    connect(mChooseDialog, &ChooseStepDialog::dingshiListshow, this, &MainWindow::dingshiListshow);
 }
 
 MainWindow::~MainWindow()
@@ -376,6 +382,32 @@ void MainWindow::playerChange(int currentPlayer)
         qDebug() << "WHITE";
         ui->pieceLabel->setPixmap(whitePiece);
     }
+}
+
+void MainWindow::dingshiListshow(QString str)
+{
+    std::vector<Piece> pieceList = deserial(str);
+    std::vector<std::vector<Piece>> ans;
+    goWidget->remember4(pieceList ,ans);
+    goWidget->showNextNStep2(ans);
+}
+
+std::vector<Piece> MainWindow::deserial(const QString& str) {
+    std::vector<Piece> pieceList;
+    for (int i = 0; i < str.size();) {
+        if (str[i] == ' ') {
+            i += 2;
+            continue;
+        }
+        Piece piece;
+        piece.loadcolor(str.mid(i, 3));
+        i += 3;
+        if (goWidget->isValid(piece)) {
+            piece.color = goWidget->board[piece.row][piece.col].color;
+            pieceList.push_back(piece);
+        }
+    }
+    return pieceList;
 }
 
 //退出
@@ -735,9 +767,9 @@ void MainWindow::on_AIJudge_clicked()
 
 void MainWindow::on_actionfindDS_triggered()
 {
-    QInputDialog* dialog = new QInputDialog(this);
-    dialog->setModal(false);
-    dialog->getText(this, "choose Piece", "选择定式子顺序");
+    mChooseDialog->clear();
+    mChooseDialog->show();
+    goWidget->startChooseMode();
 }
 
 
@@ -762,3 +794,7 @@ void MainWindow::putOnePiece(Piece piece) {
     }
 }
 
+void MainWindow::onChooseDialogClosed() {
+    mChooseDialog->clear();
+    goWidget->closeChooseMode();
+}

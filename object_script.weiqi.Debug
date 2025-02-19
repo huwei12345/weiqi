@@ -1,6 +1,7 @@
 debug/MyProtocolStream.o
 debug/aboutdialog.o
 debug/boardwidget.o
+debug/choosestepdialog.o
 debug/dingshishow.o
 debug/dingshishowwidget.o
 debug/gameresearch.o
@@ -22,6 +23,7 @@ debug/winratebar.o
 debug/qrc_src.o
 debug/moc_aboutdialog.o
 debug/moc_boardwidget.o
+debug/moc_choosestepdialog.o
 debug/moc_dingshishow.o
 debug/moc_dingshishowwidget.o
 debug/moc_helppage.o
