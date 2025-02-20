@@ -2512,6 +2512,13 @@ public:
                else {
                    showXuanDian();
                }
+           } else if (event->key() == Qt::Key_I && event->modifiers() == Qt::ControlModifier) {
+               if (mVirtualOpen) {
+                   clearXuanDian();
+               }
+               else {
+                   showXuanDianGraph();
+               }
            }
         }
 
@@ -4309,14 +4316,14 @@ public:
             getSeq(pieceSeq, n, pieceSeqList, seq, color, st);
         }
         //调试打印， 卡慢，即使不开打印，也最好不要超过11步
-//        for (auto r : pieceSeqList) {
-//            std::cout << "seq: ";
-//            for (auto x : r) {
-//                std::cout << showPiece(x).toStdString() + " ";
-//            }
-//            std::cout << std::endl;
-//        }
-//        std::cout << std::endl;
+        for (auto r : pieceSeqList) {
+            std::cout << "seq: ";
+            for (auto x : r) {
+                std::cout << showPiece(x).toStdString() + " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
     }
     void reverseList(std::vector<std::vector<Piece>>& pieceSeqList) {
         for (auto &seq : pieceSeqList) {
@@ -4358,6 +4365,11 @@ public:
                 }
             }
         }
+    }
+
+
+    void remember(int row, int col, std::vector<std::vector<Piece>>& ans) {
+        remember(board, row, col, currentPlayer, mStepN, ans);
     }
 
     //无法处理打劫问题，只能根据当前盘面与当前落子点和颜色推断如何下（依据是定式库）。
@@ -4480,12 +4492,52 @@ public:
     }
 
 
-    void remember(int row, int col, std::vector<std::vector<Piece>>& ans) {
-        remember(board, row, col, currentPlayer, mStepN, ans);
+    //按截图做定式选点功能，只要第一步
+    void remember5(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& res) {
+        if (DingShiBook == nullptr) {
+            qDebug() << "no DingShiBook";
+            return;
+        }
+        std::vector<std::vector<Piece>> seqList;
+        int color = 0;
+        if (mTryMode == true) {
+            color = mTryColor;
+        }
+        else {
+            color = getCurrentPlayer();
+        }
+        getEverySeq2(boarder, seqList, color);
+        int rotate = 0;
+        if (seqList.size() == 0) {
+            return;
+        }
+        for (size_t i = 0; i < seqList.size(); i++) {
+            auto pieceSeq = seqList[i];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            //这种方式还有利于将错误棋局导向正确棋局
+            getNextOneLevelStep(pieceSeq, DingShiBook, res);
+        }
+        {
+            //冗余代码，可以重构
+            //反转颜色再搜一遍
+            adjustColor(seqList);
+            //row col已经调整过了
+            std::vector<std::vector<Piece>> colorRes;
+            for (size_t i = 0; i < seqList.size(); i++) {
+                auto pieceSeq = seqList[i];
+                AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+                //这种方式还有利于将错误棋局导向正确棋局
+                getNextOneLevelStep(pieceSeq, DingShiBook, colorRes);
+            }
+            adjustColor(colorRes);
+            for (auto x : colorRes) {
+                res.push_back(x);
+            }
+        }
+        adjustResultOrigin(res, rotate);//逆操作将结果调回原位
     }
 
-
-    //按historyNode到root这一段，在定式书中搜索，另一种需要，与图像搜索应让用户进行选择
+    //按historyNode到root这一段，加上当前的[row, col color]为前缀，在定式书中搜索，另一种需要，与图像搜索应让用户进行选择
     void remember3(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
         Q_UNUSED(boarder)
         if (DingShiBook == nullptr) {
@@ -4558,7 +4610,8 @@ public:
         showNextNStep2(res);
     }
 
-    //按说不用按historyNode序列也可以获取选点
+
+    //按说不用按historyNode序列也可以获取选点，只获取一层选点
     void remember4(std::vector<Piece> seqList, std::vector<std::vector<Piece>>& res) {
         if (DingShiBook == nullptr) {
             qDebug() << "no DingShiBook";
@@ -4600,6 +4653,7 @@ public:
         if (historyNode == root || historyNode == nullptr) {
             return;
         }
+        closeVirtualStep();
         std::vector<Piece> seqList;
         auto pNode = historyNode;
         while (pNode != root && pNode != nullptr) {
@@ -4623,6 +4677,19 @@ public:
         repaint();
     }
 
+    //根据棋盘盘面或者截图来的盘面进行定式选点（1步）
+    void showXuanDianGraph() {
+        qDebug() << "showXuanDianGraph";
+        closeVirtualStep();
+        remember5(board, mVirtualAns);
+        if (mVirtualAns.size() != 0) {
+            mVirtualOpen = true;
+            mVirtualMax = mVirtualAns.size();
+            mVirtualIndex = (mVirtualIndex + 1) % mVirtualMax;
+            showXuanDianPiece(mVirtualAns);
+            repaint();
+        }
+    }
     void setSearchStep(int step) {
         mStepN = step;
     }
@@ -5450,14 +5517,14 @@ public:
     TODOList:
     1.完善删除节点逻辑（解决）
    （把主分支后续也删掉了，因为少1颗子，整个棋局都将变化，若以后觉得不合理可以回退v0.0.1版本)
-    x.删除节点可以撤销吗，应该支持撤销功能
+    x.删除节点可以撤销吗，应该支持撤销功能（须解决）
 
     2.下一步功能添加虚子显示，按空格切换下一个定式（解决)
-        按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式
+        说明：按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式
 
     3.支持按步数顺序查找定式，这样就不必排列组合当前已有子（解决）
     进一步或许支持现框选子？因为棋局很大，其他角可能下过了（解决）
-    y.只显示1手，像AI那样？(解决） 目前是按historyNode做的，也可以按截图内容做（优化）
+    y.只显示1手，像AI那样？(解决） 目前是按historyNode做的，也可以按截图内容做（解决）
 
     4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（难 待优化）
 
@@ -5482,12 +5549,12 @@ public:
     全局分析，目数，胜率，计算量。（解决）
     鹰眼分析，吻合度，妙手、恶手等
     AI设置
+    走势图
 
     12.双活、单关判定？人为标注？
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做
     14.三劫循环、四劫循环，不进行处理了。
 
-    走势图
 */
 
 #endif
