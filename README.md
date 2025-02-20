@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/546154f6-d27c-4c92-bee4-c31974826b61)# 旨在制作一个围棋辅助学习进步的工具，读取截图的棋盘或者部分棋盘，辅助我定式后续怎么下。
+# 旨在制作一个围棋辅助学习进步的工具，读取截图的棋盘或者部分棋盘，辅助我定式后续怎么下。
 > 后续可能辅助进行习题练习、对战练习等。
 
   因为我总是忘记定式后续怎么下。
@@ -38,6 +38,7 @@
 ![image](https://github.com/user-attachments/assets/56f07ba1-f762-4e6a-a012-54a31f2285fe)
 
 AI智能分析
+
 ![image](https://github.com/user-attachments/assets/b5892683-ec9f-4773-b710-f03247d9528d)
 
 使用AI的形式判断
