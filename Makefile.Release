@@ -15,7 +15,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DUNICODE -D_UNICODE -DWIN32 -DMINGW_HAS_SECURE_API=1 -DQT_QML_DEBUG -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_NEEDS_QMAIN
 CFLAGS        = -fno-keep-inline-dllexport -O2 -Wall -Wextra -Wextra $(DEFINES)
-CXXFLAGS      = -fno-keep-inline-dllexport -O2 -std=gnu++11 -Wall -Wextra -Wextra -fexceptions -mthreads $(DEFINES)
+CXXFLAGS      = -fno-keep-inline-dllexport -O2 -std=gnu++1y -Wall -Wextra -Wextra -fexceptions -mthreads $(DEFINES)
 INCPATH       = -I. -I../cvbuild/install/include -ID:/Qt/5.14.2/mingw73_64/include -ID:/Qt/5.14.2/mingw73_64/include/QtWidgets -ID:/Qt/5.14.2/mingw73_64/include/QtGui -ID:/Qt/5.14.2/mingw73_64/include/QtANGLE -ID:/Qt/5.14.2/mingw73_64/include/QtCore -Irelease -I. -I/include -ID:/Qt/5.14.2/mingw73_64/mkspecs/win32-g++ 
 LINKER      =        g++
 LFLAGS        =        -Wl,-s -Wl,-subsystem,windows -mthreads
@@ -217,7 +217,7 @@ compiler_moc_predefs_make_all: release/moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) release/moc_predefs.h
 release/moc_predefs.h: D:/Qt/5.14.2/mingw73_64/mkspecs/features/data/dummy.cpp
-	g++ -fno-keep-inline-dllexport -O2 -std=gnu++11 -Wall -Wextra -Wextra -dM -E -o release/moc_predefs.h D:/Qt/5.14.2/mingw73_64/mkspecs/features/data/dummy.cpp
+	g++ -fno-keep-inline-dllexport -O2 -std=gnu++1y -Wall -Wextra -Wextra -dM -E -o release/moc_predefs.h D:/Qt/5.14.2/mingw73_64/mkspecs/features/data/dummy.cpp
 
 compiler_moc_header_make_all: release/moc_aboutdialog.cpp release/moc_boardwidget.cpp release/moc_choosestepdialog.cpp release/moc_dingshishow.cpp release/moc_dingshishowwidget.cpp release/moc_helppage.cpp release/moc_judgecalcdialog.cpp release/moc_kata.cpp release/moc_mainwindow.cpp release/moc_screencapture.cpp release/moc_screenshot.cpp release/moc_settingpage.cpp release/moc_winratebar.cpp
 compiler_moc_header_clean:
@@ -1127,7 +1127,7 @@ release/moc_kata.cpp: kata.h \
 	'D:\Qt\5.14.2\mingw73_64\bin\moc.exe' $(DEFINES) --include F:/weiqi/release/moc_predefs.h -ID:/Qt/5.14.2/mingw73_64/mkspecs/win32-g++ -IF:/weiqi -IF:/cvbuild/install/include -ID:/Qt/5.14.2/mingw73_64/include -ID:/Qt/5.14.2/mingw73_64/include/QtWidgets -ID:/Qt/5.14.2/mingw73_64/include/QtGui -ID:/Qt/5.14.2/mingw73_64/include/QtANGLE -ID:/Qt/5.14.2/mingw73_64/include/QtCore -ID:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++ -ID:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/x86_64-w64-mingw32 -ID:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include/c++/backward -ID:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include -ID:/qt5.14/Tools/mingw730_64/lib/gcc/x86_64-w64-mingw32/7.3.0/include-fixed -ID:/qt5.14/Tools/mingw730_64/x86_64-w64-mingw32/include kata.h -o release/moc_kata.cpp
 
 release/moc_mainwindow.cpp: mainwindow.h \
-		imagerecognition.h \
+		choosestepdialog.h \
 		piece.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QString \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qstring.h \
@@ -1183,35 +1183,34 @@ release/moc_mainwindow.cpp: mainwindow.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qvarlengtharray.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qcontainerfwd.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qobject_impl.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/QImage \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qimage.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QDialog \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qdialog.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgetsglobal.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtguiglobal.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtgui-config.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgets-config.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qwidget.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs_win.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qmargins.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpaintdevice.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qrect.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qsize.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpalette.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qcolor.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qrgb.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qrgba64.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpaintdevice.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs_win.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtCore/qrect.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtCore/qmargins.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtCore/qsize.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpixelformat.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtransform.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qbrush.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qmatrix.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpolygon.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qregion.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qdatastream.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qiodevice.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qline.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtransform.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpainterpath.h \
-		settingpage.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QWidget \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qwidget.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgetsglobal.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgets-config.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpalette.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qbrush.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qimage.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpixelformat.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpixmap.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qshareddata.h \
@@ -1237,6 +1236,10 @@ release/moc_mainwindow.cpp: mainwindow.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qfiledevice.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qvector2d.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtouchdevice.h \
+		imagerecognition.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/QImage \
+		settingpage.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QWidget \
 		threadsafequeue.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QMutex \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QQueue \
@@ -2345,7 +2348,40 @@ release/choosestepdialog.o: choosestepdialog.cpp choosestepdialog.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qfiledevice.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qvector2d.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtouchdevice.h \
-		ui_choosestepdialog.h
+		ui_choosestepdialog.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/QVariant \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QApplication \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qapplication.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qcoreapplication.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qeventloop.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qdesktopwidget.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qguiapplication.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qinputmethod.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QDialogButtonBox \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qdialogbuttonbox.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QHBoxLayout \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qboxlayout.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qlayout.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qlayoutitem.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qgridlayout.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QLabel \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qlabel.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qframe.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QPushButton \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qpushbutton.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qabstractbutton.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qicon.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QTextEdit \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtextedit.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qabstractscrollarea.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtextdocument.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtextoption.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtextcursor.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtextformat.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpen.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QVBoxLayout \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QWidget \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/QDebug
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/choosestepdialog.o choosestepdialog.cpp
 
 release/dingshishow.o: dingshishow.cpp dingshishow.h \
@@ -3316,11 +3352,15 @@ release/kata.o: kata.cpp kata.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QMutex \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QQueue \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qqueue.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtCore/QMutexLocker
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/QMutexLocker \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/QThread \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qthread.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/QRegularExpression \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qregularexpression.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release/kata.o kata.cpp
 
 release/main.o: main.cpp mainwindow.h \
-		imagerecognition.h \
+		choosestepdialog.h \
 		piece.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QString \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qstring.h \
@@ -3376,35 +3416,34 @@ release/main.o: main.cpp mainwindow.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qvarlengtharray.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qcontainerfwd.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qobject_impl.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/QImage \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qimage.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QDialog \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qdialog.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgetsglobal.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtguiglobal.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtgui-config.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgets-config.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qwidget.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs_win.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qmargins.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpaintdevice.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qrect.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtCore/qsize.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpalette.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qcolor.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qrgb.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qrgba64.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpaintdevice.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qwindowdefs_win.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtCore/qrect.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtCore/qmargins.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtCore/qsize.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpixelformat.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtransform.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qbrush.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qmatrix.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpolygon.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qregion.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qdatastream.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qiodevice.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qline.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtransform.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpainterpath.h \
-		settingpage.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QWidget \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qwidget.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgetsglobal.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/qtwidgets-config.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpalette.h \
-		D:/Qt/5.14.2/mingw73_64/include/QtGui/qbrush.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qimage.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpixelformat.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qpixmap.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qsharedpointer.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qshareddata.h \
@@ -3430,6 +3469,10 @@ release/main.o: main.cpp mainwindow.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/qfiledevice.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qvector2d.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtGui/qtouchdevice.h \
+		imagerecognition.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtGui/QImage \
+		settingpage.h \
+		D:/Qt/5.14.2/mingw73_64/include/QtWidgets/QWidget \
 		threadsafequeue.h \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QMutex \
 		D:/Qt/5.14.2/mingw73_64/include/QtCore/QQueue \

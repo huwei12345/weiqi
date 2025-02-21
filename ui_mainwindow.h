@@ -56,6 +56,7 @@ public:
     QAction *actionAIjudge;
     QAction *actionxuandian;
     QAction *actionfindDS;
+    QAction *deepsearch;
     QWidget *centralwidget;
     QGridLayout *gridLayout;
     QTextEdit *textEdit;
@@ -190,6 +191,8 @@ public:
         actionxuandian->setCheckable(true);
         actionfindDS = new QAction(MainWindow);
         actionfindDS->setObjectName(QString::fromUtf8("actionfindDS"));
+        deepsearch = new QAction(MainWindow);
+        deepsearch->setObjectName(QString::fromUtf8("deepsearch"));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
         gridLayout = new QGridLayout(centralwidget);
@@ -610,6 +613,7 @@ public:
         menu_3->addAction(actionnextStep);
         menu_3->addAction(actionxuandian);
         menu_3->addAction(actionfindDS);
+        menu_3->addAction(deepsearch);
         menu_4->addAction(actionsearchStep);
         menu_4->addAction(setting);
         menu_5->addAction(action);
@@ -647,6 +651,10 @@ public:
         actionAIjudge->setText(QCoreApplication::translate("MainWindow", "\346\231\272\350\203\275\350\243\201\345\210\244", nullptr));
         actionxuandian->setText(QCoreApplication::translate("MainWindow", "\345\256\232\345\274\217\351\200\211\347\202\271", nullptr));
         actionfindDS->setText(QCoreApplication::translate("MainWindow", "\346\241\206\351\200\211\346\237\245\345\256\232\345\274\217", nullptr));
+        deepsearch->setText(QCoreApplication::translate("MainWindow", "\351\271\260\347\234\274\345\210\206\346\236\220", nullptr));
+#if QT_CONFIG(tooltip)
+        deepsearch->setToolTip(QCoreApplication::translate("MainWindow", "\351\271\260\347\234\274\345\210\206\346\236\220", nullptr));
+#endif // QT_CONFIG(tooltip)
         label_4->setText(QCoreApplication::translate("MainWindow", "\347\240\224\347\251\266", nullptr));
         storeBtn->setText(QCoreApplication::translate("MainWindow", "\345\255\230\345\202\250", nullptr));
         LoadBtn->setText(QCoreApplication::translate("MainWindow", "\350\257\273\345\217\226", nullptr));

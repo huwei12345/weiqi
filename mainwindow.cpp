@@ -798,3 +798,12 @@ void MainWindow::onChooseDialogClosed() {
     mChooseDialog->clear();
     goWidget->closeChooseMode();
 }
+
+void MainWindow::on_deepsearch_triggered()
+{
+    QList<MoveAnalysis> results = mKata->analyzeFullGame(goWidget->getCurrentNode());
+    AnalysisReport::generateReport(results);
+    // 可选：绘制胜率曲线
+    //plotWinRateChart(results);
+}
+
