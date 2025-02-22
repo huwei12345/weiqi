@@ -20,6 +20,7 @@
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
+#include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSlider>
 #include <QtWidgets/QSpacerItem>
@@ -135,6 +136,10 @@ public:
     QHBoxLayout *horizontalLayout_6;
     QTreeWidget *pieceTree;
     QSpacerItem *horizontalSpacer;
+    QWidget *widget_4;
+    QVBoxLayout *verticalLayout_2;
+    QPlainTextEdit *plainTextEdit;
+    QSpacerItem *verticalSpacer_2;
     QMenuBar *menubar;
     QMenu *menu;
     QMenu *menu_2;
@@ -560,6 +565,22 @@ public:
         horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         horizontalLayout_6->addItem(horizontalSpacer);
+
+        widget_4 = new QWidget(widget_2);
+        widget_4->setObjectName(QString::fromUtf8("widget_4"));
+        verticalLayout_2 = new QVBoxLayout(widget_4);
+        verticalLayout_2->setObjectName(QString::fromUtf8("verticalLayout_2"));
+        plainTextEdit = new QPlainTextEdit(widget_4);
+        plainTextEdit->setObjectName(QString::fromUtf8("plainTextEdit"));
+
+        verticalLayout_2->addWidget(plainTextEdit);
+
+        verticalSpacer_2 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        verticalLayout_2->addItem(verticalSpacer_2);
+
+
+        horizontalLayout_6->addWidget(widget_4);
 
 
         horizontalLayout_4->addWidget(widget_2);

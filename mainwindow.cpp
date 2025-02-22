@@ -761,6 +761,7 @@ void MainWindow::on_judgeBtn_clicked(bool checked)
 //智能裁判
 void MainWindow::on_AIJudge_clicked()
 {
+    //TODO: 350手以上或者完成度95%
     QMetaObject::invokeMethod(mKata, "calculateEndScore", Qt::QueuedConnection, Q_ARG(std::shared_ptr<SGFTreeNode>, goWidget->getCurrentNode()), Q_ARG(JudgeInfo*, goWidget->mJudgeInfo));
 }
 
