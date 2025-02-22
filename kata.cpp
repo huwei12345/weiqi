@@ -1,19 +1,25 @@
 ﻿#include "kata.h"
 #include <QProcess>
 #include <QDebug>
+#include <QThread>
+#include <QRegularExpression>
 #include "piece.h"
 #include "threadsafequeue.h"
 #include <iostream>
 Kata::Kata()
 {
     mAnalyzeQueue = nullptr;
+    mYinYanOutputQueue = new ThreadSafeQueue<QString>;
     mAnalyzeRunning = false;
+    isYingYan = false;
 }
 
 Kata::Kata(std::vector<std::vector<Piece> > *board) : mBoard(board)
 {
     mAnalyzeQueue = nullptr;
+    mYinYanOutputQueue = new ThreadSafeQueue<QString>;
     mAnalyzeRunning = false;
+    isYingYan = false;
 }
 
 // 解析 showboard 输出并生成 19x19 的二维棋盘数组
@@ -104,14 +110,20 @@ int Kata::startKata() {
     // 连接信号和槽来处理输出
     QObject::connect(kataGoProcess, &QProcess::readyReadStandardOutput, [this]() {
         QByteArray output = kataGoProcess->readAllStandardOutput();
-        qDebug() << "KataGo Output: " << output;
         const QString str(output);
         mKatagoOutput = str;
-        if (str.startsWith("info move")) {
+        qDebug() << "KataGo Output: " << output;
+        if (str.startsWith("info move") && isYingYan == false) {
             //mAnalyzeOutput = str;
             if (mAnalyzeQueue != nullptr && mAnalyzeQueue->size() < 1000) {
                 mAnalyzeQueue->enqueue(str);
                 emit analyzeResultUpdate();
+            }
+            return;
+        }
+        else if (str.startsWith("info move") && isYingYan == true) {
+            if (mYinYanOutputQueue->size() == 0) {
+                mYinYanOutputQueue->enqueue(str);
             }
             return;
         }
@@ -191,6 +203,130 @@ bool Kata::isValid(Piece piece) {
         return true;
     }
     return false;
+}
+
+
+std::vector<Piece> Kata::getMoveHistory(std::shared_ptr<SGFTreeNode> node) {
+    std::vector<Piece> pieceList;
+    auto p = node;
+    while (p != nullptr && p->move.color != -1) {
+        if (isValid(p->move)) {
+            pieceList.push_back(p->move);
+            p = p->parent.lock();
+        }
+        else {
+            qDebug() << "Fatal Error" << showPiece(p->move);
+        }
+    }
+    std::reverse(pieceList.begin(), pieceList.end());
+    return pieceList;
+}
+
+QList<MoveAnalysis> Kata::analyzeFullGame(std::shared_ptr<SGFTreeNode> gameRoot) {
+
+    // 重置棋盘并设置规则
+    sendCommand("clear_board");
+    sendCommand("boardsize 19");
+    sendCommand("kata-set-rules chinese");
+    analysisList.clear();
+    // 遍历棋局历史
+    std::vector<Piece> moveHistory = getMoveHistory(gameRoot); // 实现获取历史着法
+    isYingYan = true;
+    for (int i = 0; i < (int)moveHistory.size(); ++i) {
+        mYinYanOutputQueue->clear();
+        // 发送分析请求，获取当前局面的所有候选着法
+        sendCommand("kata-analyze 100 maxmoves 10"); // 分析前20个候选着法
+        int cnt = 0;
+        while (mYinYanOutputQueue->size() == 0 && cnt < 100) {
+            kataGoProcess->waitForFinished(30);
+            cnt++;
+        }
+        QString yinyanStr;
+        sendCommand("");
+        if (mYinYanOutputQueue->size() != 0) {
+            mYinYanOutputQueue->dequeue(yinyanStr);
+        }
+        else {
+            qDebug() << i <<" ERRRRRRRRRRRRRRRRRRRRRRRRRRRRRR";
+            break;
+        }
+        auto move = moveHistory[i];
+        // 播放到当前局面
+        QString cmd = QString("play %1 %2\n")
+                          .arg(move.color == 0 ? "B" : "W")
+                          .arg(move.toString());
+        qDebug() << "seq " << i << " " << cmd;
+        sendCommand(cmd);
+        kataGoProcess->waitForFinished(30);
+        MoveAnalysis analysis = parseAnalysisOutput(yinyanStr, move.toString());
+        analysis.moveNumber = i + 1;
+        analysisList.append(analysis);
+    }
+    if (analysisList.size() != moveHistory.size()) {
+        return {};
+    }
+    return analysisList;
+}
+
+
+MoveAnalysis Kata::parseAnalysisOutput(const QString& output, const QString& userMove) {
+    MoveAnalysis analysis;
+    analysis.winRate = -1;
+    analysis.scoreLead = 0;
+    analysis.aiRank = -1;
+    analysis.isUserMoveBest = false;
+
+    QStringList lines = output.split("info ");
+    QList<QPair<double, QString>> moves; // 保存（胜率, 着法）
+
+    bool flag = false;
+    for (const QString& line : lines) {
+        if (line.size() != 0) {
+            QRegularExpression regex(
+                "move (\\w+) .* winrate ([0-9.]+) scoreMean ([+-]?[0-9.]+)");
+            QRegularExpressionMatch match = regex.match(line);
+            if (match.hasMatch()) {
+                QString move = match.captured(1);
+                double winRate = match.captured(2).toDouble();
+                double scoreLead = match.captured(3).toDouble();
+                if (flag == false) {
+                    //一选胜率作为当前胜率（是还没下当前手的胜率）。
+                    analysis.winRate = winRate;
+                    analysis.scoreLead = scoreLead;
+                    flag = true;
+                }
+                qDebug() << "{}{} "<< move << " " << winRate << " " << scoreLead;
+                // 记录所有候选着法
+                moves.append(qMakePair(winRate, move));
+
+                // 检查是否是用户着法
+                if (move == userMove) {
+                }
+            }
+        }
+    }
+
+    // 按胜率排序，确定AI推荐排名
+    std::sort(moves.begin(), moves.end(), [](auto& a, auto& b) {
+        return a.first > b.first; // 降序排列
+    });
+
+    // 记录排名和推荐着法
+    for (int i = 0; i < moves.size(); ++i) {
+        if (moves[i].second == userMove) {
+            analysis.aiRank = i;
+            analysis.isUserMoveBest = (i == 0);
+        }
+        analysis.topMoves.append(moves[i].second);
+    }
+
+    return analysis;
+}
+
+void Kata::sendCommand(const QString &cmd)
+{
+    kataGoProcess->write(cmd.toLatin1() + "\n");
+    kataGoProcess->waitForFinished(10);
 }
 
 void Kata::reInitKata(std::shared_ptr<SGFTreeNode> head)

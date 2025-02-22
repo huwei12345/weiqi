@@ -156,6 +156,8 @@ private slots:
 
     void on_toolButton_11_clicked(bool checked);
 
+    void on_deepsearch_triggered();
+
 private:
     Ui::MainWindow *ui;
     GoBoardWidget* goWidget;

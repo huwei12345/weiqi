@@ -259,18 +259,16 @@ protected:
         pen.setColor(Qt::black);
         pen.setWidth(2);
         painter.setPen(pen);
-
+        // 绘制纵向和横向的线
         for (int i = 0; i < boardSize; ++i) {
-            // 绘制纵向和横向的线
             painter.drawLine(margin + gridSize * i, margin, margin + gridSize * i, height() - margin * 2 - 10);
             painter.drawLine(margin, margin + gridSize * i, width() - margin * 2 - 10, margin + gridSize * i);
         }
 
-        // 标注数字
+        // 标注棋盘线数字字母
         QFont font = painter.font();
         font.setPointSize(10);
         painter.setFont(font);
-
         // 竖线标注
         for (int i = 0; i < boardSize; ++i) {
             int x = margin + gridSize * i + gridSize / 2 - 20;
@@ -278,7 +276,6 @@ protected:
             // 防止第一个数字标注与棋盘重合
             painter.drawText(x, y, colToChar(i));
         }
-
         // 横线标注
         for (int i = 0; i < boardSize; ++i) {
             int x = margin - 25; // 放在棋盘左侧
@@ -287,7 +284,10 @@ protected:
                 painter.drawText(x, y, QString::number(19 - i));
         }
 
+        //绘制AI分析
         paintAIAnalyze(painter, gridSize);
+
+        //绘制棋子
         for (int i = 0; i < 19; i++) {
             for (int j = 0; j < 19; j++) {
                 if (board[i][j].color == 1) {
@@ -303,8 +303,8 @@ protected:
             }
         }
 
+        //跟新手数显示
         if (mShouShuState == SHOWSHOUSHU) {
-            //跟新手数显示
             if (mTryMode == false) {
                 updateMoveLabel(painter, gridSize);
             }
@@ -313,6 +313,7 @@ protected:
             }
         }
 
+        //旧形式判断
 //        for (auto p : blackLiberties) {
 //            painter.setBrush(QBrush(Qt::black));
 //            painter.drawRect(margin + p.second * gridSize - 5, margin + p.first * gridSize - 5, 10, 10);
@@ -330,7 +331,7 @@ protected:
 
         for (auto p : filedLiberties) {
             painter.setBrush(QBrush(Qt::green));
-            painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+            painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 12, 12);
         }
 
         std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
@@ -342,16 +343,35 @@ protected:
                         for (auto p : liber->pieceFiled) {
                             visited[p.first][p.second] = true;
                             if (liber->belong == 0) {
-                                painter.setBrush(QBrush(Qt::yellow));
-                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+                                painter.setBrush(QBrush(Qt::black));
+                                //painter.setBrush(QBrush(Qt::yellow));
+                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 12, 12);
                             }
                             else if (liber->belong == 1) {
-                                painter.setBrush(QBrush(Qt::gray));
-                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+                                painter.setBrush(QBrush(Qt::white));
+                                //painter.setBrush(QBrush(Qt::gray));
+                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 12, 12);
                             }
                             else {
-                                painter.setBrush(QBrush(Qt::red));
-                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+//                                painter.setBrush(QBrush(Qt::red));
+//                                painter.drawRect(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6, 10, 12);
+
+                                painter.setBrush(QBrush(Qt::black));
+                                        QPoint points1[3] = {
+                                            QPoint(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6), // 上顶点
+                                            QPoint(margin + p.second * gridSize - 6, margin + p.first * gridSize + 6),     // 左下角
+                                            QPoint(margin + p.second * gridSize + 6, margin + p.first * gridSize + 6)   // 右下角
+                                        };
+                                        painter.drawPolygon(points1, 3);
+
+                                        // 绘制下三角形（黑色）
+                                        painter.setBrush(QBrush(Qt::white));
+                                        QPoint points2[3] = {
+                                            QPoint(margin + p.second * gridSize + 6, margin + p.first * gridSize + 6), // 下顶点
+                                            QPoint(margin + p.second * gridSize - 6, margin + p.first * gridSize - 6),           // 左上角
+                                            QPoint(margin + p.second * gridSize + 6, margin + p.first * gridSize - 6)         // 右上角
+                                        };
+                                        painter.drawPolygon(points2, 3);
                             }
                         }
                     }
@@ -364,11 +384,11 @@ protected:
             for (int j = 0; j < 19; j++) {
                 if (ownership[i][j] == 0) {
                     painter.setBrush(QBrush(Qt::yellow));
-                    painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                    painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 12, 12);
                 }
                 else if (ownership[i][j] == 1) {
                     painter.setBrush(QBrush(Qt::gray));
-                    painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                    painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 12, 12);
                 }
             }
         }
@@ -395,12 +415,12 @@ protected:
             for (int i = 0; i < 19; i++) {
                 for (int j = 0; j < 19; j++) {
                     if (judgeCalcBoard[i][j] == 0) {
-                        painter.setBrush(QBrush(Qt::yellow));
-                        painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                        painter.setBrush(QBrush(Qt::black));
+                        painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 12, 12);
                     }
                     else if (judgeCalcBoard[i][j] == 1) {
-                        painter.setBrush(QBrush(Qt::gray));
-                        painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 10, 12);
+                        painter.setBrush(QBrush(Qt::white));
+                        painter.drawRect(margin + j * gridSize - 6, margin + i * gridSize - 6, 12, 12);
                     }
                 }
             }
@@ -2399,6 +2419,7 @@ public:
                     return;
                 }
                 deleteSGFTreeItem(item);
+                repaint();
 
 //               if (PracticeMode != true) {
 //                   qDebug() << "please open PracticeMode";
@@ -2427,7 +2448,6 @@ public:
 //                       break;
 //                   }
 //               }
-               repaint();
            } else if (event->key() == Qt::Key_J && event->modifiers() == Qt::ControlModifier) {
                //和Ctrl + R一样，但是采用虚字模式显示
                int margin = 30;
@@ -2457,14 +2477,6 @@ public:
                    repaint();
                }
            } else if (event->key() == Qt::Key_G && event->modifiers() == Qt::ControlModifier) {
-               int margin = 30;
-               int gridSize = (width() - 2 * margin) / 19;
-               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
-               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
-               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
-               qDebug() << showPiece(row, col);
-//               std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
-//               floodFill(row, col, visited);
                if (hasCalc == false) {
                    calcGame(board, false);
                    hasCalc = true;
@@ -2474,6 +2486,17 @@ public:
                    clearCalcResult();
                    return;
                }
+               repaint();
+           } else if (event->key() == Qt::Key_Y && event->modifiers() == Qt::ControlModifier) {
+               //描绘当前这一块棋显示为绿色
+               int margin = 30;
+               int gridSize = (width() - 2 * margin) / 19;
+               QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
+               int row = std::round((float)(mousePos.y() - margin) / (float)gridSize);
+               int col = std::round((float)(mousePos.x() - margin) / (float)gridSize);
+               //std::vector<std::vector<bool>> visited(HEIGHT, std::vector<bool>(WIDTH, false));
+               //floodFill(row, col, visited);
+               qDebug() << showPiece(row, col);
                std::shared_ptr<Filed> fd = indexMap[row][col];
                filedLiberties = fd->pieceFiled;
                if (fd) {
@@ -2487,8 +2510,8 @@ public:
                else {
                    qDebug() << "error";
                }
-               repaint();
-           } else if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
+           }
+           else if (event->key() == Qt::Key_H && event->modifiers() == Qt::ControlModifier) {
                int margin = 30;
                int gridSize = (width() - 2 * margin) / 19;
                QPoint mousePos = this->mapFromGlobal(QCursor::pos());  // 获取鼠标在窗口中的位置
@@ -2511,6 +2534,13 @@ public:
                }
                else {
                    showXuanDian();
+               }
+           } else if (event->key() == Qt::Key_I && event->modifiers() == Qt::ControlModifier) {
+               if (mVirtualOpen) {
+                   clearXuanDian();
+               }
+               else {
+                   showXuanDianGraph();
                }
            }
         }
@@ -4309,14 +4339,14 @@ public:
             getSeq(pieceSeq, n, pieceSeqList, seq, color, st);
         }
         //调试打印， 卡慢，即使不开打印，也最好不要超过11步
-//        for (auto r : pieceSeqList) {
-//            std::cout << "seq: ";
-//            for (auto x : r) {
-//                std::cout << showPiece(x).toStdString() + " ";
-//            }
-//            std::cout << std::endl;
-//        }
-//        std::cout << std::endl;
+        for (auto r : pieceSeqList) {
+            std::cout << "seq: ";
+            for (auto x : r) {
+                std::cout << showPiece(x).toStdString() + " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
     }
     void reverseList(std::vector<std::vector<Piece>>& pieceSeqList) {
         for (auto &seq : pieceSeqList) {
@@ -4358,6 +4388,11 @@ public:
                 }
             }
         }
+    }
+
+
+    void remember(int row, int col, std::vector<std::vector<Piece>>& ans) {
+        remember(board, row, col, currentPlayer, mStepN, ans);
     }
 
     //无法处理打劫问题，只能根据当前盘面与当前落子点和颜色推断如何下（依据是定式库）。
@@ -4480,12 +4515,52 @@ public:
     }
 
 
-    void remember(int row, int col, std::vector<std::vector<Piece>>& ans) {
-        remember(board, row, col, currentPlayer, mStepN, ans);
+    //按截图做定式选点功能，只要第一步
+    void remember5(std::vector<std::vector<Piece>> &boarder, std::vector<std::vector<Piece>>& res) {
+        if (DingShiBook == nullptr) {
+            qDebug() << "no DingShiBook";
+            return;
+        }
+        std::vector<std::vector<Piece>> seqList;
+        int color = 0;
+        if (mTryMode == true) {
+            color = mTryColor;
+        }
+        else {
+            color = getCurrentPlayer();
+        }
+        getEverySeq2(boarder, seqList, color);
+        int rotate = 0;
+        if (seqList.size() == 0) {
+            return;
+        }
+        for (size_t i = 0; i < seqList.size(); i++) {
+            auto pieceSeq = seqList[i];
+            AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+            //这种方式还有利于将错误棋局导向正确棋局
+            getNextOneLevelStep(pieceSeq, DingShiBook, res);
+        }
+        {
+            //冗余代码，可以重构
+            //反转颜色再搜一遍
+            adjustColor(seqList);
+            //row col已经调整过了
+            std::vector<std::vector<Piece>> colorRes;
+            for (size_t i = 0; i < seqList.size(); i++) {
+                auto pieceSeq = seqList[i];
+                AdjustPosToLeftDown(pieceSeq, rotate);//for中的每次rotate一定相同
+                //这种方式还有利于将错误棋局导向正确棋局
+                getNextOneLevelStep(pieceSeq, DingShiBook, colorRes);
+            }
+            adjustColor(colorRes);
+            for (auto x : colorRes) {
+                res.push_back(x);
+            }
+        }
+        adjustResultOrigin(res, rotate);//逆操作将结果调回原位
     }
 
-
-    //按historyNode到root这一段，在定式书中搜索，另一种需要，与图像搜索应让用户进行选择
+    //按historyNode到root这一段，加上当前的[row, col color]为前缀，在定式书中搜索，另一种需要，与图像搜索应让用户进行选择
     void remember3(std::vector<std::vector<Piece>> &boarder, int row, int col, int color, int stepN, std::vector<std::vector<Piece>>& res) {
         Q_UNUSED(boarder)
         if (DingShiBook == nullptr) {
@@ -4558,7 +4633,8 @@ public:
         showNextNStep2(res);
     }
 
-    //按说不用按historyNode序列也可以获取选点
+
+    //按说不用按historyNode序列也可以获取选点，只获取一层选点
     void remember4(std::vector<Piece> seqList, std::vector<std::vector<Piece>>& res) {
         if (DingShiBook == nullptr) {
             qDebug() << "no DingShiBook";
@@ -4600,6 +4676,7 @@ public:
         if (historyNode == root || historyNode == nullptr) {
             return;
         }
+        closeVirtualStep();
         std::vector<Piece> seqList;
         auto pNode = historyNode;
         while (pNode != root && pNode != nullptr) {
@@ -4623,6 +4700,19 @@ public:
         repaint();
     }
 
+    //根据棋盘盘面或者截图来的盘面进行定式选点（1步）
+    void showXuanDianGraph() {
+        qDebug() << "showXuanDianGraph";
+        closeVirtualStep();
+        remember5(board, mVirtualAns);
+        if (mVirtualAns.size() != 0) {
+            mVirtualOpen = true;
+            mVirtualMax = mVirtualAns.size();
+            mVirtualIndex = (mVirtualIndex + 1) % mVirtualMax;
+            showXuanDianPiece(mVirtualAns);
+            repaint();
+        }
+    }
     void setSearchStep(int step) {
         mStepN = step;
     }
@@ -5450,14 +5540,13 @@ public:
     TODOList:
     1.完善删除节点逻辑（解决）
    （把主分支后续也删掉了，因为少1颗子，整个棋局都将变化，若以后觉得不合理可以回退v0.0.1版本)
-    x.删除节点可以撤销吗，应该支持撤销功能
+    x.删除节点可以撤销吗，应该支持撤销功能（须解决）
 
     2.下一步功能添加虚子显示，按空格切换下一个定式（解决)
-        按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式
-
+        说明：按Ctrl + J 开启， Ctrl + K 关闭，Ctrl + L 切换下一个定式
     3.支持按步数顺序查找定式，这样就不必排列组合当前已有子（解决）
     进一步或许支持现框选子？因为棋局很大，其他角可能下过了（解决）
-    y.只显示1手，像AI那样？(解决） 目前是按historyNode做的，也可以按截图内容做（优化）
+    y.只显示1手，像AI那样？(解决） 目前是按historyNode做的，也可以按截图内容做（解决）
 
     4.重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。（难 待优化）
 
@@ -5482,12 +5571,37 @@ public:
     全局分析，目数，胜率，计算量。（解决）
     鹰眼分析，吻合度，妙手、恶手等
     AI设置
+    走势图
 
     12.双活、单关判定？人为标注？
     13.征子、夹吃、缓征，都需要全局或局部博弈推演。可以不做。某些可以等做习题模式再做
     14.三劫循环、四劫循环，不进行处理了。
+    15.简单形式判断、智能裁判判定350手或完成度95。是否终局，单关全部收完。
 
+
+
+    简单形式判断（非AI）
+    是否终局（非AI，单关全部收完）。
+    终局判定将单官和双活的空填上颜色，一半黑，一半白。(解决）
+    isEye目前已支持2-4空的特别判定，但是没有考虑其中气的问题、打吃、双打、倒扑都可能有影响，如丁四在各种位置的情形，但是依赖这种特殊判定并不是办法。解决方案：还是应该在限制一个区域范围中，进行暴力博弈，判定如果某方先手，另一方绝顶聪明，是否能一定做活。
+    [双活难以判定，只能作为单官？标注？]或者双活情形，如果对方先手，是否一定能杀死对方棋块，如果一方无法做活，并不一定是死棋，应判定另一方是否能杀死，如果也不能，那就是双活。以及杀棋方是否是活棋，或者也是双活。
+    三劫循环 四劫循环
+    习题模式
+    目前删除节点把主分支后续也删掉了，因为少1颗子，整个棋局都将变化，若以后觉得不合理可以回退v0.0.1版本
+    内存泄漏 Filed SGFNode已解决，但可能还有界面上的内存泄漏，暂时不考虑小的内存泄露额了，不影响。
+    删除节点可以撤销吗？应该支持撤销功能（须解决）
+    征子、夹吃？暴力博弈
+    重构定式存储逻辑，要求有定式说明字段、类型字段、推荐度、常用度。并能与SGF互相转换。
+    界面优化
+    功能补充： 棋局状态、移动棋子、设置、用户、定式选点
+    分割功能，重构代码。下棋状态、分析状态、习题状态。
+    模式说明：比赛模式、复盘模式、试下模式（试下模式作为复盘和习题中的一种子模式，仅支持单分支，符合围棋规则）、摆棋模式（不符合围棋吃子规则，仅仅是摆，无顺序，删子移子）、习题模式、AI模式。
+    试下模式也该支持将子作为一个SGF树上的节点？然后退出模式后，删除节点？。
+    接入AI，需要调整现有功能准确率和运行速度，考虑将棋盘预先载入katago。
+    鹰眼分析，吻合度，妙手、恶手等
     走势图
+    AI设置
+    智能裁判判定350手或完成度95
 */
 
 #endif

@@ -75,7 +75,11 @@ Ctrl + H 判定是否能被征死
 Ctrl + J 开启定式虚子帮助
 Ctrl + K 关闭定式虚子帮助
 Ctrl + L 虚子帮助模式下一个定式
-右键 显示行列与棋块的气</string>
+右键 显示行列与棋块的气
+Ctrl + M 按historyNode到头，加上当前的[row, col color]为前缀，在定式书中搜索
+Ctrl + N 定式选点功能（按落子顺序）
+Ctrl + I 定式选定功能（按盘面无顺序）
+Ctrl + Y 描绘当前这一块棋显示为绿色</string>
      </property>
      <property name="backgroundVisible">
       <bool>true</bool>

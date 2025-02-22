@@ -721,6 +721,7 @@
     <addaction name="actionnextStep"/>
     <addaction name="actionxuandian"/>
     <addaction name="actionfindDS"/>
+    <addaction name="deepsearch"/>
    </widget>
    <widget class="QMenu" name="menu_4">
     <property name="title">
@@ -851,6 +852,14 @@
   <action name="actionfindDS">
    <property name="text">
     <string>框选查定式</string>
+   </property>
+  </action>
+  <action name="deepsearch">
+   <property name="text">
+    <string>鹰眼分析</string>
+   </property>
+   <property name="toolTip">
+    <string>鹰眼分析</string>
    </property>
   </action>
  </widget>
