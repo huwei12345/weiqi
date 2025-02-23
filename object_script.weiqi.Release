@@ -2,6 +2,7 @@ release/MyProtocolStream.o
 release/aboutdialog.o
 release/boardwidget.o
 release/choosestepdialog.o
+release/deepanalyzedialog.o
 release/dingshishow.o
 release/dingshishowwidget.o
 release/gameresearch.o
@@ -20,10 +21,12 @@ release/sgfparser.o
 release/threadsafequeue.o
 release/timecontrol.o
 release/winratebar.o
+release/winrategraph.o
 release/qrc_src.o
 release/moc_aboutdialog.o
 release/moc_boardwidget.o
 release/moc_choosestepdialog.o
+release/moc_deepanalyzedialog.o
 release/moc_dingshishow.o
 release/moc_dingshishowwidget.o
 release/moc_helppage.o

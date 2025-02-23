@@ -1,10 +1,12 @@
 ﻿#include "aboutdialog.h"
 #include "choosestepdialog.h"
+#include "deepanalyzedialog.h"
 #include "helppage.h"
 #include "judgecalcdialog.h"
 #include "kata.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "winrategraph.h"
 
 #include <QClipboard>
 #include <QFileDialog>
@@ -12,6 +14,10 @@
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QTimer>
+#include <QValueAxis>
+
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QLineSeries>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -803,8 +809,72 @@ void MainWindow::onChooseDialogClosed() {
 void MainWindow::on_deepsearch_triggered()
 {
     QList<MoveAnalysis> results = mKata->analyzeFullGame(goWidget->getCurrentNode());
-    AnalysisReport::generateReport(results);
+    AnalysisReport::generateReport(results, 0);
+    AnalysisReport::generateReport(results, 1);
     // 可选：绘制胜率曲线
-    //plotWinRateChart(results);
+    plotWinRateChart(results);
+
 }
 
+void MainWindow::plotWinRateChart(QList<MoveAnalysis> analysis) {
+    //调为黑方视角
+    std::cout << "winRate\n";
+    for (auto &r : analysis) {
+        if (0 != r.color) {
+            r.winRate = 1.0 - r.winRate;
+            r.scoreLead = -r.scoreLead;
+        }
+        r.winRate = r.winRate * 100.0;
+        std::cout << r.winRate << " ";
+    }
+    std::cout << "\n\n";
+    fflush(stdout);
+    DeepAnalyzeDialog* dialog = new DeepAnalyzeDialog;
+    dialog->showAnalyzeResult(analysis);
+    dialog->show();
+
+
+
+    // 创建QLineSeries来表示胜率或目数差
+    // 创建两个 QLineSeries：一个表示目数差距，另一个表示胜率
+    QLineSeries *series1 = new QLineSeries();
+    QLineSeries *series2 = new QLineSeries();
+    // 填充数据：第一条线表示目数差，第二条线表示胜率
+    for (int i = 0; i < analysis.size(); i++) {
+       series1->append(i, analysis[i].scoreLead);   // 目数差
+       series2->append(i, analysis[i].winRate);   // 胜率
+    }
+    // 创建图表并将两个系列添加到图表
+    QChart *chart = new QChart();
+    chart->addSeries(series1);
+    chart->addSeries(series2);
+    chart->setTitle("围棋胜率和目数差");
+    // 创建 X 轴
+    QValueAxis *axisX = new QValueAxis();
+    axisX->setRange(0, analysis.size());  // 假设有三步棋
+    axisX->setLabelFormat("%d");
+    chart->addAxis(axisX, Qt::AlignBottom);
+
+    // 创建两个 Y 轴：一个用于目数差，另一个用于胜率
+    QValueAxis *axisY1 = new QValueAxis(); // 目数差的 Y 轴
+    axisY1->setRange(-50, 50); // 设置目数差的范围
+    axisY1->setTitleText("目数差");
+    chart->addAxis(axisY1, Qt::AlignLeft);
+    series1->attachAxis(axisY1);  // 目数差的折线使用这个 Y 轴
+
+    QValueAxis *axisY2 = new QValueAxis(); // 胜率的 Y 轴
+    axisY2->setRange(0, 100); // 设置胜率的范围
+    axisY2->setTitleText("胜率 (%)");
+    chart->addAxis(axisY2, Qt::AlignRight);
+    series2->attachAxis(axisY2);  // 胜率的折线使用这个 Y 轴
+
+    // 创建图表视图
+    WinRateGraph *winRateGraph = new WinRateGraph(chart, goWidget);
+    winRateGraph->setRenderHint(QPainter::Antialiasing);
+    winRateGraph->series1 = series1;
+    winRateGraph->series2 = series2;
+    auto layout = ui->widget_3->layout();
+    layout->addWidget(winRateGraph);
+    winRateGraph->show();
+    ui->analyzePanel->show();
+}

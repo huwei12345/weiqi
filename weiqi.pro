@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -20,6 +20,7 @@ SOURCES += \
     aboutdialog.cpp \
     boardwidget.cpp \
     choosestepdialog.cpp \
+    deepanalyzedialog.cpp \
     dingshishow.cpp \
     dingshishowwidget.cpp \
     gameresearch.cpp \
@@ -37,13 +38,15 @@ SOURCES += \
     sgfparser.cpp \
     threadsafequeue.cpp \
     timecontrol.cpp \
-    winratebar.cpp
+    winratebar.cpp \
+    winrategraph.cpp
 
 HEADERS += \
     MyProtocolStream.h \
     aboutdialog.h \
     boardwidget.h \
     choosestepdialog.h \
+    deepanalyzedialog.h \
     dingshishow.h \
     dingshishowwidget.h \
     gameresearch.h \
@@ -60,11 +63,13 @@ HEADERS += \
     sgfparser.h \
     threadsafequeue.h \
     timecontrol.h \
-    winratebar.h
+    winratebar.h \
+    winrategraph.h
 
 FORMS += \
     aboutdialog.ui \
     choosestepdialog.ui \
+    deepanalyzedialog.ui \
     helppage.ui \
     judgecalcdialog.ui \
     mainwindow.ui \

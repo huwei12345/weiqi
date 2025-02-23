@@ -3,6 +3,7 @@
 
 #include "choosestepdialog.h"
 #include "imagerecognition.h"
+#include "kata.h"
 #include "settingpage.h"
 #include "threadsafequeue.h"
 
@@ -38,6 +39,7 @@ public:
     void showCurSitutation(const AnalyzeInfo &info);
     void onChooseDialogClosed();
     std::vector<Piece> deserial(const QString &str);
+    void plotWinRateChart(QList<MoveAnalysis> analysis);
 signals:
     void keyEventCaptured(QKeyEvent *event);
 

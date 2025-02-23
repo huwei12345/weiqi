@@ -86,11 +86,11 @@ int Kata::startKata() {
     // 设置 KataGo 可执行文件的路径
     // D:\download\katago-v1.15.0-eigen-windows-x64
     // kata1-b6c96-s938496-d1208807.txt.gz
-    QString kataGoPath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\katago.exe";  // 替换为你的katago可执行文件的路径
+    QString kataGoPath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\katago.exe";  // 替换为你的katago可执行文件的路径
 
     // 配置模型和配置文件路径
-    QString modelFilePath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\kata1-b15c192-s1672170752-d466197061.txt.gz"; // 替换为你的模型文件路径
-    QString configFilePath = "D:\\download\\katago-v1.15.0-eigen-windows-x64\\default_gtp.cfg";  // 替换为你的配置文件路径
+    QString modelFilePath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\kata1-b15c192-s1672170752-d466197061.txt.gz"; // 替换为你的模型文件路径
+    QString configFilePath = "D:\\download\\katago-v1.15.3-eigen-windows-x64\\default_gtp.cfg";  // 替换为你的配置文件路径
 
     // 传递启动参数
     QStringList arguments;
@@ -259,10 +259,34 @@ QList<MoveAnalysis> Kata::analyzeFullGame(std::shared_ptr<SGFTreeNode> gameRoot)
         sendCommand(cmd);
         kataGoProcess->waitForFinished(30);
         MoveAnalysis analysis = parseAnalysisOutput(yinyanStr, move.toString());
+        analysis.color = move.color;
         analysis.moveNumber = i + 1;
         analysisList.append(analysis);
     }
-    if (analysisList.size() != moveHistory.size()) {
+
+    //针对最后局面，分析一下形式
+    mYinYanOutputQueue->clear();
+    // 发送分析请求，获取当前局面的所有候选着法
+    sendCommand("kata-analyze 100 maxmoves 10"); // 分析前20个候选着法
+    int cnt = 0;
+    while (mYinYanOutputQueue->size() == 0 && cnt < 100) {
+        kataGoProcess->waitForFinished(30);
+        cnt++;
+    }
+    QString yinyanStr;
+    sendCommand("");
+    if (mYinYanOutputQueue->size() != 0) {
+        mYinYanOutputQueue->dequeue(yinyanStr);
+    }
+    else {
+        qDebug() << "last" <<" ERRRRRRRRRRRRRRRRRRRRRRRRRRRRRR";
+    }
+    MoveAnalysis analysis = parseAnalysisOutput(yinyanStr, "");
+    analysis.moveNumber = moveHistory.size() + 1;
+    analysis.color = !moveHistory[moveHistory.size() - 1].color;
+    analysisList.append(analysis);
+    if (analysisList.size() != (int)moveHistory.size() + 1) {
+        qDebug() << "YYYYYYYYYYYYYYYYYYYYYYYYYYYYY";
         return {};
     }
     return analysisList;
@@ -298,10 +322,6 @@ MoveAnalysis Kata::parseAnalysisOutput(const QString& output, const QString& use
                 qDebug() << "{}{} "<< move << " " << winRate << " " << scoreLead;
                 // 记录所有候选着法
                 moves.append(qMakePair(winRate, move));
-
-                // 检查是否是用户着法
-                if (move == userMove) {
-                }
             }
         }
     }
@@ -311,13 +331,21 @@ MoveAnalysis Kata::parseAnalysisOutput(const QString& output, const QString& use
         return a.first > b.first; // 降序排列
     });
 
-    // 记录排名和推荐着法
-    for (int i = 0; i < moves.size(); ++i) {
-        if (moves[i].second == userMove) {
-            analysis.aiRank = i;
-            analysis.isUserMoveBest = (i == 0);
+    if (userMove != "") {
+        // 记录排名和推荐着法
+        for (int i = 0; i < moves.size(); ++i) {
+            if (moves[i].second == userMove) {
+                analysis.aiRank = i;
+                analysis.isUserMoveBest = (i == 0);
+            }
+            analysis.topMoves.append(moves[i].second);
         }
-        analysis.topMoves.append(moves[i].second);
+    }
+    else {
+        for (int i = 0; i < moves.size(); ++i) {
+            analysis.topMoves.append(moves[i].second);
+        }
+        //最后一手用户没有落子
     }
 
     return analysis;

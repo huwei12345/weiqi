@@ -273,6 +273,7 @@ Makefile: weiqi.pro D:/qt5.14/5.14.2/mingw73_64/mkspecs/win32-g++/qmake.conf D:/
 		D:/qt5.14/5.14.2/mingw73_64/mkspecs/features/yacc.prf \
 		D:/qt5.14/5.14.2/mingw73_64/mkspecs/features/lex.prf \
 		weiqi.pro \
+		D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Charts.prl \
 		D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Widgets.prl \
 		D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Gui.prl \
 		D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Core.prl \
@@ -483,6 +484,7 @@ D:/qt5.14/5.14.2/mingw73_64/mkspecs/features/exceptions.prf:
 D:/qt5.14/5.14.2/mingw73_64/mkspecs/features/yacc.prf:
 D:/qt5.14/5.14.2/mingw73_64/mkspecs/features/lex.prf:
 weiqi.pro:
+D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Charts.prl:
 D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Widgets.prl:
 D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Gui.prl:
 D:/qt5.14/5.14.2/mingw73_64/lib/Qt5Core.prl:
